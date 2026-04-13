@@ -40,7 +40,7 @@
                             <a class="nav-link active" href="/">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Login</a>
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#">Register</a>
@@ -62,7 +62,7 @@
                             seeing community achievements.
                         </p>
                         <div class="d-flex gap-3 flex-wrap">
-                            <a href="#" class="btn btn-success btn-lg">Get Started</a>
+                            <a href="{{ url_for('login') }}" class="btn btn-success btn-lg">Get Started</a>
                             <a href="#" class="btn btn-outline-success btn-lg">Learn More</a>
                         </div>
                     </div>

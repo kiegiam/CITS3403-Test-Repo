@@ -26,3 +26,7 @@ body {
 footer {
     margin-top: 0;
 }
+
+.login-card {
+    border-radius: 1rem;
+}

@@ -30,3 +30,8 @@ footer {
 .login-card {
     border-radius: 1rem;
 }
+.dashboard-map {
+    width: 100%;
+    height: 500px;
+    border-radius: 0.75rem;
+}

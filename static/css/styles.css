@@ -1,0 +1,28 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #e8f5e9, #ffffff);
+}
+
+.hero-card {
+    border-radius: 1rem;
+}
+
+.feature-card {
+    border-radius: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-box {
+    background-color: #f1f8f4;
+}
+
+footer {
+    margin-top: 0;
+}

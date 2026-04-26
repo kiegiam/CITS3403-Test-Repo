@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack - Workout Plans</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #f4f6f3;
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 60%, #fff 100%);
+            border-bottom: 1px solid #d4e8d8;
+            padding: 2.5rem 0 2rem;
+        }
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #1b3a22;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.25rem;
+        }
+        .page-header p {
+            color: #5a7a62;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* ── Section labels ── */
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #6b9070;
+            margin-bottom: 1rem;
+        }
+
+        /* ── Plan cards ── */
+        .plan-card {
+            background: #fff;
+            border: 1px solid #ddeedd;
+            border-radius: 1rem;
+            padding: 1.25rem 1.4rem;
+            margin-bottom: 0.85rem;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+            cursor: pointer;
+            animation: slideIn 0.3s ease both;
+        }
+        .plan-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 80, 40, 0.09);
+            border-color: #b2d8b8;
+        }
+        .plan-card.active-plan {
+            border-color: #198754;
+            box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12);
+        }
+        .plan-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1b3a22;
+            margin-bottom: 0.2rem;
+        }
+        .plan-goal {
+            font-size: 0.82rem;
+            color: #6b9070;
+            margin-bottom: 0.75rem;
+        }
+        .plan-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .plan-badge {
+            font-size: 0.72rem;
+            font-family: 'DM Mono', monospace;
+            background: #f1f8f4;
+            color: #3a6b44;
+            border: 1px solid #c8e6c9;
+            border-radius: 0.4rem;
+            padding: 0.15rem 0.55rem;
+        }
+        .plan-actions {
+            display: flex;
+            gap: 0.4rem;
+            margin-top: 0.9rem;
+            padding-top: 0.9rem;
+            border-top: 1px solid #eef5ee;
+        }
+        .btn-plan-action {
+            font-size: 0.78rem;
+            padding: 0.3rem 0.85rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+        .btn-start {
+            background: #198754;
+            color: #fff;
+            border-color: #198754;
+        }
+        .btn-start:hover { background: #157347; color: #fff; }
+        .btn-edit {
+            background: transparent;
+            color: #5a7a62;
+            border-color: #c8e6c9;
+        }
+        .btn-edit:hover { background: #f1f8f4; color: #1b3a22; border-color: #a5d6a7; }
+        .btn-delete {
+            background: transparent;
+            color: #b04040;
+            border-color: #f5c6c6;
+            margin-left: auto;
+        }
+        .btn-delete:hover { background: #fdf2f2; border-color: #f1a0a0; }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            color: #7a9e82;
+            background: #fff;
+            border: 1px dashed #c8e6c9;
+            border-radius: 1rem;
+        }
+        .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.5;
+        }
+        .empty-state p { font-size: 0.9rem; margin: 0; }
+
+        /* ── Builder panel ── */
+        .builder-panel {
+            background: #fff;
+            border: 1px solid #ddeedd;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            position: sticky;
+            top: 1.5rem;
+        }
+        .builder-panel h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1b3a22;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eef5ee;
+        }
+
+        /* ── Form controls ── */
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #3a5e42;
+            margin-bottom: 0.35rem;
+        }
+        .form-control, .form-select {
+            border-color: #c8e6c9;
+            border-radius: 0.6rem;
+            font-size: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            color: #1b3a22;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #198754;
+            box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12);
+        }
+        .form-control::placeholder { color: #a5c4aa; }
+
+        /* ── Exercise rows ── */
+        .exercise-list { margin-bottom: 0.75rem; }
+        .exercise-row {
+            display: grid;
+            grid-template-columns: 1fr 52px 52px 70px 28px;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+            animation: slideIn 0.2s ease both;
+        }
+        .exercise-row input {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.82rem;
+            border: 1px solid #c8e6c9;
+            border-radius: 0.5rem;
+            font-family: 'DM Sans', sans-serif;
+            color: #1b3a22;
+            width: 100%;
+            transition: border-color 0.15s;
+        }
+        .exercise-row input:focus {
+            outline: none;
+            border-color: #198754;
+            box-shadow: 0 0 0 2px rgba(25,135,84,0.1);
+        }
+        .exercise-row input::placeholder { color: #a5c4aa; font-size: 0.78rem; }
+        .col-headers {
+            display: grid;
+            grid-template-columns: 1fr 52px 52px 70px 28px;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .col-header {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #6b9070;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .btn-remove-ex {
+            background: none;
+            border: none;
+            color: #c88888;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            border-radius: 4px;
+            transition: color 0.15s;
+            display: flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px;
+        }
+        .btn-remove-ex:hover { color: #b04040; background: #fdf2f2; }
+        .btn-add-ex {
+            font-size: 0.82rem;
+            color: #198754;
+            background: #f1f8f4;
+            border: 1px dashed #a5d6a7;
+            border-radius: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            width: 100%;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            transition: all 0.15s;
+            margin-bottom: 1rem;
+        }
+        .btn-add-ex:hover { background: #e8f5e9; border-color: #66bb6a; }
+
+        /* ── Save / Cancel ── */
+        .builder-footer {
+            display: flex;
+            gap: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eef5ee;
+            margin-top: 0.25rem;
+        }
+        .btn-save {
+            background: #198754;
+            color: #fff;
+            border: none;
+            border-radius: 0.6rem;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            flex: 1;
+            transition: background 0.15s;
+        }
+        .btn-save:hover { background: #157347; }
+        .btn-cancel {
+            background: transparent;
+            color: #5a7a62;
+            border: 1px solid #c8e6c9;
+            border-radius: 0.6rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.88rem;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-cancel:hover { background: #f1f8f4; }
+
+        /* ── Toast ── */
+        .toast-wrap {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+        }
+        .ft-toast {
+            background: #1b3a22;
+            color: #fff;
+            padding: 0.7rem 1.2rem;
+            border-radius: 0.6rem;
+            font-size: 0.85rem;
+            font-family: 'DM Sans', sans-serif;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            animation: toastIn 0.25s ease both;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 767px) {
+            .builder-panel { position: static; margin-top: 1.5rem; }
+            .exercise-row { grid-template-columns: 1fr 44px 44px 60px 28px; }
+            .col-headers  { grid-template-columns: 1fr 44px 44px 60px 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-white-50 small d-none d-md-inline">{{ email }}</span>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm">Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<div class="page-header">
+    <div class="container">
+        <h1>Workout Plans</h1>
+        <p>Build structured routines and start a session whenever you're ready.</p>
+    </div>
+</div>
+
+<main class="py-4">
+    <div class="container">
+        <div class="row g-4">
+
+            <!-- ── LEFT: Plans list ── -->
+            <div class="col-lg-5">
+                <p class="section-label">My Plans</p>
+                <div id="plansList"></div>
+                <button class="btn btn-success w-100 mt-2" onclick="newPlan()" id="newPlanBtn">
+                    + New Plan
+                </button>
+            </div>
+
+            <!-- ── RIGHT: Builder panel ── -->
+            <div class="col-lg-7">
+                <div class="builder-panel" id="builderPanel">
+                    <h2 id="builderTitle">New Plan</h2>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="planName">Plan name</label>
+                        <input type="text" class="form-control" id="planName" placeholder="e.g. Push Day, Leg Monday…">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="planGoal">Goal <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="text" class="form-control" id="planGoal" placeholder="e.g. Build chest strength, Lose weight…">
+                    </div>
+
+                    <div class="mb-1">
+                        <label class="form-label">Exercises</label>
+                    </div>
+                    <div class="col-headers">
+                        <span class="col-header">Exercise</span>
+                        <span class="col-header">Sets</span>
+                        <span class="col-header">Reps</span>
+                        <span class="col-header">Weight</span>
+                        <span></span>
+                    </div>
+                    <div class="exercise-list" id="exerciseList"></div>
+
+                    <button class="btn-add-ex" onclick="addExerciseRow()">+ Add exercise</button>
+
+                    <div class="builder-footer">
+                        <button class="btn-save" onclick="savePlan()">Save Plan</button>
+                        <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let plans = JSON.parse(localStorage.getItem('fittrack_plans') || '[]');
+let editingId = null;
+
+// Seed demo data on first visit
+if (plans.length === 0) {
+    plans = [
+        {
+            id: 'plan_1',
+            name: 'Push Day',
+            goal: 'Build chest and shoulder strength',
+            exercises: [
+                { name: 'Bench Press',        sets: 4, reps: 8,  weight: '80kg' },
+                { name: 'Overhead Press',     sets: 3, reps: 10, weight: '50kg' },
+                { name: 'Incline Dumbbell',   sets: 3, reps: 12, weight: '24kg' },
+                { name: 'Tricep Pushdown',    sets: 3, reps: 15, weight: '30kg' },
+            ]
+        },
+        {
+            id: 'plan_2',
+            name: 'Leg Day',
+            goal: 'Increase lower body power',
+            exercises: [
+                { name: 'Squat',              sets: 4, reps: 6,  weight: '100kg' },
+                { name: 'Romanian Deadlift',  sets: 3, reps: 10, weight: '70kg' },
+                { name: 'Leg Press',          sets: 3, reps: 12, weight: '120kg' },
+                { name: 'Calf Raise',         sets: 4, reps: 20, weight: '60kg' },
+            ]
+        }
+    ];
+    savePlansToStorage();
+}
+
+// ── Storage ────────────────────────────────────────────────────────────────
+function savePlansToStorage() {
+    localStorage.setItem('fittrack_plans', JSON.stringify(plans));
+}
+
+// ── Render plans list ──────────────────────────────────────────────────────
+function renderPlans() {
+    const list = document.getElementById('plansList');
+    if (plans.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <p>No plans yet. Create your first one!</p>
+            </div>`;
+        return;
+    }
+    list.innerHTML = plans.map(p => `
+        <div class="plan-card ${editingId === p.id ? 'active-plan' : ''}" id="card_${p.id}">
+            <div class="plan-name">${escHtml(p.name)}</div>
+            ${p.goal ? `<div class="plan-goal">${escHtml(p.goal)}</div>` : '<div class="plan-goal" style="color:#aac4ae">No goal set</div>'}
+            <div class="plan-meta">
+                <span class="plan-badge">${p.exercises.length} exercise${p.exercises.length !== 1 ? 's' : ''}</span>
+                ${p.exercises.slice(0,2).map(e => `<span class="plan-badge">${escHtml(e.name)}</span>`).join('')}
+                ${p.exercises.length > 2 ? `<span class="plan-badge">+${p.exercises.length - 2} more</span>` : ''}
+            </div>
+            <div class="plan-actions">
+                <button class="btn-plan-action btn-start" onclick="startPlan('${p.id}')">▶ Start</button>
+                <button class="btn-plan-action btn-edit"  onclick="editPlan('${p.id}')">Edit</button>
+                <button class="btn-plan-action btn-delete" onclick="deletePlan('${p.id}')">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── Builder helpers ────────────────────────────────────────────────────────
+function addExerciseRow(ex = {}) {
+    const list = document.getElementById('exerciseList');
+    const row = document.createElement('div');
+    row.className = 'exercise-row';
+    const id = 'ex_' + Date.now() + Math.random().toString(36).slice(2,5);
+    row.id = id;
+    row.innerHTML = `
+        <input type="text"   placeholder="Exercise name"  value="${escHtml(ex.name   || '')}" class="ex-name">
+        <input type="number" placeholder="Sets"  min="1"  value="${ex.sets   || ''}"           class="ex-sets"   style="text-align:center">
+        <input type="number" placeholder="Reps"  min="1"  value="${ex.reps   || ''}"           class="ex-reps"   style="text-align:center">
+        <input type="text"   placeholder="e.g. 80kg"      value="${escHtml(ex.weight || '')}"  class="ex-weight">
+        <button class="btn-remove-ex" onclick="removeRow('${id}')" title="Remove">✕</button>
+    `;
+    list.appendChild(row);
+}
+
+function removeRow(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function getExercises() {
+    return Array.from(document.querySelectorAll('.exercise-row')).map(row => ({
+        name:   row.querySelector('.ex-name').value.trim(),
+        sets:   parseInt(row.querySelector('.ex-sets').value) || 0,
+        reps:   parseInt(row.querySelector('.ex-reps').value) || 0,
+        weight: row.querySelector('.ex-weight').value.trim()
+    })).filter(e => e.name !== '');
+}
+
+function clearBuilder() {
+    document.getElementById('planName').value = '';
+    document.getElementById('planGoal').value = '';
+    document.getElementById('exerciseList').innerHTML = '';
+    document.getElementById('builderTitle').textContent = 'New Plan';
+}
+
+// ── CRUD ───────────────────────────────────────────────────────────────────
+function newPlan() {
+    editingId = null;
+    clearBuilder();
+    addExerciseRow();
+    renderPlans();
+    document.getElementById('planName').focus();
+}
+
+function editPlan(id) {
+    const plan = plans.find(p => p.id === id);
+    if (!plan) return;
+    editingId = id;
+    clearBuilder();
+    document.getElementById('builderTitle').textContent = 'Edit Plan';
+    document.getElementById('planName').value = plan.name;
+    document.getElementById('planGoal').value = plan.goal || '';
+    plan.exercises.forEach(ex => addExerciseRow(ex));
+    renderPlans();
+    document.getElementById('builderPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function savePlan() {
+    const name = document.getElementById('planName').value.trim();
+    if (!name) {
+        document.getElementById('planName').focus();
+        showToast('Please enter a plan name.');
+        return;
+    }
+    const exercises = getExercises();
+    if (exercises.length === 0) {
+        showToast('Add at least one exercise.');
+        return;
+    }
+
+    if (editingId) {
+        const idx = plans.findIndex(p => p.id === editingId);
+        if (idx !== -1) {
+            plans[idx] = { ...plans[idx], name, goal: document.getElementById('planGoal').value.trim(), exercises };
+            showToast('Plan updated!');
+        }
+    } else {
+        plans.push({
+            id: 'plan_' + Date.now(),
+            name,
+            goal: document.getElementById('planGoal').value.trim(),
+            exercises
+        });
+        showToast('Plan saved!');
+    }
+
+    editingId = null;
+    savePlansToStorage();
+    clearBuilder();
+    addExerciseRow();
+    renderPlans();
+}
+
+function cancelEdit() {
+    editingId = null;
+    clearBuilder();
+    addExerciseRow();
+    renderPlans();
+}
+
+function deletePlan(id) {
+    if (!confirm('Delete this plan? This cannot be undone.')) return;
+    plans = plans.filter(p => p.id !== id);
+    if (editingId === id) {
+        editingId = null;
+        clearBuilder();
+        addExerciseRow();
+    }
+    savePlansToStorage();
+    renderPlans();
+    showToast('Plan deleted.');
+}
+
+function startPlan(id) {
+    const plan = plans.find(p => p.id === id);
+    if (!plan) return;
+    // Store the plan as the active workout session for Steven's log page to pick up
+    localStorage.setItem('fittrack_active_plan', JSON.stringify(plan));
+    showToast(`Starting "${plan.name}" — redirecting to workout log…`);
+    // In a real app: window.location.href = "{{ url_for('workout_log') }}?plan=" + id;
+    setTimeout(() => alert(`In the full app this would open Steven's workout log page with "${plan.name}" pre-filled.`), 1200);
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+    const wrap = document.getElementById('toastWrap');
+    const t = document.createElement('div');
+    t.className = 'ft-toast';
+    t.textContent = msg;
+    wrap.appendChild(t);
+    setTimeout(() => t.remove(), 2800);
+}
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+renderPlans();
+addExerciseRow();
+</script>
+</body>
+</html>

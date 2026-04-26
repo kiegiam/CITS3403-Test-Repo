@@ -34,6 +34,12 @@ def dashboard():
 
     return render_template("dashboard.html", email=session["user_email"])
 
+@app.route('/plans')
+def plans():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+    return render_template('plans.html', email=session['email'])
+
 
 @app.route("/logout")
 def logout():

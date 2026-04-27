@@ -30,3 +30,14 @@ footer {
 .login-card {
     border-radius: 1rem;
 }
+.table th {
+    white-space: nowrap;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+textarea {
+    resize: vertical;
+}

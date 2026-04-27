@@ -162,6 +162,12 @@ def add_workout():
 
     return render_template("add_workout.html")
 
+@app.route('/plans')
+def plans():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+    return render_template('plans.html', email=session['email'])
+
 
 @app.route("/logout")
 def logout():

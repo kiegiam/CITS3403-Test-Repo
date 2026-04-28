@@ -66,7 +66,13 @@
                                 <p class="mb-0 text-muted">View your account information and fitness summary.</p>
                             </div>
                             <div class="col-md-4 text-md-end">
-                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">Back to Dashboard</a>
+                                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                                    <a href="{{ url_for('edit_profile') }}" class="btn btn-success">
+                                        Edit Profile
+                                    </a>
+                                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">
+                                        Back to Dashboard
+                                    </a>
                             </div>
                         </div>
                     </div>

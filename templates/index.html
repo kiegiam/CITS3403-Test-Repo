@@ -43,7 +43,7 @@
                             <a class="nav-link" href="{{ url_for('login') }}">Login</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Register</a>
+                            <a class="nav-link" href="{{ url_for('register') }}">Register</a>
                         </li>
                     </ul>
                 </div>
@@ -66,31 +66,6 @@
                             <a href="#" class="btn btn-outline-success btn-lg">Learn More</a>
                         </div>
                     </div>
-
-                    <div class="col-lg-6">
-                        <div class="card shadow-sm border-0 hero-card">
-                            <div class="card-body p-4">
-                                <h2 class="h4 mb-3">This Week at a Glance</h2>
-                                <div class="row text-center g-3">
-                                    <div class="col-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">4</h3>
-                                            <p class="mb-0 small">Workouts</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">285</h3>
-                                            <p class="mb-0 small">Minutes</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">6</h3>
-                                            <p class="mb-0 small">Day Streak</p>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 <hr>
 
@@ -189,7 +164,7 @@
             <div class="container text-center">
                 <h2 class="fw-bold mb-3">Start building healthy habits today</h2>
                 <p class="mb-4">Create an account, log your first workout, and join the FitTrack community.</p>
-                <a href="#" class="btn btn-light btn-lg">Sign Up</a>
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Sign Up</a>
             </div>
         </section>
     </main>

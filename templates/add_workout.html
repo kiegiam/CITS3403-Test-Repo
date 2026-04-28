@@ -45,6 +45,12 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                        </li>
                         <li class="nav-item ms-lg-3">
                             <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
                         </li>
@@ -136,6 +142,8 @@
                                     <div class="d-flex gap-3 mt-4 flex-wrap">
                                         <button type="submit" class="btn btn-success">Save Workout</button>
                                         <a href="{{ url_for('workouts') }}" class="btn btn-outline-success">Cancel</a>
+                                        <a href="{{ url_for('progress') }}" class="btn btn-outline-success">View Progress</a>
+                                        <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">Community Ranking</a>
                                     </div>
                                 </form>
                             </div>

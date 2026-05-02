@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -58,6 +59,7 @@ def is_logged_in():
 def current_user():
     if "user_id" not in session:
         return None
+
     return db.session.get(User, session["user_id"])
 
 
@@ -73,12 +75,20 @@ def user_to_profile_dict(user):
 
 def workout_to_dict(workout):
     return {
+        "id": workout.id,
         "date": workout.date,
         "type": workout.type,
         "duration": workout.duration,
         "intensity": workout.intensity,
         "notes": workout.notes or "No notes added.",
     }
+
+
+def get_user_workout(user, workout_id):
+    return Workout.query.filter_by(
+        id=workout_id,
+        user_id=user.id
+    ).first()
 
 
 def get_statistics(user):
@@ -153,6 +163,7 @@ def register():
             return render_template("register.html")
 
         existing_user = User.query.filter_by(email=email).first()
+
         if existing_user:
             flash("An account with that email already exists.")
             return render_template("register.html")
@@ -202,6 +213,7 @@ def dashboard():
         return redirect(url_for("login"))
 
     user = current_user()
+
     if user is None:
         session.clear()
         return redirect(url_for("login"))
@@ -214,7 +226,11 @@ def dashboard():
         .all()
     )
 
-    recent_workouts = [workout_to_dict(workout) for workout in recent_workout_objects]
+    recent_workouts = []
+
+    for workout in recent_workout_objects:
+        recent_workouts.append(workout_to_dict(workout))
+
     statistics = get_statistics(user)
 
     return render_template(
@@ -231,6 +247,7 @@ def profile():
         return redirect(url_for("login"))
 
     user = current_user()
+
     if user is None:
         session.clear()
         return redirect(url_for("login"))
@@ -251,6 +268,7 @@ def edit_profile():
         return redirect(url_for("login"))
 
     user = current_user()
+
     if user is None:
         session.clear()
         return redirect(url_for("login"))
@@ -262,17 +280,24 @@ def edit_profile():
 
         if not name:
             flash("Name cannot be empty.")
-            return render_template("edit_profile.html", profile=user_to_profile_dict(user))
+            return render_template(
+                "edit_profile.html",
+                profile=user_to_profile_dict(user)
+            )
 
         user.name = name
         user.goal = goal or "Stay consistent"
         user.location = location or "Not set"
 
         db.session.commit()
+
         flash("Profile updated successfully.")
         return redirect(url_for("profile"))
 
-    return render_template("edit_profile.html", profile=user_to_profile_dict(user))
+    return render_template(
+        "edit_profile.html",
+        profile=user_to_profile_dict(user)
+    )
 
 
 @app.route("/workouts")
@@ -281,6 +306,7 @@ def workouts():
         return redirect(url_for("login"))
 
     user = current_user()
+
     if user is None:
         session.clear()
         return redirect(url_for("login"))
@@ -292,8 +318,15 @@ def workouts():
         .all()
     )
 
-    workout_list = [workout_to_dict(workout) for workout in workout_objects]
-    return render_template("workouts.html", workouts=workout_list)
+    workout_list = []
+
+    for workout in workout_objects:
+        workout_list.append(workout_to_dict(workout))
+
+    return render_template(
+        "workouts.html",
+        workouts=workout_list
+    )
 
 
 @app.route("/progress")
@@ -302,6 +335,7 @@ def progress():
         return redirect(url_for("login"))
 
     user = current_user()
+
     if user is None:
         session.clear()
         return redirect(url_for("login"))
@@ -315,7 +349,10 @@ def progress():
         .all()
     )
 
-    recent_workouts = [workout_to_dict(workout) for workout in recent_workout_objects]
+    recent_workouts = []
+
+    for workout in recent_workout_objects:
+        recent_workouts.append(workout_to_dict(workout))
 
     return render_template(
         "progress.html",
@@ -365,6 +402,7 @@ def add_workout():
         return redirect(url_for("login"))
 
     user = current_user()
+
     if user is None:
         session.clear()
         return redirect(url_for("login"))
@@ -378,6 +416,12 @@ def add_workout():
 
         if not date_value or not workout_type or not duration or not intensity:
             flash("Please complete all required fields.")
+            return render_template("add_workout.html")
+
+        try:
+            datetime.strptime(date_value, "%Y-%m-%d")
+        except ValueError:
+            flash("Date must use the format YYYY-MM-DD.")
             return render_template("add_workout.html")
 
         try:
@@ -406,6 +450,103 @@ def add_workout():
         return redirect(url_for("workouts"))
 
     return render_template("add_workout.html")
+
+
+@app.route("/workouts/<int:workout_id>/edit", methods=["GET", "POST"])
+def edit_workout(workout_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    workout = get_user_workout(user, workout_id)
+
+    if workout is None:
+        flash("Workout not found.")
+        return redirect(url_for("workouts"))
+
+    if request.method == "POST":
+        date_value = request.form.get("date", "").strip()
+        workout_type = request.form.get("type", "").strip()
+        duration = request.form.get("duration", "").strip()
+        intensity = request.form.get("intensity", "").strip()
+        notes = request.form.get("notes", "").strip()
+
+        if not date_value or not workout_type or not duration or not intensity:
+            flash("Please complete all required fields.")
+            return render_template(
+                "edit_workout.html",
+                workout=workout
+            )
+
+        try:
+            datetime.strptime(date_value, "%Y-%m-%d")
+        except ValueError:
+            flash("Date must use the format YYYY-MM-DD.")
+            return render_template(
+                "edit_workout.html",
+                workout=workout
+            )
+
+        try:
+            duration_value = int(duration)
+        except ValueError:
+            flash("Duration must be a number.")
+            return render_template(
+                "edit_workout.html",
+                workout=workout
+            )
+
+        if duration_value <= 0:
+            flash("Duration must be greater than 0.")
+            return render_template(
+                "edit_workout.html",
+                workout=workout
+            )
+
+        workout.date = date_value
+        workout.type = workout_type
+        workout.duration = duration_value
+        workout.intensity = intensity
+        workout.notes = notes or "No notes added."
+
+        db.session.commit()
+
+        flash("Workout updated successfully.")
+        return redirect(url_for("workouts"))
+
+    return render_template(
+        "edit_workout.html",
+        workout=workout
+    )
+
+
+@app.route("/workouts/<int:workout_id>/delete", methods=["POST"])
+def delete_workout(workout_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    workout = get_user_workout(user, workout_id)
+
+    if workout is None:
+        flash("Workout not found.")
+        return redirect(url_for("workouts"))
+
+    db.session.delete(workout)
+    db.session.commit()
+
+    flash("Workout deleted successfully.")
+    return redirect(url_for("workouts"))
 
 
 @app.route("/plans")

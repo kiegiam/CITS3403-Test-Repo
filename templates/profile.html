@@ -26,34 +26,36 @@
                     class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#mainNav"
-                    aria-controls="mainNav"
+                    data-bs-target="#profileNav"
+                    aria-controls="profileNav"
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="mainNav">
+                <div class="collapse navbar-collapse" id="profileNav">
                     <ul class="navbar-nav ms-auto align-items-lg-center">
                         <li class="nav-item">
-                            <a class="nav-link " href="{{ url_for('dashboard') }}">Dashboard</a>
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link active" href="{{ url_for('profile') }}">Profile</a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link " href="{{ url_for('workouts') }}">My Workouts</a>
+                            <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link " href="{{ url_for('plans') }}">Plans</a>
+                            <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link " href="{{ url_for('progress') }}">Progress</a>
+                            <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link " href="{{ url_for('ranking') }}">Ranking</a>
-                        </li>
+
                         <li class="nav-item ms-lg-3">
                             <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
                         </li>
@@ -65,48 +67,147 @@
 
     <main class="py-5">
         <div class="container">
+
             <section class="mb-4">
-                <div class="card shadow-sm border-0 hero-card">
-                    <div class="card-body p-4">
-                        <div class="row align-items-center g-4">
-                            <div class="col-md-8">
-                                <p class="text-success fw-semibold mb-1">Profile Page</p>
-                                <h1 class="h3 mb-2">My Profile</h1>
-                                <p class="mb-0 text-muted">View your account information and fitness summary.</p>
+                <div class="card shadow-sm border-0 hero-card overflow-hidden">
+                    <div class="card-body p-0">
+
+                        <div class="bg-success text-white p-4 p-md-5">
+                            <div class="row align-items-center g-4">
+                                <div class="col-md-8">
+                                    <p class="text-white-50 fw-semibold mb-1">Profile Page</p>
+                                    <h1 class="display-6 fw-bold mb-2">My Profile</h1>
+                                    <p class="mb-0 text-white-50">
+                                        View your account information, fitness goal, and workout summary.
+                                    </p>
+                                </div>
+
+                                <div class="col-md-4 text-md-end">
+                                    <a href="{{ url_for('dashboard') }}" class="btn btn-light">
+                                        Back to Dashboard
+                                    </a>
+                                </div>
                             </div>
-                            <div class="col-md-4 text-md-end">
-                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">Back to Dashboard</a>
-                                <a href="{{ url_for('edit_profile') }}" class="btn btn-success">Edit Profile</a>
+                        </div>
+
+                        <div class="p-4">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
+
+                                <div
+                                    class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm border border-3 border-success overflow-hidden"
+                                    style="width: 96px; height: 96px; font-size: 2rem; font-weight: 700;"
+                                >
+                                    {% if profile.avatar_filename %}
+                                        <img
+                                            src="{{ url_for('static', filename='uploads/' ~ profile.avatar_filename) }}"
+                                            alt="Profile avatar"
+                                            class="w-100 h-100"
+                                            style="object-fit: cover;"
+                                        >
+                                    {% else %}
+                                        {{ profile.name[0] }}
+                                    {% endif %}
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <h2 class="h3 mb-1">{{ profile.name }}</h2>
+                                    <p class="text-muted mb-2">{{ profile.email }}</p>
+
+                                    <span class="badge text-bg-success px-3 py-2">
+                                        Goal: {{ profile.goal }}
+                                    </span>
+                                </div>
+
+                                <div class="text-md-end">
+                                    <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-success">
+                                        Edit Profile
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="row text-center g-3">
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body p-4">
+                                <p class="text-muted mb-1">Total Workouts</p>
+                                <h2 class="display-6 fw-bold text-success mb-0">
+                                    {{ statistics.total_workouts }}
+                                </h2>
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body p-4">
+                                <p class="text-muted mb-1">Total Minutes</p>
+                                <h2 class="display-6 fw-bold text-success mb-0">
+                                    {{ statistics.total_minutes }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body p-4">
+                                <p class="text-muted mb-1">Day Streak</p>
+                                <h2 class="display-6 fw-bold text-success mb-0">
+                                    {{ statistics.current_streak }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
 
             <section>
                 <div class="row g-4">
+
                     <div class="col-lg-5">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-body p-4">
-                                <h2 class="h4 mb-3">Account Details</h2>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <span class="text-muted">Name</span>
-                                        <strong>{{ profile.name }}</strong>
-                                    </li>
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <span class="text-muted">Email</span>
-                                        <strong>{{ profile.email }}</strong>
-                                    </li>
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <span class="text-muted">Location</span>
-                                        <strong>{{ profile.location }}</strong>
-                                    </li>
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <span class="text-muted">Member since</span>
-                                        <strong>{{ profile.member_since }}</strong>
-                                    </li>
-                                </ul>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h2 class="h4 mb-0">Account Details</h2>
+                                    <span class="badge text-bg-light text-success border">
+                                        Active User
+                                    </span>
+                                </div>
+
+                                <div class="list-group list-group-flush">
+
+                                    <div class="list-group-item px-0 py-3">
+                                        <p class="text-muted small mb-1">Name</p>
+                                        <p class="fw-semibold mb-0">{{ profile.name }}</p>
+                                    </div>
+
+                                    <div class="list-group-item px-0 py-3">
+                                        <p class="text-muted small mb-1">Email</p>
+                                        <p class="fw-semibold mb-0">{{ profile.email }}</p>
+                                    </div>
+
+                                    <div class="list-group-item px-0 py-3">
+                                        <p class="text-muted small mb-1">Location</p>
+                                        <p class="fw-semibold mb-0">{{ profile.location }}</p>
+                                    </div>
+
+                                    <div class="list-group-item px-0 py-3">
+                                        <p class="text-muted small mb-1">Member since</p>
+                                        <p class="fw-semibold mb-0">{{ profile.member_since }}</p>
+                                    </div>
+
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -114,40 +215,65 @@
                     <div class="col-lg-7">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-body p-4">
+
                                 <h2 class="h4 mb-3">Fitness Summary</h2>
-                                <p class="mb-4"><strong>Current goal:</strong> {{ profile.goal }}</p>
 
-                                <div class="row text-center g-3">
-                                    <div class="col-md-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">{{ statistics.total_workouts }}</h3>
-                                            <p class="mb-0 small text-muted">Workouts</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">{{ statistics.total_minutes }}</h3>
-                                            <p class="mb-0 small text-muted">Minutes</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">{{ statistics.current_streak }}</h3>
-                                            <p class="mb-0 small text-muted">Day Streak</p>
-                                        </div>
-                                    </div>
+                                <div class="p-4 rounded bg-light border mb-4">
+                                    <p class="text-muted mb-1">Current goal</p>
+                                    <h3 class="h5 mb-0">{{ profile.goal }}</h3>
                                 </div>
 
-                                <div class="mt-4 d-flex flex-wrap gap-2">
-                                    <a href="{{ url_for('workouts') }}" class="btn btn-success">View My Workouts</a>
-                                    <a href="{{ url_for('progress') }}" class="btn btn-outline-success">View Progress</a>
-                                    <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">Community Ranking</a>
+                                <div class="row g-3 mb-4">
+
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded border bg-white h-100">
+                                            <p class="text-muted small mb-1">Training consistency</p>
+                                            <p class="fw-semibold mb-0">
+                                                {{ statistics.current_streak }} day streak
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded border bg-white h-100">
+                                            <p class="text-muted small mb-1">Average minutes</p>
+                                            <p class="fw-semibold mb-0">
+                                                {% if statistics.total_workouts > 0 %}
+                                                    {{ (statistics.total_minutes / statistics.total_workouts) | round }} min per workout
+                                                {% else %}
+                                                    0 min per workout
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+
                                 </div>
+
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{{ url_for('workouts') }}" class="btn btn-success">
+                                        View My Workouts
+                                    </a>
+
+                                    <a href="{{ url_for('progress') }}" class="btn btn-outline-success">
+                                        View Progress
+                                    </a>
+
+                                    <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">
+                                        Community Ranking
+                                    </a>
+
+                                    <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-secondary">
+                                        Edit Profile
+                                    </a>
+                                </div>
+
                             </div>
                         </div>
                     </div>
+
                 </div>
             </section>
+
         </div>
     </main>
 

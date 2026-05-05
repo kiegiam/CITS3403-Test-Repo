@@ -107,25 +107,32 @@
                     <div class="col-lg-5">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-body p-4">
-                                <h2 class="h4 mb-3">Account Details</h2>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <span class="text-muted">Name</span>
-                                        <strong>{{ profile.name }}</strong>
-                                    </li>
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <span class="text-muted">Email</span>
-                                        <strong>{{ profile.email }}</strong>
-                                    </li>
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <span class="text-muted">Location</span>
-                                        <strong>{{ profile.location }}</strong>
-                                    </li>
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <span class="text-muted">Member since</span>
-                                        <strong>{{ profile.member_since }}</strong>
-                                    </li>
-                                </ul>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h2 class="h4 mb-0">Account Details</h2>
+                                    <span class="badge text-bg-light text-success border">Active User</span>
+                                </div>
+
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item px-0 py-3">
+                                        <p class="text-muted small mb-1">Name</p>
+                                        <p class="fw-semibold mb-0">{{ profile.name }}</p>
+                                    </div>
+
+                                    <div class="list-group-item px-0 py-3">
+                                        <p class="text-muted small mb-1">Email</p>
+                                        <p class="fw-semibold mb-0">{{ profile.email }}</p>
+                                    </div>
+
+                                    <div class="list-group-item px-0 py-3">
+                                        <p class="text-muted small mb-1">Location</p>
+                                        <p class="fw-semibold mb-0">{{ profile.location }}</p>
+                                    </div>
+
+                                    <div class="list-group-item px-0 py-3">
+                                        <p class="text-muted small mb-1">Member since</p>
+                                        <p class="fw-semibold mb-0">{{ profile.member_since }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

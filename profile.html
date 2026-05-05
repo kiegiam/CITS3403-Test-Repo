@@ -39,18 +39,23 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link active" href="{{ url_for('profile') }}">Profile</a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
                         </li>
+
                         <li class="nav-item ms-lg-3">
                             <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
                         </li>
@@ -66,6 +71,7 @@
             <section class="mb-4">
                 <div class="card shadow-sm border-0 hero-card overflow-hidden">
                     <div class="card-body p-0">
+
                         <div class="bg-success text-white p-4 p-md-5">
                             <div class="row align-items-center g-4">
                                 <div class="col-md-8">
@@ -75,6 +81,7 @@
                                         View your account information, fitness goal, and workout summary.
                                     </p>
                                 </div>
+
                                 <div class="col-md-4 text-md-end">
                                     <a href="{{ url_for('dashboard') }}" class="btn btn-light">
                                         Back to Dashboard
@@ -85,16 +92,27 @@
 
                         <div class="p-4">
                             <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
+
                                 <div
-                                    class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm"
+                                    class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm border border-3 border-success overflow-hidden"
                                     style="width: 96px; height: 96px; font-size: 2rem; font-weight: 700;"
                                 >
-                                    {{ profile.name[0] }}
+                                    {% if profile.avatar_filename %}
+                                        <img
+                                            src="{{ url_for('static', filename='uploads/' ~ profile.avatar_filename) }}"
+                                            alt="Profile avatar"
+                                            class="w-100 h-100"
+                                            style="object-fit: cover;"
+                                        >
+                                    {% else %}
+                                        {{ profile.name[0] }}
+                                    {% endif %}
                                 </div>
 
                                 <div class="flex-grow-1">
                                     <h2 class="h3 mb-1">{{ profile.name }}</h2>
                                     <p class="text-muted mb-2">{{ profile.email }}</p>
+
                                     <span class="badge text-bg-success px-3 py-2">
                                         Goal: {{ profile.goal }}
                                     </span>
@@ -105,14 +123,17 @@
                                         Edit Profile
                                     </a>
                                 </div>
+
                             </div>
                         </div>
+
                     </div>
                 </div>
             </section>
 
             <section class="mb-4">
                 <div class="row text-center g-3">
+
                     <div class="col-md-4">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-body p-4">
@@ -145,20 +166,26 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
             </section>
 
             <section>
                 <div class="row g-4">
+
                     <div class="col-lg-5">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-body p-4">
+
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h2 class="h4 mb-0">Account Details</h2>
-                                    <span class="badge text-bg-light text-success border">Active User</span>
+                                    <span class="badge text-bg-light text-success border">
+                                        Active User
+                                    </span>
                                 </div>
 
                                 <div class="list-group list-group-flush">
+
                                     <div class="list-group-item px-0 py-3">
                                         <p class="text-muted small mb-1">Name</p>
                                         <p class="fw-semibold mb-0">{{ profile.name }}</p>
@@ -178,7 +205,9 @@
                                         <p class="text-muted small mb-1">Member since</p>
                                         <p class="fw-semibold mb-0">{{ profile.member_since }}</p>
                                     </div>
+
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -186,6 +215,7 @@
                     <div class="col-lg-7">
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-body p-4">
+
                                 <h2 class="h4 mb-3">Fitness Summary</h2>
 
                                 <div class="p-4 rounded bg-light border mb-4">
@@ -194,6 +224,7 @@
                                 </div>
 
                                 <div class="row g-3 mb-4">
+
                                     <div class="col-md-6">
                                         <div class="p-3 rounded border bg-white h-100">
                                             <p class="text-muted small mb-1">Training consistency</p>
@@ -215,25 +246,31 @@
                                             </p>
                                         </div>
                                     </div>
+
                                 </div>
 
                                 <div class="d-flex flex-wrap gap-2">
                                     <a href="{{ url_for('workouts') }}" class="btn btn-success">
                                         View My Workouts
                                     </a>
+
                                     <a href="{{ url_for('progress') }}" class="btn btn-outline-success">
                                         View Progress
                                     </a>
+
                                     <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">
                                         Community Ranking
                                     </a>
+
                                     <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-secondary">
                                         Edit Profile
                                     </a>
                                 </div>
+
                             </div>
                         </div>
                     </div>
+
                 </div>
             </section>
 

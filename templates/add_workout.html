@@ -26,30 +26,33 @@
                     class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#addWorkoutNav"
-                    aria-controls="addWorkoutNav"
+                    data-bs-target="#mainNav"
+                    aria-controls="mainNav"
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="addWorkoutNav">
+                <div class="collapse navbar-collapse" id="mainNav">
                     <ul class="navbar-nav ms-auto align-items-lg-center">
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                            <a class="nav-link " href="{{ url_for('dashboard') }}">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
+                            <a class="nav-link " href="{{ url_for('profile') }}">Profile</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
+                            <a class="nav-link active" href="{{ url_for('workouts') }}">My Workouts</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
+                            <a class="nav-link " href="{{ url_for('plans') }}">Plans</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                            <a class="nav-link " href="{{ url_for('progress') }}">Progress</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="{{ url_for('ranking') }}">Ranking</a>
                         </li>
                         <li class="nav-item ms-lg-3">
                             <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>

@@ -102,6 +102,43 @@
                 </div>
             </section>
 
+            <section class="mb-4">
+                <div class="row text-center g-3">
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body p-4">
+                                <p class="text-muted mb-1">Total Workouts</p>
+                                <h2 class="display-6 fw-bold text-success mb-0">
+                                    {{ statistics.total_workouts }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body p-4">
+                                <p class="text-muted mb-1">Total Minutes</p>
+                                <h2 class="display-6 fw-bold text-success mb-0">
+                                    {{ statistics.total_minutes }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body p-4">
+                                <p class="text-muted mb-1">Day Streak</p>
+                                <h2 class="display-6 fw-bold text-success mb-0">
+                                    {{ statistics.current_streak }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section>
                 <div class="row g-4">
                     <div class="col-lg-5">
@@ -141,30 +178,13 @@
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-body p-4">
                                 <h2 class="h4 mb-3">Fitness Summary</h2>
-                                <p class="mb-4"><strong>Current goal:</strong> {{ profile.goal }}</p>
 
-                                <div class="row text-center g-3">
-                                    <div class="col-md-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">{{ statistics.total_workouts }}</h3>
-                                            <p class="mb-0 small text-muted">Workouts</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">{{ statistics.total_minutes }}</h3>
-                                            <p class="mb-0 small text-muted">Minutes</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="stat-box p-3 rounded">
-                                            <h3 class="h2 mb-1">{{ statistics.current_streak }}</h3>
-                                            <p class="mb-0 small text-muted">Day Streak</p>
-                                        </div>
-                                    </div>
+                                <div class="p-4 rounded bg-light border mb-4">
+                                    <p class="text-muted mb-1">Current goal</p>
+                                    <h3 class="h5 mb-0">{{ profile.goal }}</h3>
                                 </div>
 
-                                <div class="mt-4 d-flex flex-wrap gap-2">
+                                <div class="d-flex flex-wrap gap-2">
                                     <a href="{{ url_for('workouts') }}" class="btn btn-success">View My Workouts</a>
                                     <a href="{{ url_for('progress') }}" class="btn btn-outline-success">View Progress</a>
                                     <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">Community Ranking</a>

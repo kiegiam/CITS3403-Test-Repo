@@ -1,8 +1,10 @@
+import os
 from datetime import date, datetime
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 
 app = Flask(__name__)
@@ -10,6 +12,10 @@ app.secret_key = "dev-secret-key"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///fittrack.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# User-uploaded avatar settings
+app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
+app.config["ALLOWED_IMAGE_EXTENSIONS"] = {"png", "jpg", "jpeg", "gif"}
 
 db = SQLAlchemy(app)
 
@@ -24,6 +30,10 @@ class User(db.Model):
     goal = db.Column(db.String(200), nullable=True)
     member_since = db.Column(db.String(50), nullable=True)
     location = db.Column(db.String(100), nullable=True)
+
+    # Stores the uploaded avatar filename for this user.
+    # If this is None, the Profile page shows the first letter of the user's name.
+    avatar_filename = db.Column(db.String(255), nullable=True)
 
     workouts = db.relationship(
         "Workout",
@@ -63,6 +73,13 @@ def current_user():
     return db.session.get(User, session["user_id"])
 
 
+def allowed_image(filename):
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_IMAGE_EXTENSIONS"]
+    )
+
+
 def user_to_profile_dict(user):
     return {
         "name": user.name,
@@ -70,6 +87,7 @@ def user_to_profile_dict(user):
         "goal": user.goal or "No goal set yet.",
         "member_since": user.member_since or "Unknown",
         "location": user.location or "Not set",
+        "avatar_filename": user.avatar_filename,
     }
 
 
@@ -178,6 +196,7 @@ def register():
             goal=goal or "Stay consistent",
             member_since=date.today().strftime("%B %Y"),
             location=location or "Not set",
+            avatar_filename=None,
         )
 
         db.session.add(new_user)
@@ -280,6 +299,7 @@ def edit_profile():
         name = request.form.get("name", "").strip()
         goal = request.form.get("goal", "").strip()
         location = request.form.get("location", "").strip()
+        avatar_file = request.files.get("avatar")
 
         if not name:
             flash("Name cannot be empty.")
@@ -291,6 +311,25 @@ def edit_profile():
         user.name = name
         user.goal = goal or "Stay consistent"
         user.location = location or "Not set"
+
+        if avatar_file and avatar_file.filename:
+            if not allowed_image(avatar_file.filename):
+                flash("Avatar must be an image file: png, jpg, jpeg, or gif.")
+                return render_template(
+                    "edit_profile.html",
+                    profile=user_to_profile_dict(user)
+                )
+
+            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+            original_filename = secure_filename(avatar_file.filename)
+            file_extension = original_filename.rsplit(".", 1)[1].lower()
+
+            avatar_filename = f"user_{user.id}_avatar.{file_extension}"
+            avatar_path = os.path.join(app.config["UPLOAD_FOLDER"], avatar_filename)
+
+            avatar_file.save(avatar_path)
+            user.avatar_filename = avatar_filename
 
         db.session.commit()
 

@@ -116,100 +116,114 @@
                 </div>
             </section>
 
-            <section class="mb-4">
-                <div class="row g-4">
-                    <div class="col-lg-6">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-body p-4">
-                                <h2 class="h4 mb-3">Workout Type Breakdown</h2>
+            {% if progress_stats.total_workouts == 0 %}
+                <section>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-5 text-center">
+                            <h2 class="h4 mb-3">No workout data yet</h2>
+                            <p class="text-muted mb-4">
+                                Add your first workout to unlock progress charts, training summaries, and workout history.
+                            </p>
+                            <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
+                        </div>
+                    </div>
+                </section>
+            {% else %}
+                <section class="mb-4">
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-body p-4">
+                                    <h2 class="h4 mb-3">Workout Type Breakdown</h2>
 
-                                {% for workout_type, count in type_counts.items() %}
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span class="fw-semibold">{{ workout_type }}</span>
-                                            <span class="text-muted">{{ count }} workout(s)</span>
-                                        </div>
+                                    {% for workout_type, count in type_counts.items() %}
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="fw-semibold">{{ workout_type }}</span>
+                                                <span class="text-muted">{{ count }} workout(s)</span>
+                                            </div>
 
-                                        <div class="progress">
-                                            <div
-                                                class="progress-bar bg-success"
-                                                role="progressbar"
-                                                style="width: {{ (count / progress_stats.total_workouts * 100) | round }}%;"
-                                            >
+                                            <div class="progress">
+                                                <div
+                                                    class="progress-bar bg-success"
+                                                    role="progressbar"
+                                                    style="width: {{ (count / progress_stats.total_workouts * 100) | round }}%;"
+                                                >
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                {% endfor %}
-
-                                <p class="small text-muted mb-0">
-                                    Most common training type:
-                                    <strong>{{ progress_stats.most_common_type }}</strong>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-6">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-body p-4">
-                                <h2 class="h4 mb-3">Training Minutes by Type</h2>
-
-                                <div class="list-group list-group-flush">
-                                    {% for workout_type, minutes in type_minutes.items() %}
-                                        <div class="list-group-item px-0 d-flex justify-content-between">
-                                            <span>{{ workout_type }}</span>
-                                            <span class="badge text-bg-success">{{ minutes }} min</span>
-                                        </div>
                                     {% endfor %}
+
+                                    <p class="small text-muted mb-0">
+                                        Most common training type:
+                                        <strong>{{ progress_stats.most_common_type }}</strong>
+                                    </p>
                                 </div>
+                            </div>
+                        </div>
 
-                                <p class="small text-muted mt-3 mb-0">
-                                    This summary is generated from the workout data stored on the server.
-                                </p>
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-body p-4">
+                                    <h2 class="h4 mb-3">Training Minutes by Type</h2>
+
+                                    <div class="list-group list-group-flush">
+                                        {% for workout_type, minutes in type_minutes.items() %}
+                                            <div class="list-group-item px-0 d-flex justify-content-between">
+                                                <span>{{ workout_type }}</span>
+                                                <span class="badge text-bg-success">{{ minutes }} min</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <p class="small text-muted mt-3 mb-0">
+                                        This summary is generated from the workout data stored on the server.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section>
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h2 class="h4 mb-0">Recent Workout History</h2>
-                            <a href="{{ url_for('workouts') }}" class="text-decoration-none">View all</a>
-                        </div>
+                <section>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2 class="h4 mb-0">Recent Workout History</h2>
+                                <a href="{{ url_for('workouts') }}" class="text-decoration-none">View all</a>
+                            </div>
 
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Type</th>
-                                        <th>Duration</th>
-                                        <th>Intensity</th>
-                                        <th>Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for workout in recent_workouts %}
+                            <div class="table-responsive">
+                                <table class="table align-middle">
+                                    <thead>
                                         <tr>
-                                            <td>{{ workout.date }}</td>
-                                            <td>{{ workout.type }}</td>
-                                            <td>{{ workout.duration }} min</td>
-                                            <td>
-                                                <span class="badge text-bg-success">{{ workout.intensity }}</span>
-                                            </td>
-                                            <td class="text-muted">{{ workout.notes }}</td>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th>Duration</th>
+                                            <th>Intensity</th>
+                                            <th>Notes</th>
                                         </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {% for workout in recent_workouts %}
+                                            <tr>
+                                                <td>{{ workout.date }}</td>
+                                                <td>{{ workout.type }}</td>
+                                                <td>{{ workout.duration }} min</td>
+                                                <td>
+                                                    <span class="badge text-bg-success">{{ workout.intensity }}</span>
+                                                </td>
+                                                <td class="text-muted">{{ workout.notes }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
 
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            {% endif %}
 
         </div>
     </main>

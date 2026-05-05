@@ -93,8 +93,11 @@ def get_user_workout(user, workout_id):
 
 def get_statistics(user):
     user_workouts = Workout.query.filter_by(user_id=user.id).all()
+
     total_workouts = len(user_workouts)
     total_minutes = sum(workout.duration for workout in user_workouts)
+
+    # Temporary value for now. This can be replaced with a real streak algorithm later.
     current_streak = 6
 
     return {
@@ -226,10 +229,10 @@ def dashboard():
         .all()
     )
 
-    recent_workouts = []
-
-    for workout in recent_workout_objects:
-        recent_workouts.append(workout_to_dict(workout))
+    recent_workouts = [
+        workout_to_dict(workout)
+        for workout in recent_workout_objects
+    ]
 
     statistics = get_statistics(user)
 
@@ -318,82 +321,15 @@ def workouts():
         .all()
     )
 
-    workout_list = []
-
-    for workout in workout_objects:
-        workout_list.append(workout_to_dict(workout))
+    workout_list = [
+        workout_to_dict(workout)
+        for workout in workout_objects
+    ]
 
     return render_template(
         "workouts.html",
         workouts=workout_list
     )
-
-
-@app.route("/progress")
-def progress():
-    if not is_logged_in():
-        return redirect(url_for("login"))
-
-    user = current_user()
-
-    if user is None:
-        session.clear()
-        return redirect(url_for("login"))
-
-    progress_stats, type_counts, type_minutes = get_progress_data(user)
-
-    recent_workout_objects = (
-        Workout.query
-        .filter_by(user_id=user.id)
-        .order_by(Workout.date.desc(), Workout.id.desc())
-        .all()
-    )
-
-    recent_workouts = []
-
-    for workout in recent_workout_objects:
-        recent_workouts.append(workout_to_dict(workout))
-
-    return render_template(
-        "progress.html",
-        progress_stats=progress_stats,
-        type_counts=type_counts,
-        type_minutes=type_minutes,
-        recent_workouts=recent_workouts,
-    )
-
-
-@app.route("/ranking")
-def ranking():
-    if not is_logged_in():
-        return redirect(url_for("login"))
-
-    users = User.query.all()
-    leaderboard = []
-
-    for user in users:
-        user_workouts = Workout.query.filter_by(user_id=user.id).all()
-
-        total_workouts = len(user_workouts)
-        total_minutes = sum(workout.duration for workout in user_workouts)
-
-        leaderboard.append(
-            {
-                "name": user.name,
-                "workouts": total_workouts,
-                "minutes": total_minutes,
-                "streak": 6,
-                "shared": True,
-            }
-        )
-
-    leaderboard = sorted(
-        leaderboard,
-        key=lambda user_data: user_data["minutes"],
-        reverse=True
-    )
-
-    return render_template("ranking.html", leaderboard=leaderboard)
 
 
 @app.route("/workouts/add", methods=["GET", "POST"])
@@ -549,12 +485,85 @@ def delete_workout(workout_id):
     return redirect(url_for("workouts"))
 
 
+@app.route("/progress")
+def progress():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    progress_stats, type_counts, type_minutes = get_progress_data(user)
+
+    recent_workout_objects = (
+        Workout.query
+        .filter_by(user_id=user.id)
+        .order_by(Workout.date.desc(), Workout.id.desc())
+        .all()
+    )
+
+    recent_workouts = [
+        workout_to_dict(workout)
+        for workout in recent_workout_objects
+    ]
+
+    return render_template(
+        "progress.html",
+        progress_stats=progress_stats,
+        type_counts=type_counts,
+        type_minutes=type_minutes,
+        recent_workouts=recent_workouts,
+    )
+
+
+@app.route("/ranking")
+def ranking():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    users = User.query.all()
+    leaderboard = []
+
+    for user in users:
+        user_workouts = Workout.query.filter_by(user_id=user.id).all()
+
+        total_workouts = len(user_workouts)
+        total_minutes = sum(workout.duration for workout in user_workouts)
+
+        leaderboard.append(
+            {
+                "name": user.name,
+                "workouts": total_workouts,
+                "minutes": total_minutes,
+                "streak": 6,
+                "shared": True,
+            }
+        )
+
+    leaderboard = sorted(
+        leaderboard,
+        key=lambda user_data: user_data["minutes"],
+        reverse=True
+    )
+
+    return render_template(
+        "ranking.html",
+        leaderboard=leaderboard
+    )
+
+
 @app.route("/plans")
 def plans():
     if not is_logged_in():
         return redirect(url_for("login"))
 
-    return render_template("plans.html", email=session["user_email"])
+    return render_template(
+        "plans.html",
+        email=session["user_email"]
+    )
 
 
 @app.route("/logout")

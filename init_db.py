@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 
 from app import app, db, User, Workout
 
+
 with app.app_context():
     db.create_all()
 
@@ -17,6 +18,7 @@ with app.app_context():
             goal="Stay consistent",
             member_since=date.today().strftime("%B %Y"),
             location="Perth, WA",
+            avatar_filename=None,
         )
 
         db.session.add(demo_user)
@@ -45,6 +47,14 @@ with app.app_context():
                 duration=45,
                 intensity="Medium",
                 notes="Easy pace recovery session.",
+                user_id=demo_user.id,
+            ),
+            Workout(
+                date="2026-04-24",
+                type="Cycling",
+                duration=40,
+                intensity="Low",
+                notes="Light cardio after class.",
                 user_id=demo_user.id,
             ),
         ]

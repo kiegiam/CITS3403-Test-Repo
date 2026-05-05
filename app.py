@@ -3,6 +3,7 @@ from datetime import date, datetime
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -30,9 +31,6 @@ class User(db.Model):
     goal = db.Column(db.String(200), nullable=True)
     member_since = db.Column(db.String(50), nullable=True)
     location = db.Column(db.String(100), nullable=True)
-
-    # Stores the uploaded avatar filename for this user.
-    # If this is None, the Profile page shows the first letter of the user's name.
     avatar_filename = db.Column(db.String(255), nullable=True)
 
     workouts = db.relationship(
@@ -60,6 +58,79 @@ class Workout(db.Model):
 
     def __repr__(self):
         return f"<Workout {self.type} on {self.date}>"
+
+
+def ensure_database_ready():
+    with app.app_context():
+        db.create_all()
+
+        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+        existing_columns = db.session.execute(
+            text("PRAGMA table_info(users)")
+        ).fetchall()
+
+        column_names = [column[1] for column in existing_columns]
+
+        if "avatar_filename" not in column_names:
+            db.session.execute(
+                text("ALTER TABLE users ADD COLUMN avatar_filename VARCHAR(255)")
+            )
+            db.session.commit()
+
+        existing_demo = User.query.filter_by(email="demo@fittrack.com").first()
+
+        if existing_demo is None:
+            demo_user = User(
+                name="Demo User",
+                email="demo@fittrack.com",
+                password_hash=generate_password_hash("password123"),
+                goal="Stay consistent",
+                member_since=date.today().strftime("%B %Y"),
+                location="Perth, WA",
+                avatar_filename=None,
+            )
+
+            db.session.add(demo_user)
+            db.session.commit()
+
+            sample_workouts = [
+                Workout(
+                    date="2026-04-20",
+                    type="Running",
+                    duration=30,
+                    intensity="Medium",
+                    notes="Felt good and kept a steady pace.",
+                    user_id=demo_user.id,
+                ),
+                Workout(
+                    date="2026-04-21",
+                    type="Gym",
+                    duration=60,
+                    intensity="High",
+                    notes="Leg day with squats and lunges.",
+                    user_id=demo_user.id,
+                ),
+                Workout(
+                    date="2026-04-23",
+                    type="Swimming",
+                    duration=45,
+                    intensity="Medium",
+                    notes="Easy pace recovery session.",
+                    user_id=demo_user.id,
+                ),
+                Workout(
+                    date="2026-04-24",
+                    type="Cycling",
+                    duration=40,
+                    intensity="Low",
+                    notes="Light cardio after class.",
+                    user_id=demo_user.id,
+                ),
+            ]
+
+            db.session.add_all(sample_workouts)
+            db.session.commit()
 
 
 def is_logged_in():
@@ -115,7 +186,6 @@ def get_statistics(user):
     total_workouts = len(user_workouts)
     total_minutes = sum(workout.duration for workout in user_workouts)
 
-    # Temporary value for now. This can be replaced with a real streak algorithm later.
     current_streak = 6
 
     return {
@@ -612,4 +682,5 @@ def logout():
 
 
 if __name__ == "__main__":
+    ensure_database_ready()
     app.run(debug=True)

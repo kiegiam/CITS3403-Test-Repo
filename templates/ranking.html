@@ -73,7 +73,7 @@
                                 <h1 class="h3 mb-2">Community Ranking</h1>
                                 <p class="mb-0 text-muted">
                                     Compare shared workout progress with other FitTrack users.
-                                    Rankings are based on total workout minutes.
+                                    The leaderboard is currently sorted by total workout minutes.
                                 </p>
                             </div>
                             <div class="col-lg-4 text-lg-end">
@@ -123,7 +123,7 @@
                                         </div>
                                         <div class="col-4">
                                             <strong>{{ user.minutes }}</strong>
-                                            <p class="small text-muted mb-0">Minutes</p>
+                                            <p class="small text-muted mb-0">Total Minutes</p>
                                         </div>
                                         <div class="col-4">
                                             <strong>{{ user.streak }}</strong>
@@ -142,7 +142,7 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h2 class="h4 mb-0">Leaderboard</h2>
-                            <span class="badge text-bg-success">Based on shared progress</span>
+                            <span class="badge text-bg-success">Sorted by total minutes</span>
                         </div>
 
                         <div class="table-responsive">
@@ -154,7 +154,7 @@
                                         <th>Total Workouts</th>
                                         <th>Total Minutes</th>
                                         <th>Day Streak</th>
-                                        <th>Sharing Status</th>
+                                        <th>Progress Visibility</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -178,9 +178,9 @@
                                             <td>{{ user.streak }} days</td>
                                             <td>
                                                 {% if user.shared %}
-                                                    <span class="badge text-bg-success">Shared</span>
+                                                    <span class="badge text-bg-success">Shared on leaderboard</span>
                                                 {% else %}
-                                                    <span class="badge text-bg-secondary">Private</span>
+                                                    <span class="badge text-bg-secondary">Not shared</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -190,7 +190,7 @@
                         </div>
 
                         <p class="small text-muted mb-0">
-                            This ranking page demonstrates how users can view selected progress data from other users.
+                            Only shared workout progress is shown here, and rankings are ordered by total workout minutes.
                         </p>
                     </div>
                 </div>

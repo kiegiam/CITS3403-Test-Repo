@@ -72,7 +72,7 @@
                                     <p class="text-white-50 fw-semibold mb-1">Profile Page</p>
                                     <h1 class="display-6 fw-bold mb-2">My Profile</h1>
                                     <p class="mb-0 text-white-50">
-                                        View your account information and fitness summary.
+                                        View your account information, fitness goal, and workout summary.
                                     </p>
                                 </div>
                                 <div class="col-md-4 text-md-end">
@@ -191,6 +191,30 @@
                                 <div class="p-4 rounded bg-light border mb-4">
                                     <p class="text-muted mb-1">Current goal</p>
                                     <h3 class="h5 mb-0">{{ profile.goal }}</h3>
+                                </div>
+
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded border bg-white h-100">
+                                            <p class="text-muted small mb-1">Training consistency</p>
+                                            <p class="fw-semibold mb-0">
+                                                {{ statistics.current_streak }} day streak
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded border bg-white h-100">
+                                            <p class="text-muted small mb-1">Average minutes</p>
+                                            <p class="fw-semibold mb-0">
+                                                {% if statistics.total_workouts > 0 %}
+                                                    {{ (statistics.total_minutes / statistics.total_workouts) | round }} min per workout
+                                                {% else %}
+                                                    0 min per workout
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="d-flex flex-wrap gap-2">

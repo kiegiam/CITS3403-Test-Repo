@@ -65,7 +65,6 @@
 
     <main class="py-5">
         <div class="container">
-
             <section class="mb-4">
                 <div class="card shadow-sm border-0 hero-card">
                     <div class="card-body p-4">
@@ -74,6 +73,7 @@
                                 <h1 class="h3 mb-2">Community Ranking</h1>
                                 <p class="mb-0 text-muted">
                                     Compare shared workout progress with other FitTrack users.
+                                    The leaderboard is currently sorted by total workout minutes.
                                 </p>
                             </div>
                             <div class="col-lg-4 text-lg-end">
@@ -84,6 +84,19 @@
                 </div>
             </section>
 
+            {% if not leaderboard or leaderboard[0].minutes == 0 %}
+                <section>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-5 text-center">
+                            <h2 class="h4 mb-3">No ranking data yet</h2>
+                            <p class="text-muted mb-4">
+                                Community rankings will appear after users add workouts and build up training minutes.
+                            </p>
+                            <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
+                        </div>
+                    </div>
+                </section>
+            {% else %}
             <section class="mb-4">
                 <div class="row g-3">
                     {% for user in leaderboard[:3] %}
@@ -110,7 +123,7 @@
                                         </div>
                                         <div class="col-4">
                                             <strong>{{ user.minutes }}</strong>
-                                            <p class="small text-muted mb-0">Minutes</p>
+                                            <p class="small text-muted mb-0">Total Minutes</p>
                                         </div>
                                         <div class="col-4">
                                             <strong>{{ user.streak }}</strong>
@@ -129,7 +142,7 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h2 class="h4 mb-0">Leaderboard</h2>
-                            <span class="badge text-bg-success">Based on shared progress</span>
+                            <span class="badge text-bg-success">Sorted by total minutes</span>
                         </div>
 
                         <div class="table-responsive">
@@ -141,7 +154,7 @@
                                         <th>Total Workouts</th>
                                         <th>Total Minutes</th>
                                         <th>Day Streak</th>
-                                        <th>Sharing Status</th>
+                                        <th>Progress Visibility</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -165,9 +178,9 @@
                                             <td>{{ user.streak }} days</td>
                                             <td>
                                                 {% if user.shared %}
-                                                    <span class="badge text-bg-success">Shared</span>
+                                                    <span class="badge text-bg-success">Shared on leaderboard</span>
                                                 {% else %}
-                                                    <span class="badge text-bg-secondary">Private</span>
+                                                    <span class="badge text-bg-secondary">Not shared</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -177,11 +190,12 @@
                         </div>
 
                         <p class="small text-muted mb-0">
-                            This ranking page demonstrates how users can view selected progress data from other users.
+                            Only shared workout progress is shown here, and rankings are ordered by total workout minutes.
                         </p>
                     </div>
                 </div>
             </section>
+            {% endif %}
 
         </div>
     </main>

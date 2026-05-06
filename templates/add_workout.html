@@ -3,162 +3,973 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitTrack - Add Workout</title>
+    <title>FitTrack – Start Workout</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/styles.css') }}"
-    >
+    <style>
+        /* ── Base ────────────────────────────────────────────────────── */
+        :root {
+            --green:      #16a34a;
+            --green-dark: #15803d;
+            --green-pale: #f0fdf4;
+            --border:     #e2e8f0;
+            --muted:      #64748b;
+            --danger:     #dc2626;
+            --radius:     0.75rem;
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background: #f8fafc; }
+        code, .mono { font-family: 'DM Mono', monospace; }
+
+        /* ── Screens ─────────────────────────────────────────────────── */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ── Timer pill (fixed top-right during workout) ─────────────── */
+        #timer-pill {
+            position: fixed;
+            top: 72px;
+            right: 1.25rem;
+            z-index: 1040;
+            background: #111827;
+            color: #fff;
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            font-family: 'DM Mono', monospace;
+            font-size: 1.05rem;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            display: none;
+        }
+        #timer-pill.visible { display: block; }
+        #timer-pill .dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            margin-right: 0.45rem;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* ── Muscle group grid ───────────────────────────────────────── */
+        .muscle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+        .muscle-btn {
+            border: 2px solid var(--border);
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 1.1rem 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: #1e293b;
+        }
+        .muscle-btn:hover { border-color: var(--green); background: var(--green-pale); }
+        .muscle-btn.selected {
+            border-color: var(--green);
+            background: var(--green);
+            color: #fff;
+        }
+        .muscle-btn .icon { font-size: 1.6rem; display: block; margin-bottom: 0.35rem; }
+
+        /* ── Exercise list ───────────────────────────────────────────── */
+        .exercise-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            background: #fff;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            user-select: none;
+        }
+        .exercise-item:hover { border-color: var(--green); background: var(--green-pale); }
+        .exercise-item.added {
+            border-color: var(--green);
+            background: var(--green-pale);
+        }
+        .exercise-item .badge-custom {
+            font-size: 0.7rem;
+            background: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fde047;
+            border-radius: 4px;
+            padding: 1px 6px;
+            margin-left: 0.5rem;
+        }
+
+        /* ── Set logger table ────────────────────────────────────────── */
+        .exercise-block {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            background: #fff;
+        }
+        .exercise-block-header {
+            background: var(--green);
+            color: #fff;
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+        .exercise-block-header .muscle-tag {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            font-weight: 400;
+            margin-left: 0.5rem;
+        }
+        .sets-table { width: 100%; border-collapse: collapse; }
+        .sets-table th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            padding: 0.5rem 0.75rem;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        .sets-table td {
+            padding: 0.45rem 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .sets-table tr:last-child td { border-bottom: none; }
+        .set-input {
+            width: 80px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.9rem;
+            font-family: 'DM Mono', monospace;
+            text-align: center;
+        }
+        .set-input:focus { outline: none; border-color: var(--green); }
+        .btn-remove-set {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .btn-remove-set:hover { background: #fee2e2; color: var(--danger); }
+        .btn-add-set {
+            font-size: 0.82rem;
+            color: var(--green);
+            background: none;
+            border: none;
+            padding: 0.45rem 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-add-set:hover { text-decoration: underline; }
+        .btn-remove-exercise {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0;
+            line-height: 1;
+        }
+        .btn-remove-exercise:hover { color: #fff; }
+
+        /* ── Summary screen ──────────────────────────────────────────── */
+        .stat-card {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-family: 'DM Mono', monospace;
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--green);
+            line-height: 1.1;
+        }
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 0.25rem;
+        }
+        .exercise-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.92rem;
+        }
+        .exercise-summary-row:last-child { border-bottom: none; }
+
+        /* ── Misc ────────────────────────────────────────────────────── */
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--green);
+            margin-bottom: 0.25rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--muted);
+        }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        #toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .toast-msg {
+            background: #1e293b;
+            color: #fff;
+            padding: 0.55rem 1.2rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .toast-msg.show { opacity: 1; }
+    </style>
 </head>
 <body class="bg-light">
 
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-            <div class="container">
-                <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+<!-- ── Navbar ─────────────────────────────────────────────────────────── -->
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#awNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="awNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{{ url_for('workouts') }}">My Workouts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('plans') }}">Plans</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('progress') }}">Progress</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a></li>
+                    <li class="nav-item ms-lg-3">
+                        <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
 
+<!-- ── Live timer pill ────────────────────────────────────────────────── -->
+<div id="timer-pill">
+    <span class="dot"></span>
+    <span id="timer-display">0:00</span>
+</div>
+
+<div id="toast-container"></div>
+
+<main class="py-5">
+<div class="container" style="max-width: 760px;">
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SCREEN 1 — Pick muscle groups
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="screen-muscles" class="screen active">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+            <p class="step-label">Step 1 of 2</p>
+            <h1 class="h3 mb-1">What are you training today?</h1>
+            <p class="text-muted mb-4">Pick one or more muscle groups. You can add exercises from each.</p>
+
+            <div class="muscle-grid mb-4">
+                {% set icons = {
+                    'Chest':     '🫁',
+                    'Back':      '🔙',
+                    'Shoulders': '🏋️',
+                    'Biceps':    '💪',
+                    'Triceps':   '🦾',
+                    'Legs':      '🦵',
+                    'Core':      '🎯',
+                    'Cardio':    '🏃'
+                } %}
+                {% for group in muscle_groups %}
                 <button
-                    class="navbar-toggler"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#addWorkoutNav"
-                    aria-controls="addWorkoutNav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation"
+                    class="muscle-btn"
+                    data-group="{{ group }}"
+                    onclick="toggleMuscle(this)"
                 >
-                    <span class="navbar-toggler-icon"></span>
+                    <span class="icon">{{ icons.get(group, '💪') }}</span>
+                    {{ group }}
                 </button>
+                {% endfor %}
+            </div>
 
-                <div class="collapse navbar-collapse" id="addWorkoutNav">
-                    <ul class="navbar-nav ms-auto align-items-lg-center">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
-                        </li>
-                        <li class="nav-item ms-lg-3">
-                            <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
-                        </li>
-                    </ul>
+            <button
+                class="btn btn-success w-100"
+                onclick="goToExercises()"
+            >
+                Choose Exercises →
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SCREEN 2 — Pick exercises & log sets (workout in progress)
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="screen-workout" class="screen">
+
+    <!-- Exercise picker panel -->
+    <div class="card shadow-sm border-0 mb-3" id="exercise-picker-card">
+        <div class="card-body p-4">
+            <p class="step-label">Step 2 of 2 — Workout in progress</p>
+            <h2 class="h5 mb-3">Add exercises to your workout</h2>
+
+            <!-- Muscle group tabs -->
+            <div id="group-tabs" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+            <!-- Exercise list for selected tab -->
+            <div id="exercise-list" class="mb-3">
+                <div class="empty-state">
+                    <div class="icon">🔄</div>
+                    <p class="mb-0">Loading exercises…</p>
                 </div>
             </div>
-        </nav>
-    </header>
 
-    <main class="py-5">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <section class="mb-4">
-                        <div class="card shadow-sm border-0 hero-card">
-                            <div class="card-body p-4">
-                                <p class="text-success fw-semibold mb-1">Add Workout Page</p>
-                                <h1 class="h3 mb-2">Add a New Workout</h1>
-                                <p class="mb-0 text-muted">Record your training details so they appear in your workout history.</p>
-                            </div>
+            <!-- Add custom exercise -->
+            <details class="mb-0">
+                <summary class="text-success fw-semibold" style="cursor:pointer; font-size:0.9rem;">
+                    + Add a custom exercise
+                </summary>
+                <div class="mt-3 p-3 rounded bg-light border">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input
+                                type="text"
+                                id="custom-name"
+                                class="form-control form-control-sm"
+                                placeholder="Exercise name"
+                            >
                         </div>
-                    </section>
-
-                    {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            <div class="alert alert-danger" role="alert">
-                                {{ messages[0] }}
-                            </div>
-                        {% endif %}
-                    {% endwith %}
-
-                    <section>
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body p-4">
-                                <form method="POST" action="{{ url_for('add_workout') }}">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label for="date" class="form-label">Date</label>
-                                            <input type="text" class="form-control" id="date" name="date" placeholder="YYYY-MM-DD" pattern="\d{4}-\d{2}-\d{2}" required>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label for="type" class="form-label">Workout Type</label>
-                                            <input
-                                                type="text"
-                                                class="form-control"
-                                                id="type"
-                                                name="type"
-                                                placeholder="Running, Gym, Swimming"
-                                                required
-                                            >
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label for="duration" class="form-label">Duration in minutes</label>
-                                            <input
-                                                type="number"
-                                                class="form-control"
-                                                id="duration"
-                                                name="duration"
-                                                min="1"
-                                                placeholder="45"
-                                                required
-                                            >
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label for="intensity" class="form-label">Intensity</label>
-                                            <select class="form-select" id="intensity" name="intensity" required>
-                                                <option value="" selected disabled>Choose intensity</option>
-                                                <option value="Low">Low</option>
-                                                <option value="Medium">Medium</option>
-                                                <option value="High">High</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <label for="notes" class="form-label">Notes</label>
-                                            <textarea
-                                                class="form-control"
-                                                id="notes"
-                                                name="notes"
-                                                rows="4"
-                                                placeholder="Write anything important about this workout..."
-                                            ></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex gap-3 mt-4 flex-wrap">
-                                        <button type="submit" class="btn btn-success">Save Workout</button>
-                                        <a href="{{ url_for('workouts') }}" class="btn btn-outline-success">Cancel</a>
-                                        <a href="{{ url_for('progress') }}" class="btn btn-outline-success">View Progress</a>
-                                        <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">Community Ranking</a>
-                                    </div>
-                                </form>
-                            </div>
+                        <div class="col-md-4">
+                            <select id="custom-group" class="form-select form-select-sm">
+                                {% for group in muscle_groups %}
+                                <option value="{{ group }}">{{ group }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </section>
+                        <div class="col-md-2">
+                            <button
+                                class="btn btn-success btn-sm w-100"
+                                onclick="addCustomExercise()"
+                            >Add</button>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- Active set logger -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Your sets</h2>
+                <span class="text-muted small" id="set-count-label">0 sets logged</span>
+            </div>
+
+            <div id="exercise-blocks">
+                <div class="empty-state" id="no-sets-msg">
+                    <div class="icon">➕</div>
+                    <p class="mb-0 text-muted">Add an exercise above to start logging sets</p>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
+    <!-- Notes + finish -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body p-4">
+            <label for="workout-notes" class="form-label fw-semibold">Notes <span class="text-muted fw-normal">(optional)</span></label>
+            <textarea
+                id="workout-notes"
+                class="form-control mb-4"
+                rows="2"
+                placeholder="How did it feel? Any PRs today?"
+            ></textarea>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <button
+                    class="btn btn-success flex-grow-1"
+                    onclick="finishWorkout()"
+                >
+                    🏁 Finish Workout
+                </button>
+                <a href="{{ url_for('workouts') }}" class="btn btn-outline-secondary">
+                    Discard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SCREEN 3 — Post-workout summary
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="screen-summary" class="screen">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+
+            <!-- Trophy header -->
+            <div class="text-center mb-4">
+                <div style="font-size:3.5rem; line-height:1;">🏆</div>
+                <h1 class="h3 mt-2 mb-1">Workout Complete!</h1>
+                <p class="text-muted mb-0" id="summary-date"></p>
+            </div>
+
+            <!-- Stat grid -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="value" id="sum-duration">–</div>
+                        <div class="label">Minutes</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="value" id="sum-sets">–</div>
+                        <div class="label">Total Sets</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="value" id="sum-volume">–</div>
+                        <div class="label">kg Lifted</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="value" id="sum-intensity">–</div>
+                        <div class="label">Intensity</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Muscle groups trained -->
+            <div class="mb-3">
+                <p class="fw-semibold mb-2">Muscle groups trained</p>
+                <div id="sum-muscles" class="d-flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Exercise breakdown -->
+            <div class="mb-4">
+                <p class="fw-semibold mb-2">Exercise breakdown</p>
+                <div id="sum-exercises"></div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('workouts') }}" class="btn btn-success flex-grow-1">
+                    View My Workouts
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">
+                    Dashboard
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</div><!-- /container -->
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ================================================================
+   State
+   ================================================================ */
+let selectedGroups   = new Set();   // muscle groups chosen on screen 1
+let activeTab        = null;        // currently visible tab on screen 2
+let exerciseCache    = {};          // { "Chest": [...], ... }
+let addedExercises   = {};          // { exerciseId: {id, name, muscle_group} }
+let workoutSets      = {};          // { exerciseId: [{set_number, reps, weight_kg}, ...] }
+
+let timerInterval    = null;
+let startedAt        = null;        // Date object
+
+/* ================================================================
+   Utilities
+   ================================================================ */
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function toast(msg) {
+    const el = document.createElement('div');
+    el.className = 'toast-msg';
+    el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+    }, 2500);
+}
+
+function totalSetCount() {
+    return Object.values(workoutSets).reduce((acc, sets) => acc + sets.length, 0);
+}
+
+/* ================================================================
+   Screen 1 — Muscle group selection
+   ================================================================ */
+function toggleMuscle(btn) {
+    const group = btn.dataset.group;
+    if (selectedGroups.has(group)) {
+        selectedGroups.delete(group);
+        btn.classList.remove('selected');
+    } else {
+        selectedGroups.add(group);
+        btn.classList.add('selected');
+    }
+}
+
+function goToExercises() {
+    if (selectedGroups.size === 0) {
+        toast('Pick at least one muscle group first');
+        return;
+    }
+
+    // Build tabs
+    const tabsEl = document.getElementById('group-tabs');
+    tabsEl.innerHTML = '';
+    selectedGroups.forEach(group => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm btn-outline-success';
+        btn.textContent = group;
+        btn.dataset.group = group;
+        btn.onclick = () => switchTab(group);
+        tabsEl.appendChild(btn);
+    });
+
+    // Start timer
+    startedAt = new Date();
+    const pill = document.getElementById('timer-pill');
+    pill.classList.add('visible');
+    timerInterval = setInterval(updateTimer, 1000);
+
+    // Show first tab
+    switchTab([...selectedGroups][0]);
+    showScreen('screen-workout');
+}
+
+/* ================================================================
+   Screen 2 — Exercise tabs
+   ================================================================ */
+async function switchTab(group) {
+    activeTab = group;
+
+    // Highlight active tab
+    document.querySelectorAll('#group-tabs button').forEach(b => {
+        b.classList.toggle('btn-success', b.dataset.group === group);
+        b.classList.toggle('btn-outline-success', b.dataset.group !== group);
+    });
+
+    // Set default for custom exercise dropdown
+    document.getElementById('custom-group').value = group;
+
+    // Fetch exercises (cached)
+    if (!exerciseCache[group]) {
+        document.getElementById('exercise-list').innerHTML =
+            '<div class="empty-state"><div class="icon">🔄</div><p>Loading…</p></div>';
+        try {
+            const res = await fetch(`/api/exercises?muscle_group=${encodeURIComponent(group)}`);
+            exerciseCache[group] = await res.json();
+        } catch (e) {
+            document.getElementById('exercise-list').innerHTML =
+                '<div class="empty-state text-danger">Failed to load exercises. Please refresh.</div>';
+            return;
+        }
+    }
+    renderExerciseList(group);
+}
+
+function renderExerciseList(group) {
+    const list = document.getElementById('exercise-list');
+    const exercises = exerciseCache[group] || [];
+
+    if (exercises.length === 0) {
+        list.innerHTML = '<div class="empty-state"><p>No exercises found for this group.</p></div>';
+        return;
+    }
+
+    list.innerHTML = exercises.map(ex => {
+        const isAdded = !!addedExercises[ex.id];
+        return `
+        <div class="exercise-item ${isAdded ? 'added' : ''}"
+             id="ex-item-${ex.id}"
+             onclick="toggleExercise(${ex.id}, '${escapeAttr(ex.name)}', '${escapeAttr(ex.muscle_group)}', ${ex.is_custom})">
+            <span>
+                ${escapeHtml(ex.name)}
+                ${ex.is_custom ? '<span class="badge-custom">custom</span>' : ''}
+            </span>
+            <span style="font-size:1.2rem;">${isAdded ? '✅' : '➕'}</span>
+        </div>`;
+    }).join('');
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escapeAttr(str) {
+    return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function toggleExercise(id, name, muscleGroup, isCustom) {
+    if (addedExercises[id]) {
+        // Already added — just scroll to its block
+        const block = document.getElementById(`block-${id}`);
+        if (block) block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        toast(`${name} is already in your workout`);
+        return;
+    }
+
+    addedExercises[id] = { id, name, muscle_group: muscleGroup };
+    workoutSets[id] = [];
+
+    // Mark as added in list
+    const item = document.getElementById(`ex-item-${id}`);
+    if (item) {
+        item.classList.add('added');
+        item.querySelector('span:last-child').textContent = '✅';
+    }
+
+    // Remove empty state
+    document.getElementById('no-sets-msg')?.remove();
+
+    // Create exercise block
+    renderExerciseBlock(id);
+    addSet(id);  // auto-add first set
+    updateSetCountLabel();
+
+    toast(`${name} added`);
+}
+
+/* ================================================================
+   Screen 2 — Set logger
+   ================================================================ */
+function renderExerciseBlock(exerciseId) {
+    const ex = addedExercises[exerciseId];
+    const container = document.getElementById('exercise-blocks');
+
+    const block = document.createElement('div');
+    block.className = 'exercise-block';
+    block.id = `block-${exerciseId}`;
+    block.innerHTML = `
+        <div class="exercise-block-header">
+            <span>
+                ${escapeHtml(ex.name)}
+                <span class="muscle-tag">${escapeHtml(ex.muscle_group)}</span>
+            </span>
+            <button class="btn-remove-exercise" onclick="removeExercise(${exerciseId})" title="Remove exercise">✕</button>
+        </div>
+        <table class="sets-table">
+            <thead>
+                <tr>
+                    <th>Set</th>
+                    <th>Reps</th>
+                    <th>Weight (kg)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="sets-body-${exerciseId}"></tbody>
+        </table>
+        <button class="btn-add-set" onclick="addSet(${exerciseId})">+ Add Set</button>
+    `;
+    container.appendChild(block);
+}
+
+function addSet(exerciseId) {
+    const sets = workoutSets[exerciseId];
+    const setNum = sets.length + 1;
+
+    // Prefill with previous set's values if available
+    const prev = sets[sets.length - 1];
+    const prevReps   = prev ? prev.reps   : '';
+    const prevWeight = prev ? prev.weight_kg : '';
+
+    sets.push({ set_number: setNum, reps: prevReps, weight_kg: prevWeight });
+
+    const tbody = document.getElementById(`sets-body-${exerciseId}`);
+    const row = document.createElement('tr');
+    row.id = `set-row-${exerciseId}-${setNum}`;
+    row.innerHTML = `
+        <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+        <td>
+            <input
+                class="set-input"
+                type="number"
+                min="1"
+                placeholder="10"
+                value="${prevReps}"
+                oninput="updateSet(${exerciseId}, ${setNum}, 'reps', this.value)"
+            >
+        </td>
+        <td>
+            <input
+                class="set-input"
+                type="number"
+                min="0"
+                step="0.5"
+                placeholder="0"
+                value="${prevWeight}"
+                oninput="updateSet(${exerciseId}, ${setNum}, 'weight_kg', this.value)"
+            >
+        </td>
+        <td>
+            <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})" title="Remove set">✕</button>
+        </td>
+    `;
+    tbody.appendChild(row);
+    updateSetCountLabel();
+}
+
+function updateSet(exerciseId, setNum, field, value) {
+    const sets = workoutSets[exerciseId];
+    const set = sets.find(s => s.set_number === setNum);
+    if (set) set[field] = field === 'reps' ? parseInt(value) : parseFloat(value);
+}
+
+function removeSet(exerciseId, setNum) {
+    workoutSets[exerciseId] = workoutSets[exerciseId].filter(s => s.set_number !== setNum);
+    document.getElementById(`set-row-${exerciseId}-${setNum}`)?.remove();
+
+    // Re-number remaining sets in display
+    renumberSets(exerciseId);
+    updateSetCountLabel();
+}
+
+function renumberSets(exerciseId) {
+    const tbody = document.getElementById(`sets-body-${exerciseId}`);
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, i) => {
+        row.querySelector('td:first-child').textContent = i + 1;
+        workoutSets[exerciseId][i].set_number = i + 1;
+    });
+}
+
+function removeExercise(exerciseId) {
+    delete addedExercises[exerciseId];
+    delete workoutSets[exerciseId];
+    document.getElementById(`block-${exerciseId}`)?.remove();
+
+    // Un-mark in exercise list
+    const item = document.getElementById(`ex-item-${exerciseId}`);
+    if (item) {
+        item.classList.remove('added');
+        item.querySelector('span:last-child').textContent = '➕';
+    }
+
+    if (Object.keys(addedExercises).length === 0) {
+        const container = document.getElementById('exercise-blocks');
+        const msg = document.createElement('div');
+        msg.className = 'empty-state';
+        msg.id = 'no-sets-msg';
+        msg.innerHTML = '<div class="icon">➕</div><p class="mb-0 text-muted">Add an exercise above to start logging sets</p>';
+        container.appendChild(msg);
+    }
+    updateSetCountLabel();
+}
+
+function updateSetCountLabel() {
+    const count = totalSetCount();
+    document.getElementById('set-count-label').textContent =
+        count === 1 ? '1 set logged' : `${count} sets logged`;
+}
+
+/* ================================================================
+   Custom exercise
+   ================================================================ */
+async function addCustomExercise() {
+    const name  = document.getElementById('custom-name').value.trim();
+    const group = document.getElementById('custom-group').value;
+
+    if (!name) { toast('Enter an exercise name'); return; }
+
+    try {
+        const res = await fetch('/api/exercises', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, muscle_group: group }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            toast(data.error || 'Could not add exercise');
+            return;
+        }
+
+        // Add to cache and refresh list if on the same tab
+        if (!exerciseCache[group]) exerciseCache[group] = [];
+        exerciseCache[group].push(data);
+        exerciseCache[group].sort((a,b) => a.name.localeCompare(b.name));
+
+        if (activeTab === group) renderExerciseList(group);
+
+        document.getElementById('custom-name').value = '';
+        toast(`"${name}" added to ${group}`);
+    } catch (e) {
+        toast('Network error — please try again');
+    }
+}
+
+/* ================================================================
+   Timer
+   ================================================================ */
+function updateTimer() {
+    if (!startedAt) return;
+    const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    document.getElementById('timer-display').textContent =
+        `${m}:${String(s).padStart(2,'0')}`;
+}
+
+/* ================================================================
+   Finish workout
+   ================================================================ */
+async function finishWorkout() {
+    const allSets = [];
+    for (const [exerciseId, sets] of Object.entries(workoutSets)) {
+        for (const s of sets) {
+            allSets.push({
+                exercise_id: parseInt(exerciseId),
+                set_number:  s.set_number,
+                reps:        s.reps || 0,
+                weight_kg:   s.weight_kg || 0,
+            });
+        }
+    }
+
+    if (allSets.length === 0) {
+        toast('Log at least one set before finishing');
+        return;
+    }
+
+    // Validate inputs
+    const invalid = allSets.find(s => !s.reps || s.reps <= 0);
+    if (invalid) {
+        toast('Fill in reps for every set before finishing');
+        return;
+    }
+
+    clearInterval(timerInterval);
+    const finishedAt = new Date();
+
+    const payload = {
+        started_at:  startedAt.toISOString().slice(0, 19),
+        finished_at: finishedAt.toISOString().slice(0, 19),
+        notes:       document.getElementById('workout-notes').value.trim(),
+        sets:        allSets,
+    };
+
+    // Disable button while saving
+    const btn = document.querySelector('#screen-workout .btn-success');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+        const res = await fetch('/workouts/finish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            toast(data.error || 'Something went wrong');
+            btn.disabled = false;
+            btn.textContent = '🏁 Finish Workout';
+            return;
+        }
+
+        // Hide timer pill
+        document.getElementById('timer-pill').classList.remove('visible');
+
+        // Populate summary
+        populateSummary(data, finishedAt);
+        showScreen('screen-summary');
+
+    } catch (e) {
+        toast('Network error — please try again');
+        btn.disabled = false;
+        btn.textContent = '🏁 Finish Workout';
+    }
+}
+
+/* ================================================================
+   Screen 3 — Summary
+   ================================================================ */
+function populateSummary(data, finishedAt) {
+    const dateStr = finishedAt.toLocaleDateString('en-AU', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    document.getElementById('summary-date').textContent = dateStr;
+    document.getElementById('sum-duration').textContent = data.duration_minutes;
+    document.getElementById('sum-sets').textContent     = data.total_sets;
+    document.getElementById('sum-volume').textContent   = data.total_volume_kg.toLocaleString();
+    document.getElementById('sum-intensity').textContent = data.intensity;
+
+    // Muscle group badges
+    const musclesEl = document.getElementById('sum-muscles');
+    musclesEl.innerHTML = data.muscle_groups.map(g =>
+        `<span class="badge text-bg-success px-3 py-2">${escapeHtml(g)}</span>`
+    ).join('');
+
+    // Exercise breakdown
+    const exEl = document.getElementById('sum-exercises');
+    exEl.innerHTML = Object.entries(data.exercises).map(([name, sets]) => `
+        <div class="exercise-summary-row">
+            <span>${escapeHtml(name)}</span>
+            <span class="badge text-bg-light text-dark border">${sets} set${sets !== 1 ? 's' : ''}</span>
+        </div>
+    `).join('');
+}
+</script>
 </body>
 </html>

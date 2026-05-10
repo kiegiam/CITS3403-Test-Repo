@@ -90,6 +90,7 @@ MUSCLE_GROUPS = [
     "Cardio",
 ]
 
+
 class Exercise(db.Model):
     __tablename__ = "exercises"
 
@@ -130,9 +131,9 @@ class WorkoutSet(db.Model):
     workout_id = db.Column(db.Integer, db.ForeignKey("workouts.id"), nullable=False)
     exercise_id = db.Column(db.Integer, db.ForeignKey("exercises.id"), nullable=False)
 
-    set_number = db.Column(db.Integer, nullable=False)   # 1, 2, 3 …
+    set_number = db.Column(db.Integer, nullable=False)
     reps = db.Column(db.Integer, nullable=False)
-    weight_kg = db.Column(db.Float, nullable=False)       # 0 for bodyweight
+    weight_kg = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
         return (
@@ -160,9 +161,6 @@ def ensure_database_ready():
 
         os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-        # ------------------------------------------------------------------ #
-        # Migrate users table: add avatar_filename if missing (legacy DBs)    #
-        # ------------------------------------------------------------------ #
         user_columns = [
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(users)")).fetchall()
@@ -173,9 +171,6 @@ def ensure_database_ready():
             )
             db.session.commit()
 
-        # ------------------------------------------------------------------ #
-        # Migrate workouts table: add started_at / finished_at if missing     #
-        # ------------------------------------------------------------------ #
         workout_columns = [
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(workouts)")).fetchall()
@@ -185,74 +180,69 @@ def ensure_database_ready():
                 text("ALTER TABLE workouts ADD COLUMN started_at DATETIME")
             )
             db.session.commit()
+
         if "finished_at" not in workout_columns:
             db.session.execute(
                 text("ALTER TABLE workouts ADD COLUMN finished_at DATETIME")
             )
             db.session.commit()
 
-        # ------------------------------------------------------------------ #
-        # Seed built-in exercise catalogue (runs once; skipped if populated)  #
-        # ------------------------------------------------------------------ #
         if Exercise.query.filter_by(user_id=None).count() == 0:
             builtin_exercises = [
-                # Chest
-                Exercise(name="Bench Press",         muscle_group="Chest"),
+                Exercise(name="Bench Press", muscle_group="Chest"),
                 Exercise(name="Incline Bench Press", muscle_group="Chest"),
-                Exercise(name="Dumbbell Fly",        muscle_group="Chest"),
-                Exercise(name="Push-Up",             muscle_group="Chest"),
-                Exercise(name="Cable Crossover",     muscle_group="Chest"),
-                # Back
-                Exercise(name="Deadlift",            muscle_group="Back"),
-                Exercise(name="Pull-Up",             muscle_group="Back"),
-                Exercise(name="Barbell Row",         muscle_group="Back"),
-                Exercise(name="Lat Pulldown",        muscle_group="Back"),
-                Exercise(name="Seated Cable Row",    muscle_group="Back"),
-                # Shoulders
-                Exercise(name="Overhead Press",      muscle_group="Shoulders"),
-                Exercise(name="Lateral Raise",       muscle_group="Shoulders"),
-                Exercise(name="Front Raise",         muscle_group="Shoulders"),
-                Exercise(name="Arnold Press",        muscle_group="Shoulders"),
-                Exercise(name="Rear Delt Fly",       muscle_group="Shoulders"),
-                # Biceps
-                Exercise(name="Barbell Curl",        muscle_group="Biceps"),
-                Exercise(name="Dumbbell Curl",       muscle_group="Biceps"),
-                Exercise(name="Hammer Curl",         muscle_group="Biceps"),
-                Exercise(name="Preacher Curl",       muscle_group="Biceps"),
-                Exercise(name="Cable Curl",          muscle_group="Biceps"),
-                # Triceps
-                Exercise(name="Tricep Pushdown",              muscle_group="Triceps"),
-                Exercise(name="Skull Crusher",                muscle_group="Triceps"),
-                Exercise(name="Overhead Tricep Extension",    muscle_group="Triceps"),
-                Exercise(name="Close-Grip Bench Press",       muscle_group="Triceps"),
-                Exercise(name="Dips",                         muscle_group="Triceps"),
-                # Legs
-                Exercise(name="Squat",               muscle_group="Legs"),
-                Exercise(name="Leg Press",           muscle_group="Legs"),
-                Exercise(name="Romanian Deadlift",   muscle_group="Legs"),
-                Exercise(name="Leg Curl",            muscle_group="Legs"),
-                Exercise(name="Leg Extension",       muscle_group="Legs"),
-                Exercise(name="Calf Raise",          muscle_group="Legs"),
-                Exercise(name="Lunges",              muscle_group="Legs"),
-                # Core
-                Exercise(name="Plank",               muscle_group="Core"),
-                Exercise(name="Crunch",              muscle_group="Core"),
-                Exercise(name="Hanging Leg Raise",   muscle_group="Core"),
-                Exercise(name="Russian Twist",       muscle_group="Core"),
-                Exercise(name="Ab Wheel Rollout",    muscle_group="Core"),
-                # Cardio
-                Exercise(name="Treadmill Run",       muscle_group="Cardio"),
-                Exercise(name="Cycling",             muscle_group="Cardio"),
-                Exercise(name="Rowing Machine",      muscle_group="Cardio"),
-                Exercise(name="Jump Rope",           muscle_group="Cardio"),
-                Exercise(name="Stair Climber",       muscle_group="Cardio"),
+                Exercise(name="Dumbbell Fly", muscle_group="Chest"),
+                Exercise(name="Push-Up", muscle_group="Chest"),
+                Exercise(name="Cable Crossover", muscle_group="Chest"),
+
+                Exercise(name="Deadlift", muscle_group="Back"),
+                Exercise(name="Pull-Up", muscle_group="Back"),
+                Exercise(name="Barbell Row", muscle_group="Back"),
+                Exercise(name="Lat Pulldown", muscle_group="Back"),
+                Exercise(name="Seated Cable Row", muscle_group="Back"),
+
+                Exercise(name="Overhead Press", muscle_group="Shoulders"),
+                Exercise(name="Lateral Raise", muscle_group="Shoulders"),
+                Exercise(name="Front Raise", muscle_group="Shoulders"),
+                Exercise(name="Arnold Press", muscle_group="Shoulders"),
+                Exercise(name="Rear Delt Fly", muscle_group="Shoulders"),
+
+                Exercise(name="Barbell Curl", muscle_group="Biceps"),
+                Exercise(name="Dumbbell Curl", muscle_group="Biceps"),
+                Exercise(name="Hammer Curl", muscle_group="Biceps"),
+                Exercise(name="Preacher Curl", muscle_group="Biceps"),
+                Exercise(name="Cable Curl", muscle_group="Biceps"),
+
+                Exercise(name="Tricep Pushdown", muscle_group="Triceps"),
+                Exercise(name="Skull Crusher", muscle_group="Triceps"),
+                Exercise(name="Overhead Tricep Extension", muscle_group="Triceps"),
+                Exercise(name="Close-Grip Bench Press", muscle_group="Triceps"),
+                Exercise(name="Dips", muscle_group="Triceps"),
+
+                Exercise(name="Squat", muscle_group="Legs"),
+                Exercise(name="Leg Press", muscle_group="Legs"),
+                Exercise(name="Romanian Deadlift", muscle_group="Legs"),
+                Exercise(name="Leg Curl", muscle_group="Legs"),
+                Exercise(name="Leg Extension", muscle_group="Legs"),
+                Exercise(name="Calf Raise", muscle_group="Legs"),
+                Exercise(name="Lunges", muscle_group="Legs"),
+
+                Exercise(name="Plank", muscle_group="Core"),
+                Exercise(name="Crunch", muscle_group="Core"),
+                Exercise(name="Hanging Leg Raise", muscle_group="Core"),
+                Exercise(name="Russian Twist", muscle_group="Core"),
+                Exercise(name="Ab Wheel Rollout", muscle_group="Core"),
+
+                Exercise(name="Treadmill Run", muscle_group="Cardio"),
+                Exercise(name="Cycling", muscle_group="Cardio"),
+                Exercise(name="Rowing Machine", muscle_group="Cardio"),
+                Exercise(name="Jump Rope", muscle_group="Cardio"),
+                Exercise(name="Stair Climber", muscle_group="Cardio"),
             ]
+
             db.session.add_all(builtin_exercises)
             db.session.commit()
 
-        # ------------------------------------------------------------------ #
-        # Seed demo user and sample workouts                                  #
-        # ------------------------------------------------------------------ #
         existing_demo = User.query.filter_by(email="demo@fittrack.com").first()
 
         if existing_demo is None:
@@ -306,7 +296,6 @@ def ensure_database_ready():
 
             db.session.add_all(sample_workouts)
             db.session.commit()
-
 
 
 def is_logged_in():
@@ -546,6 +535,7 @@ def edit_profile():
         goal = request.form.get("goal", "").strip()
         location = request.form.get("location", "").strip()
         avatar_file = request.files.get("avatar")
+        remove_avatar = request.form.get("remove_avatar")
 
         if not name:
             flash("Name cannot be empty.")
@@ -557,6 +547,18 @@ def edit_profile():
         user.name = name
         user.goal = goal or "Stay consistent"
         user.location = location or "Not set"
+
+        if remove_avatar == "yes":
+            if user.avatar_filename:
+                avatar_path = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    user.avatar_filename
+                )
+
+                if os.path.exists(avatar_path):
+                    os.remove(avatar_path)
+
+            user.avatar_filename = None
 
         if avatar_file and avatar_file.filename:
             if not allowed_image(avatar_file.filename):
@@ -648,31 +650,32 @@ def api_exercises():
     """Return exercises for a given muscle group as JSON.
 
     Query params:
-        muscle_group  – required, e.g. "Chest"
+        muscle_group – required, e.g. "Chest"
 
-    Returns built-in exercises (user_id IS NULL) plus the current user's
-    custom exercises for that muscle group.
+    Returns built-in exercises plus the current user's custom exercises.
     """
     if not is_logged_in():
         return jsonify({"error": "Unauthorised"}), 401
 
     user = current_user()
+
     if user is None:
         return jsonify({"error": "Unauthorised"}), 401
 
     muscle_group = request.args.get("muscle_group", "").strip()
+
     if not muscle_group:
         return jsonify({"error": "muscle_group parameter is required"}), 400
 
     exercises = Exercise.query.filter(
         Exercise.muscle_group == muscle_group,
         db.or_(
-            Exercise.user_id == None,   # built-ins
-            Exercise.user_id == user.id # user's own custom exercises
+            Exercise.user_id == None,
+            Exercise.user_id == user.id
         )
     ).order_by(Exercise.name).all()
 
-    return jsonify([ex.to_dict() for ex in exercises])
+    return jsonify([exercise.to_dict() for exercise in exercises])
 
 
 @app.route("/api/exercises", methods=["POST"])
@@ -686,10 +689,12 @@ def api_add_exercise():
         return jsonify({"error": "Unauthorised"}), 401
 
     user = current_user()
+
     if user is None:
         return jsonify({"error": "Unauthorised"}), 401
 
     data = request.get_json(silent=True)
+
     if not data:
         return jsonify({"error": "JSON body required"}), 400
 
@@ -700,23 +705,30 @@ def api_add_exercise():
         return jsonify({"error": "Exercise name is required"}), 400
 
     if muscle_group not in MUSCLE_GROUPS:
-        return jsonify({"error": f"muscle_group must be one of: {', '.join(MUSCLE_GROUPS)}"}), 400
+        return jsonify(
+            {"error": f"muscle_group must be one of: {', '.join(MUSCLE_GROUPS)}"}
+        ), 400
 
-    # Prevent duplicates: same name + muscle group for this user or built-ins
     duplicate = Exercise.query.filter(
         Exercise.name.ilike(name),
         Exercise.muscle_group == muscle_group,
-        db.or_(Exercise.user_id == None, Exercise.user_id == user.id)
+        db.or_(
+            Exercise.user_id == None,
+            Exercise.user_id == user.id
+        )
     ).first()
 
     if duplicate:
-        return jsonify({"error": "An exercise with that name already exists in this muscle group"}), 409
+        return jsonify(
+            {"error": "An exercise with that name already exists in this muscle group"}
+        ), 409
 
     new_exercise = Exercise(
         name=name,
         muscle_group=muscle_group,
         user_id=user.id,
     )
+
     db.session.add(new_exercise)
     db.session.commit()
 
@@ -729,44 +741,27 @@ def api_add_exercise():
 
 @app.route("/workouts/finish", methods=["POST"])
 def finish_workout():
-    """Receive the completed workout from the frontend and persist it.
-
-    Expects JSON body:
-    {
-        "started_at":  "<ISO 8601 string>",   // e.g. "2026-05-06T09:00:00"
-        "finished_at": "<ISO 8601 string>",
-        "notes":       "optional free text",
-        "sets": [
-            {
-                "exercise_id": 3,
-                "set_number":  1,
-                "reps":        10,
-                "weight_kg":   80.0
-            },
-            ...
-        ]
-    }
-
-    The workout's `type` is derived from the muscle groups exercised,
-    `intensity` from average weight lifted, and `duration` from the timer.
-    """
+    """Receive the completed workout from the frontend and persist it."""
     if not is_logged_in():
         return jsonify({"error": "Unauthorised"}), 401
 
     user = current_user()
+
     if user is None:
         return jsonify({"error": "Unauthorised"}), 401
 
     data = request.get_json(silent=True)
+
     if not data:
         return jsonify({"error": "JSON body required"}), 400
 
-    # ---- parse timestamps ------------------------------------------------ #
     try:
-        started_at  = datetime.fromisoformat(data["started_at"])
+        started_at = datetime.fromisoformat(data["started_at"])
         finished_at = datetime.fromisoformat(data["finished_at"])
     except (KeyError, ValueError):
-        return jsonify({"error": "started_at and finished_at must be valid ISO datetime strings"}), 400
+        return jsonify(
+            {"error": "started_at and finished_at must be valid ISO datetime strings"}
+        ), 400
 
     if finished_at <= started_at:
         return jsonify({"error": "finished_at must be after started_at"}), 400
@@ -774,65 +769,82 @@ def finish_workout():
     duration_seconds = int((finished_at - started_at).total_seconds())
     duration_minutes = max(1, round(duration_seconds / 60))
 
-    # ---- validate sets --------------------------------------------------- #
+    if duration_minutes > 600:
+        return jsonify({"error": "Workout duration must be 600 minutes or less"}), 400
+
     raw_sets = data.get("sets", [])
+
     if not raw_sets:
         return jsonify({"error": "At least one set is required"}), 400
 
     validated_sets = []
-    for i, s in enumerate(raw_sets):
+
+    for index, set_data in enumerate(raw_sets):
         try:
-            exercise_id = int(s["exercise_id"])
-            set_number  = int(s["set_number"])
-            reps        = int(s["reps"])
-            weight_kg   = float(s["weight_kg"])
+            exercise_id = int(set_data["exercise_id"])
+            set_number = int(set_data["set_number"])
+            reps = int(set_data["reps"])
+            weight_kg = float(set_data["weight_kg"])
         except (KeyError, ValueError, TypeError):
-            return jsonify({"error": f"Set {i} is missing or has invalid fields"}), 400
+            return jsonify(
+                {"error": f"Set {index} is missing or has invalid fields"}
+            ), 400
 
         if reps <= 0:
-            return jsonify({"error": f"Set {i}: reps must be greater than 0"}), 400
-        if weight_kg < 0:
-            return jsonify({"error": f"Set {i}: weight_kg cannot be negative"}), 400
+            return jsonify({"error": f"Set {index}: reps must be greater than 0"}), 400
 
-        # Confirm the exercise exists and belongs to this user or is built-in
+        if weight_kg < 0:
+            return jsonify({"error": f"Set {index}: weight_kg cannot be negative"}), 400
+
         exercise = Exercise.query.filter(
             Exercise.id == exercise_id,
-            db.or_(Exercise.user_id == None, Exercise.user_id == user.id)
+            db.or_(
+                Exercise.user_id == None,
+                Exercise.user_id == user.id
+            )
         ).first()
 
         if exercise is None:
-            return jsonify({"error": f"Set {i}: exercise_id {exercise_id} not found"}), 404
+            return jsonify(
+                {"error": f"Set {index}: exercise_id {exercise_id} not found"}
+            ), 404
 
-        validated_sets.append({
-            "exercise":   exercise,
-            "set_number": set_number,
-            "reps":       reps,
-            "weight_kg":  weight_kg,
-        })
+        validated_sets.append(
+            {
+                "exercise": exercise,
+                "set_number": set_number,
+                "reps": reps,
+                "weight_kg": weight_kg,
+            }
+        )
 
-    # ---- derive workout metadata ----------------------------------------- #
-    # Type: comma-joined unique muscle groups that were trained
-    muscle_groups_trained = list(dict.fromkeys(
-        s["exercise"].muscle_group for s in validated_sets
-    ))
+    muscle_groups_trained = list(
+        dict.fromkeys(
+            set_data["exercise"].muscle_group
+            for set_data in validated_sets
+        )
+    )
+
     workout_type = ", ".join(muscle_groups_trained)
 
-    # Intensity: based on average weight across all sets
-    weights = [s["weight_kg"] for s in validated_sets]
-    avg_weight = sum(weights) / len(weights)
+    weights = [
+        set_data["weight_kg"]
+        for set_data in validated_sets
+    ]
 
-    if avg_weight == 0:
-        intensity = "Low"        # bodyweight only
-    elif avg_weight < 40:
+    average_weight = sum(weights) / len(weights)
+
+    if average_weight == 0:
         intensity = "Low"
-    elif avg_weight < 80:
+    elif average_weight < 40:
+        intensity = "Low"
+    elif average_weight < 80:
         intensity = "Medium"
     else:
         intensity = "High"
 
     notes = (data.get("notes") or "").strip() or "No notes added."
 
-    # ---- persist --------------------------------------------------------- #
     new_workout = Workout(
         date=started_at.strftime("%Y-%m-%d"),
         type=workout_type,
@@ -843,39 +855,47 @@ def finish_workout():
         finished_at=finished_at,
         user_id=user.id,
     )
-    db.session.add(new_workout)
-    db.session.flush()  # get new_workout.id before committing
 
-    for s in validated_sets:
+    db.session.add(new_workout)
+    db.session.flush()
+
+    for set_data in validated_sets:
         workout_set = WorkoutSet(
             workout_id=new_workout.id,
-            exercise_id=s["exercise"].id,
-            set_number=s["set_number"],
-            reps=s["reps"],
-            weight_kg=s["weight_kg"],
+            exercise_id=set_data["exercise"].id,
+            set_number=set_data["set_number"],
+            reps=set_data["reps"],
+            weight_kg=set_data["weight_kg"],
         )
+
         db.session.add(workout_set)
 
     db.session.commit()
 
-    # ---- build summary for the frontend ---------------------------------- #
-    total_volume_kg = sum(s["reps"] * s["weight_kg"] for s in validated_sets)
-    sets_per_exercise = {}
-    for s in validated_sets:
-        ex_name = s["exercise"].name
-        sets_per_exercise[ex_name] = sets_per_exercise.get(ex_name, 0) + 1
+    total_volume_kg = sum(
+        set_data["reps"] * set_data["weight_kg"]
+        for set_data in validated_sets
+    )
 
-    return jsonify({
-        "workout_id":       new_workout.id,
-        "date":             new_workout.date,
-        "type":             workout_type,
-        "duration_minutes": duration_minutes,
-        "intensity":        intensity,
-        "total_sets":       len(validated_sets),
-        "total_volume_kg":  round(total_volume_kg, 1),
-        "exercises":        sets_per_exercise,
-        "muscle_groups":    muscle_groups_trained,
-    }), 201
+    sets_per_exercise = {}
+
+    for set_data in validated_sets:
+        exercise_name = set_data["exercise"].name
+        sets_per_exercise[exercise_name] = sets_per_exercise.get(exercise_name, 0) + 1
+
+    return jsonify(
+        {
+            "workout_id": new_workout.id,
+            "date": new_workout.date,
+            "type": workout_type,
+            "duration_minutes": duration_minutes,
+            "intensity": intensity,
+            "total_sets": len(validated_sets),
+            "total_volume_kg": round(total_volume_kg, 1),
+            "exercises": sets_per_exercise,
+            "muscle_groups": muscle_groups_trained,
+        }
+    ), 201
 
 
 @app.route("/workouts/<int:workout_id>/edit", methods=["GET", "POST"])
@@ -929,6 +949,13 @@ def edit_workout(workout_id):
 
         if duration_value <= 0:
             flash("Duration must be greater than 0.")
+            return render_template(
+                "edit_workout.html",
+                workout=workout
+            )
+
+        if duration_value > 600:
+            flash("Duration must be 600 minutes or less.")
             return render_template(
                 "edit_workout.html",
                 workout=workout

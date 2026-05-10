@@ -72,7 +72,9 @@
                             <div class="col-md-8">
                                 <p class="text-success fw-semibold mb-1">Training History</p>
                                 <h1 class="h3 mb-2">My Workouts</h1>
-                                <p class="mb-0 text-muted">Check your past workouts and monitor your training consistency.</p>
+                                <p class="mb-0 text-muted">
+                                    Check your past workouts, search training records, and monitor your consistency.
+                                </p>
                             </div>
                             <div class="col-md-4 text-md-end">
                                 <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
@@ -90,56 +92,134 @@
                 {% endif %}
             {% endwith %}
 
+            <section class="mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <form method="GET" action="{{ url_for('workouts') }}">
+                            <div class="row g-3 align-items-end">
+
+                                <div class="col-md-4">
+                                    <label for="search" class="form-label">Search Workout Type</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="search"
+                                        name="search"
+                                        value="{{ search_query }}"
+                                        placeholder="Running, Gym, Swimming"
+                                    >
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="intensity" class="form-label">Filter by Intensity</label>
+                                    <select class="form-select" id="intensity" name="intensity">
+                                        <option value="">All Intensities</option>
+                                        <option value="Low" {% if intensity_filter == "Low" %}selected{% endif %}>Low</option>
+                                        <option value="Medium" {% if intensity_filter == "Medium" %}selected{% endif %}>Medium</option>
+                                        <option value="High" {% if intensity_filter == "High" %}selected{% endif %}>High</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="sort" class="form-label">Sort Workouts</label>
+                                    <select class="form-select" id="sort" name="sort">
+                                        <option value="newest" {% if sort_by == "newest" %}selected{% endif %}>Newest First</option>
+                                        <option value="oldest" {% if sort_by == "oldest" %}selected{% endif %}>Oldest First</option>
+                                        <option value="longest" {% if sort_by == "longest" %}selected{% endif %}>Longest Duration</option>
+                                        <option value="shortest" {% if sort_by == "shortest" %}selected{% endif %}>Shortest Duration</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        Apply
+                                    </button>
+                                </div>
+
+                            </div>
+
+                            <div class="mt-3">
+                                <a href="{{ url_for('workouts') }}" class="btn btn-outline-secondary btn-sm">
+                                    Clear Filters
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
             <section>
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-4">
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Workout Type</th>
-                                        <th>Duration</th>
-                                        <th>Intensity</th>
-                                        <th>Notes</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for workout in workouts %}
-                                        <tr>
-                                            <td>{{ workout.date }}</td>
-                                            <td><strong>{{ workout.type }}</strong></td>
-                                            <td>{{ workout.duration }} min</td>
-                                            <td>
-                                                <span class="badge text-bg-success">{{ workout.intensity }}</span>
-                                            </td>
-                                            <td class="text-muted">{{ workout.notes }}</td>
-                                            <td>
-                                                <div class="d-flex flex-wrap gap-2">
-                                                    <a
-                                                        href="{{ url_for('edit_workout', workout_id=workout.id) }}"
-                                                        class="btn btn-outline-success btn-sm"
-                                                    >
-                                                        Edit
-                                                    </a>
 
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ url_for('delete_workout', workout_id=workout.id) }}"
-                                                        onsubmit="return confirm('Delete this workout?');"
-                                                    >
-                                                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                            Delete
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
+                        {% if workouts %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Workout Type</th>
+                                            <th>Duration</th>
+                                            <th>Intensity</th>
+                                            <th>Notes</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {% for workout in workouts %}
+                                            <tr>
+                                                <td>{{ workout.date }}</td>
+                                                <td><strong>{{ workout.type }}</strong></td>
+                                                <td>{{ workout.duration }} min</td>
+                                                <td>
+                                                    {% if workout.intensity == "High" %}
+                                                        <span class="badge text-bg-danger">{{ workout.intensity }}</span>
+                                                    {% elif workout.intensity == "Medium" %}
+                                                        <span class="badge text-bg-success">{{ workout.intensity }}</span>
+                                                    {% else %}
+                                                        <span class="badge text-bg-secondary">{{ workout.intensity }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-muted">{{ workout.notes }}</td>
+                                                <td>
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <a
+                                                            href="{{ url_for('edit_workout', workout_id=workout.id) }}"
+                                                            class="btn btn-outline-success btn-sm"
+                                                        >
+                                                            Edit
+                                                        </a>
+
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ url_for('delete_workout', workout_id=workout.id) }}"
+                                                            onsubmit="return confirm('Delete this workout?');"
+                                                        >
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                                Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <h2 class="h4 mb-3">No workouts found</h2>
+                                <p class="text-muted mb-4">
+                                    Try clearing the filters or add a new workout record.
+                                </p>
+                                <a href="{{ url_for('workouts') }}" class="btn btn-outline-success">
+                                    Clear Filters
+                                </a>
+                                <a href="{{ url_for('add_workout') }}" class="btn btn-success">
+                                    Add Workout
+                                </a>
+                            </div>
+                        {% endif %}
 
                         <div class="mt-3 d-flex flex-wrap gap-2">
                             <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">Back to Dashboard</a>

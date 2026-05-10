@@ -165,6 +165,7 @@ def ensure_database_ready():
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(users)")).fetchall()
         ]
+
         if "avatar_filename" not in user_columns:
             db.session.execute(
                 text("ALTER TABLE users ADD COLUMN avatar_filename VARCHAR(255)")
@@ -175,6 +176,7 @@ def ensure_database_ready():
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(workouts)")).fetchall()
         ]
+
         if "started_at" not in workout_columns:
             db.session.execute(
                 text("ALTER TABLE workouts ADD COLUMN started_at DATETIME")
@@ -601,12 +603,28 @@ def workouts():
         session.clear()
         return redirect(url_for("login"))
 
-    workout_objects = (
-        Workout.query
-        .filter_by(user_id=user.id)
-        .order_by(Workout.date.desc(), Workout.id.desc())
-        .all()
-    )
+    search_query = request.args.get("search", "").strip()
+    intensity_filter = request.args.get("intensity", "").strip()
+    sort_by = request.args.get("sort", "newest").strip()
+
+    query = Workout.query.filter_by(user_id=user.id)
+
+    if search_query:
+        query = query.filter(Workout.type.ilike(f"%{search_query}%"))
+
+    if intensity_filter:
+        query = query.filter_by(intensity=intensity_filter)
+
+    if sort_by == "oldest":
+        query = query.order_by(Workout.date.asc(), Workout.id.asc())
+    elif sort_by == "longest":
+        query = query.order_by(Workout.duration.desc(), Workout.id.desc())
+    elif sort_by == "shortest":
+        query = query.order_by(Workout.duration.asc(), Workout.id.asc())
+    else:
+        query = query.order_by(Workout.date.desc(), Workout.id.desc())
+
+    workout_objects = query.all()
 
     workout_list = [
         workout_to_dict(workout)
@@ -615,7 +633,10 @@ def workouts():
 
     return render_template(
         "workouts.html",
-        workouts=workout_list
+        workouts=workout_list,
+        search_query=search_query,
+        intensity_filter=intensity_filter,
+        sort_by=sort_by,
     )
 
 

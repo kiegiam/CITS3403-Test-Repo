@@ -147,6 +147,21 @@
                                 </div>
                             </div>
 
+                            {% if profile.avatar_filename %}
+                                <div class="form-check mb-3">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        id="remove_avatar"
+                                        name="remove_avatar"
+                                        value="yes"
+                                    >
+                                    <label class="form-check-label" for="remove_avatar">
+                                        Remove current avatar and use default initial
+                                    </label>
+                                </div>
+                            {% endif %}
+
                             <div class="mb-3">
                                 <label for="name" class="form-label">Name</label>
                                 <input

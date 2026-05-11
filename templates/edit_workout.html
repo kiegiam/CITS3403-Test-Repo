@@ -128,9 +128,13 @@
                                                 name="duration"
                                                 value="{{ workout.duration }}"
                                                 min="1"
+                                                max="600"
                                                 placeholder="45"
                                                 required
                                             >
+                                            <div class="form-text">
+                                                Duration must be between 1 and 600 minutes.
+                                            </div>
                                         </div>
 
                                         <div class="col-md-6">

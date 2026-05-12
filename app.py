@@ -495,6 +495,7 @@ def register():
             goal="Stay consistent",
             member_since=date.today().strftime("%B %Y"),
             location="Not set",
+            avatar_filename=None,
         )
 
         db.session.add(new_user)
@@ -502,8 +503,6 @@ def register():
 
         flash("Account created successfully. Please log in.", "success")
         return redirect(url_for("login"))
-
-    return render_template("register.html")
 
     return render_template("register.html")
 

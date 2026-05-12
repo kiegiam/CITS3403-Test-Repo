@@ -26,27 +26,24 @@
                     class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#mainNav"
-                    aria-controls="mainNav"
+                    data-bs-target="#appNav"
+                    aria-controls="appNav"
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                <div class="collapse navbar-collapse" id="appNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('plans') }}">Plans</a>
+                            <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
@@ -54,10 +51,30 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
                         </li>
-                        <li class="nav-item ms-lg-3">
-                            <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
-                        </li>
                     </ul>
+
+                    <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+                        <a href="{{ url_for('profile') }}" class="profile-icon-link" aria-label="Profile">
+                            {% if profile and profile.avatar_filename %}
+                                <img
+                                    src="{{ url_for('static', filename='uploads/' ~ profile.avatar_filename) }}"
+                                    alt="Profile"
+                                    class="profile-icon"
+                                >
+                            {% else %}
+                                <span class="profile-icon profile-icon-fallback">
+                                    {% if profile and profile.name %}
+                                        {% set name_parts = profile.name.split() %}
+                                        {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                    {% else %}
+                                        {{ email[0]|upper }}
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </a>
+
+                        <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
+                    </div>
                 </div>
             </div>
         </nav>

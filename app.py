@@ -504,9 +504,11 @@ def dashboard():
     return render_template(
         "dashboard.html",
         email=user.email,
+        profile=user_to_profile_dict(user),
         recent_workouts=recent_workouts,
         statistics=statistics,
     )
+    
 
 
 @app.route("/profile")

@@ -15,8 +15,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///fittrack.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # User-uploaded avatar settings
-app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
-app.config["ALLOWED_IMAGE_EXTENSIONS"] = {"png", "jpg", "jpeg", "gif"}
+app.config["UPLOAD_FOLDER"] = os.path.join(app.static_folder, "uploads")
+app.config["ALLOWED_IMAGE_EXTENSIONS"] = {"png", "jpg", "jpeg", "gif", "webp"}
+
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 db = SQLAlchemy(app)
 
@@ -336,7 +338,11 @@ def user_to_profile_dict(user):
         "location": user.location or "Not set",
         "avatar_filename": user.avatar_filename,
     }
-
+def allowed_avatar_file(filename):
+    return (
+        "." in filename and
+        filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_IMAGE_EXTENSIONS"]
+    )
 @app.context_processor
 def inject_nav_user():
     if "user_id" in session:
@@ -562,8 +568,7 @@ def edit_profile():
         if action == "remove_avatar":
             if user.avatar_filename:
                 avatar_path = os.path.join(
-                    app.static_folder,
-                    "uploads",
+                    app.config["UPLOAD_FOLDER"],
                     user.avatar_filename
                 )
 
@@ -579,6 +584,7 @@ def edit_profile():
         name = request.form.get("name", "").strip()
         goal = request.form.get("goal", "").strip()
         location = request.form.get("location", "").strip()
+        avatar_file = request.files.get("avatar")
 
         if not name:
             flash("Name cannot be empty.")
@@ -591,12 +597,36 @@ def edit_profile():
         user.goal = goal or "Stay consistent"
         user.location = location or "Not set"
 
+        if avatar_file and avatar_file.filename:
+            if not allowed_avatar_file(avatar_file.filename):
+                flash("Please upload a valid image file: PNG, JPG, JPEG, or GIF.")
+                return render_template(
+                    "edit_profile.html",
+                    profile=user_to_profile_dict(user)
+                )
+
+            if user.avatar_filename:
+                old_avatar_path = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    user.avatar_filename
+                )
+                if os.path.exists(old_avatar_path):
+                    os.remove(old_avatar_path)
+
+            original_name = secure_filename(avatar_file.filename)
+            extension = original_name.rsplit(".", 1)[1].lower()
+            new_filename = f"{user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{extension}"
+
+            save_path = os.path.join(app.config["UPLOAD_FOLDER"], new_filename)
+            avatar_file.save(save_path)
+
+            user.avatar_filename = new_filename
+
         db.session.commit()
         flash("Profile updated successfully.")
         return redirect(url_for("profile"))
 
     return render_template("edit_profile.html", profile=user_to_profile_dict(user))
-
 
 @app.route("/workouts")
 def workouts():

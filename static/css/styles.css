@@ -123,3 +123,97 @@ textarea {
     justify-content: center;
     font-size: 1.25rem;
 }
+.dashboard-info-card {
+    border-radius: 1rem;
+}
+
+.weekly-bars {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+    align-items: end;
+}
+
+.weekly-bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.weekly-bar-track {
+    width: 40px;
+    min-height: 14px;
+    max-height: 140px;
+    background: #e9ecef;
+    border-radius: 999px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+}
+
+.weekly-bar-segment {
+    width: 100%;
+}
+
+.bar-gray {
+    background-color: #ced4da;
+}
+
+.bar-strength {
+    background-color: #198754;
+}
+
+.bar-cardio {
+    background-color: #0d6efd;
+}
+
+.bar-flexibility {
+    background-color: #ffc107;
+}
+
+.bar-other {
+    background-color: #6c757d;
+}
+.weekly-rec-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.weekly-rec-tag {
+    color: #fff;
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 0.35rem 0.5rem;
+    border-radius: 999px;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.recent-workout-badge {
+    min-width: 72px;
+    font-weight: 600;
+}
+.weekly-rec-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.weekly-rec-tag {
+    color: #fff;
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 0.35rem 0.5rem;
+    border-radius: 999px;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.recent-workout-badge {
+    min-width: 72px;
+    font-weight: 600;
+}

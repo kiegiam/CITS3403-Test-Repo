@@ -409,6 +409,7 @@
 <!-- ══════════════════════════════════════════════════════════════════════
      SCREEN 2 — Pick exercises & log sets (workout in progress)
      ══════════════════════════════════════════════════════════════════════ -->
+<input type="hidden" id="plan-type" value="{{ selected_plan }}">
 <div id="screen-workout" class="screen">
 
     <!-- Exercise picker panel -->
@@ -942,6 +943,7 @@ async function finishWorkout() {
                 set_number:  s.set_number,
                 reps:        s.reps || 0,
                 weight_kg:   s.weight_kg || 0,
+                
             });
         }
     }
@@ -965,6 +967,7 @@ async function finishWorkout() {
         started_at:  startedAt.toISOString().slice(0, 19),
         finished_at: finishedAt.toISOString().slice(0, 19),
         notes:       document.getElementById('workout-notes').value.trim(),
+        plan_type: document.getElementById('plan-type')?.value || "",
         sets:        allSets,
     };
 

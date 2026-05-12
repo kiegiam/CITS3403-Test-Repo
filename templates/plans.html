@@ -136,7 +136,9 @@
                                     <li class="list-group-item px-0">Focus on major muscle groups</li>
                                     <li class="list-group-item px-0">Track weight and duration</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-outline-success">Log Strength Workout</a>
+                                <a href="{{ url_for('add_workout', plan='strength') }}" class="btn btn-success">
+                                    Log Strength Session
+                                    </a>
                             </div>
                         </div>
                     </div>
@@ -153,7 +155,9 @@
                                     <li class="list-group-item px-0">Mix low and medium intensity</li>
                                     <li class="list-group-item px-0">Record distance or notes</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-outline-success">Log Cardio Workout</a>
+                                <a href="{{ url_for('add_workout', plan='cardio') }}" class="btn btn-primary">
+                                    Log Cardio Session
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -170,7 +174,9 @@
                                     <li class="list-group-item px-0">Focus on controlled movement</li>
                                     <li class="list-group-item px-0">Note tight or sore areas</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-outline-success">Log Flexibility Workout</a>
+                                <a href="{{ url_for('add_workout', plan='flexibility') }}" class="btn btn-warning">
+                                    Log Flexibility Session
+                                </a>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import os
 from datetime import date, datetime
-
+import re
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -343,6 +343,23 @@ def allowed_avatar_file(filename):
         "." in filename and
         filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_IMAGE_EXTENSIONS"]
     )
+
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def is_valid_email(email):
+    return bool(EMAIL_REGEX.match(email))
+
+
+def is_valid_password(password):
+    if len(password) < 8:
+        return False
+
+    has_letter = any(char.isalpha() for char in password)
+    has_number = any(char.isdigit() for char in password)
+
+    return has_letter and has_number
+
 @app.context_processor
 def inject_nav_user():
     if "user_id" in session:
@@ -442,37 +459,51 @@ def register():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        goal = request.form.get("goal", "").strip()
-        location = request.form.get("location", "").strip()
 
-        if not name or not email or not password:
-            flash("Name, email, and password are required.")
+        if not name:
+            flash("Name is required.", "danger")
+            return render_template("register.html")
+
+        if not email:
+            flash("Email is required.", "danger")
+            return render_template("register.html")
+
+        if not password:
+            flash("Password is required.", "danger")
+            return render_template("register.html")
+
+        if not is_valid_email(email):
+            flash("Please enter a valid email address.", "danger")
+            return render_template("register.html")
+
+        if not is_valid_password(password):
+            flash(
+                "Password must be at least 8 characters long and contain at least 1 letter and 1 number.",
+                "danger"
+            )
             return render_template("register.html")
 
         existing_user = User.query.filter_by(email=email).first()
-
         if existing_user:
-            flash("An account with that email already exists.")
+            flash("An account with that email already exists.", "danger")
             return render_template("register.html")
 
         new_user = User(
             name=name,
             email=email,
             password_hash=generate_password_hash(password),
-            goal=goal or "Stay consistent",
+            goal="Stay consistent",
             member_since=date.today().strftime("%B %Y"),
-            location=location or "Not set",
-            avatar_filename=None,
+            location="Not set",
         )
 
         db.session.add(new_user)
         db.session.commit()
 
-        session["user_id"] = new_user.id
-        session["user_email"] = new_user.email
+        flash("Account created successfully. Please log in.", "success")
+        return redirect(url_for("login"))
 
-        flash("Account created successfully.")
-        return redirect(url_for("dashboard"))
+    return render_template("register.html")
 
     return render_template("register.html")
 
@@ -483,6 +514,18 @@ def login():
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
+        if not email:
+            flash("Email is required.", "danger")
+            return render_template("login.html")
+
+        if not password:
+            flash("Password is required.", "danger")
+            return render_template("login.html")
+
+        if not is_valid_email(email):
+            flash("Please enter a valid email address.", "danger")
+            return render_template("login.html")
+
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password_hash, password):
@@ -490,7 +533,7 @@ def login():
             session["user_email"] = user.email
             return redirect(url_for("dashboard"))
 
-        flash("Invalid email or password.")
+        flash("Invalid email or password.", "danger")
 
     return render_template("login.html")
 

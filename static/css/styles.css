@@ -105,3 +105,21 @@ textarea {
     transform: scale(1.05);
     opacity: 0.9;
 }
+.profile-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #198754;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.profile-preview-fallback {
+    background-color: #198754;
+    color: #ffffff;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}

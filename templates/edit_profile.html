@@ -144,7 +144,7 @@
                             <div class="mb-4">
                                 <label class="form-label fw-semibold">Current Avatar</label>
 
-                                <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-start gap-3 flex-wrap">
                                     <div
                                         class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm border border-3 border-success overflow-hidden"
                                         style="width: 96px; height: 96px; font-size: 2rem; font-weight: 700;"
@@ -157,15 +157,27 @@
                                                 style="object-fit: cover;"
                                             >
                                         {% else %}
-                                            {{ profile.name[0] }}
+                                            {% set name_parts = profile.name.split() %}
+                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
                                         {% endif %}
                                     </div>
 
-                                    <div>
+                                    <div class="flex-grow-1">
                                         <p class="mb-1 fw-semibold">{{ profile.name }}</p>
-                                        <p class="mb-0 text-muted small">
+                                        <p class="mb-2 text-muted small">
                                             Upload a new image below to replace your current avatar.
                                         </p>
+
+                                        {% if profile.avatar_filename %}
+                                            <button
+                                                type="submit"
+                                                name="action"
+                                                value="remove_avatar"
+                                                class="btn btn-outline-danger btn-sm"
+                                            >
+                                                Remove current avatar
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -183,21 +195,6 @@
                                     Accepted formats: PNG, JPG, JPEG, or GIF.
                                 </div>
                             </div>
-
-                            {% if profile.avatar_filename %}
-                                <div class="form-check mb-3">
-                                    <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        id="remove_avatar"
-                                        name="remove_avatar"
-                                        value="yes"
-                                    >
-                                    <label class="form-check-label" for="remove_avatar">
-                                        Remove current avatar and use default initial
-                                    </label>
-                                </div>
-                            {% endif %}
 
                             <div class="mb-3">
                                 <label for="name" class="form-label">Name</label>
@@ -234,7 +231,7 @@
                             </div>
 
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-success">
+                                <button type="submit" name="action" value="save" class="btn btn-success">
                                     Save Changes
                                 </button>
 

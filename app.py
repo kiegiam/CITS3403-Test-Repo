@@ -337,6 +337,20 @@ def user_to_profile_dict(user):
         "avatar_filename": user.avatar_filename,
     }
 
+@app.context_processor
+def inject_nav_user():
+    if "user_id" in session:
+        user = current_user()
+        if user:
+            return {
+                "nav_email": user.email,
+                "nav_profile": user_to_profile_dict(user),
+            }
+
+    return {
+        "nav_email": None,
+        "nav_profile": None,
+    }
 
 def workout_to_dict(workout):
     return {

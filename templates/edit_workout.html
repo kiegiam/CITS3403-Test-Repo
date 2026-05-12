@@ -55,19 +55,21 @@
 
                     <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
                         <a href="{{ url_for('profile') }}" class="profile-icon-link" aria-label="Profile">
-                            {% if profile and profile.avatar_filename %}
+                            {% if nav_profile and nav_profile.avatar_filename %}
                                 <img
-                                    src="{{ url_for('static', filename='uploads/' ~ profile.avatar_filename) }}"
+                                    src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
                                     alt="Profile"
                                     class="profile-icon"
                                 >
                             {% else %}
                                 <span class="profile-icon profile-icon-fallback">
-                                    {% if profile and profile.name %}
-                                        {% set name_parts = profile.name.split() %}
+                                    {% if nav_profile and nav_profile.name %}
+                                        {% set name_parts = nav_profile.name.split() %}
                                         {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                    {% elif nav_email %}
+                                        {{ nav_email[0]|upper }}
                                     {% else %}
-                                        {{ email[0]|upper }}
+                                        U
                                     {% endif %}
                                 </span>
                             {% endif %}

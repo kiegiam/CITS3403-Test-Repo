@@ -217,3 +217,19 @@ textarea {
     min-width: 72px;
     font-weight: 600;
 }
+.home-page {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.78)),
+        url("../background image/sports-sprinter-runner-man.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+.hero-section {
+    background: transparent !important;
+    min-height: 520px;
+    display: flex;
+    align-items: center;
+}

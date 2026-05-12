@@ -303,29 +303,49 @@
                     </li>
                 </ul>
 
-                <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-                    <a href="{{ url_for('profile') }}" class="profile-icon-link" aria-label="Profile">
-                        {% if nav_profile and nav_profile.avatar_filename %}
-                            <img
-                                src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
-                                alt="Profile"
-                                class="profile-icon"
-                            >
-                        {% else %}
-                            <span class="profile-icon profile-icon-fallback">
-                                {% if nav_profile and nav_profile.name %}
-                                    {% set name_parts = nav_profile.name.split() %}
-                                    {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
-                                {% elif nav_email %}
-                                    {{ nav_email[0]|upper }}
-                                {% else %}
-                                    U
-                                {% endif %}
-                            </span>
-                        {% endif %}
-                    </a>
+                <div class="d-flex align-items-center mt-3 mt-lg-0">
+                    <div class="dropdown">
+                        <button
+                            class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Open profile menu"
+                        >
+                            {% if nav_profile and nav_profile.avatar_filename %}
+                                <img
+                                    src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                    alt="Profile"
+                                    class="profile-icon"
+                                >
+                            {% else %}
+                                <span class="profile-icon profile-icon-fallback">
+                                    {% if nav_profile and nav_profile.name %}
+                                        {% set name_parts = nav_profile.name.split() %}
+                                        {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                    {% elif nav_email %}
+                                        {{ nav_email[0]|upper }}
+                                    {% else %}
+                                        U
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </button>
 
-                    <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                    My Profile
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

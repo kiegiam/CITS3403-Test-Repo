@@ -233,3 +233,19 @@ textarea {
     display: flex;
     align-items: center;
 }
+html, body {
+    min-height: 100%;
+}
+
+body.dashboard-page {
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.45)),
+        url("../background image/tour-de-france-arc-de-triomphe-Pauline-Ballet.webp") center center / cover no-repeat fixed !important;
+    min-height: 100vh;
+    background-color: transparent !important;
+}
+.dashboard-page .card {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}

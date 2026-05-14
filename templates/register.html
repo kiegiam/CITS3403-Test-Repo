@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitTrack - Register</title>
+    <title>FitTrack - Sign Up</title>
+
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -14,7 +15,9 @@
         href="{{ url_for('static', filename='css/styles.css') }}"
     >
 </head>
+
 <body class="bg-light">
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-success">
             <div class="container">
@@ -33,15 +36,13 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto align-items-lg-center">
                         <li class="nav-item">
-                            <a class="nav-link " href="{{ url_for('home') }}">Home</a>
+                            <a class="nav-link" href="{{ url_for('home') }}">Home</a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link " href="{{ url_for('login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('register') }}">Register</a>
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
                         </li>
                     </ul>
                 </div>
@@ -49,61 +50,117 @@
         </nav>
     </header>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 col-lg-5">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <h1 class="h3 text-center mb-4">Create Account</h1>
+    <main class="py-5">
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-5">
+                        <div class="card shadow-sm border-0 login-card">
+                            <div class="card-body p-4 p-lg-5">
 
-                        {% with messages = get_flashed_messages() %}
-                            {% if messages %}
-                                <div class="alert alert-danger" role="alert">
-                                    {{ messages[0] }}
-                                </div>
-                            {% endif %}
-                        {% endwith %}
+                                <p class="fw-semibold text-center mb-2" style="color: #635bff;">
+                                    Join FitTrack
+                                </p>
 
-                        <form method="POST">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="name" name="name" required>
+                                <h1 class="h2 text-center fw-bold mb-4">
+                                    Create Account
+                                </h1>
+
+                                {% with messages = get_flashed_messages() %}
+                                    {% if messages %}
+                                        <div class="alert alert-danger" role="alert">
+                                            {{ messages[0] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+
+                                <form method="POST" action="{{ url_for('register') }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">Name</label>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="name"
+                                            name="name"
+                                            placeholder="Enter your name"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input
+                                            type="email"
+                                            class="form-control"
+                                            id="email"
+                                            name="email"
+                                            placeholder="you@example.com"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="password" class="form-label">Password</label>
+                                        <input
+                                            type="password"
+                                            class="form-control"
+                                            id="password"
+                                            name="password"
+                                            placeholder="At least 6 characters, no spaces"
+                                            minlength="6"
+                                            pattern="\S{6,}"
+                                            title="Password must be at least 6 characters and cannot contain spaces."
+                                            required
+                                        >
+                                        <div class="form-text">
+                                            Password must be at least 6 characters and cannot contain spaces.
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                                        <input
+                                            type="password"
+                                            class="form-control"
+                                            id="confirm_password"
+                                            name="confirm_password"
+                                            placeholder="Enter your password again"
+                                            minlength="6"
+                                            pattern="\S{6,}"
+                                            title="Password must be at least 6 characters and cannot contain spaces."
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-success">
+                                            Sign Up
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <hr class="my-4">
+
+                                <p class="text-center mb-0">
+                                    <span class="text-muted">Already have an account?</span>
+                                    <a href="{{ url_for('login') }}" class="text-decoration-none fw-semibold">
+                                        Log in
+                                    </a>
+                                </p>
+
                             </div>
-
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="goal" class="form-label">Fitness Goal</label>
-                                <input type="text" class="form-control" id="goal" name="goal">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="location" class="form-label">Location</label>
-                                <input type="text" class="form-control" id="location" name="location">
-                            </div>
-
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-success">Register</button>
-                            </div>
-                        </form>
-
-                        <div class="text-center mt-3">
-                            <a href="{{ url_for('login') }}">Already have an account? Log in</a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
 
 </body>
 </html>

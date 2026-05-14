@@ -1188,12 +1188,37 @@ def progress():
         for workout in recent_workout_objects
     ]
 
+    type_chart_labels = list(type_counts.keys())
+    type_chart_counts = list(type_counts.values())
+    minutes_chart_labels = list(type_minutes.keys())
+    minutes_chart_values = list(type_minutes.values())
+
+    trend_minutes_by_date = {}
+
+    for workout in recent_workout_objects:
+        if workout.date not in trend_minutes_by_date:
+            trend_minutes_by_date[workout.date] = 0
+
+        trend_minutes_by_date[workout.date] += workout.duration
+
+    trend_chart_labels = sorted(trend_minutes_by_date.keys())
+    trend_chart_minutes = [
+        trend_minutes_by_date[workout_date]
+        for workout_date in trend_chart_labels
+    ]
+
     return render_template(
         "progress.html",
         progress_stats=progress_stats,
         type_counts=type_counts,
         type_minutes=type_minutes,
         recent_workouts=recent_workouts,
+        type_chart_labels=type_chart_labels,
+        type_chart_counts=type_chart_counts,
+        minutes_chart_labels=minutes_chart_labels,
+        minutes_chart_values=minutes_chart_values,
+        trend_chart_labels=trend_chart_labels,
+        trend_chart_minutes=trend_chart_minutes,
     )
 
 
@@ -1213,6 +1238,7 @@ def ranking():
 
         leaderboard.append(
             {
+                "user_id": user.id,
                 "name": user.name,
                 "workouts": total_workouts,
                 "minutes": total_minutes,
@@ -1227,9 +1253,44 @@ def ranking():
         reverse=True
     )
 
+    ranking_summary = {
+        "total_ranked_users": len(leaderboard),
+        "community_total_minutes": sum(user_data["minutes"] for user_data in leaderboard),
+        "top_streak": max((user_data["streak"] for user_data in leaderboard), default=0),
+        "top_user_name": leaderboard[0]["name"] if leaderboard else None,
+    }
+
+    current_user_rank = {
+        "rank": None,
+        "minutes": 0,
+        "workouts": 0,
+        "minutes_to_next_rank": 0,
+    }
+
+    for index, user_data in enumerate(leaderboard):
+        if user_data["user_id"] == session["user_id"]:
+            minutes_to_next_rank = 0
+
+            if index > 0:
+                minutes_to_next_rank = max(
+                    0,
+                    leaderboard[index - 1]["minutes"] - user_data["minutes"] + 1
+                )
+
+            current_user_rank = {
+                "rank": index + 1,
+                "minutes": user_data["minutes"],
+                "workouts": user_data["workouts"],
+                "minutes_to_next_rank": minutes_to_next_rank,
+            }
+
+            break
+
     return render_template(
         "ranking.html",
-        leaderboard=leaderboard
+        leaderboard=leaderboard,
+        ranking_summary=ranking_summary,
+        current_user_rank=current_user_rank
     )
 
 

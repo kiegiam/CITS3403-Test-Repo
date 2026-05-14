@@ -137,6 +137,84 @@
                 </section>
             {% else %}
             <section class="mb-4">
+                <div class="row text-center g-3">
+                    <div class="col-md-3">
+                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                            <h2 class="h1 mb-1">{{ ranking_summary.total_ranked_users }}</h2>
+                            <p class="mb-0 text-muted">Ranked Users</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                            <h2 class="h1 mb-1">{{ ranking_summary.community_total_minutes }}</h2>
+                            <p class="mb-0 text-muted">Community Minutes</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                            <h2 class="h1 mb-1">{{ ranking_summary.top_streak }}</h2>
+                            <p class="mb-0 text-muted">Top Day Streak</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                            <h2 class="h4 mb-1">{{ ranking_summary.top_user_name }}</h2>
+                            <p class="mb-0 text-muted">Current Leader</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h2 class="h4 mb-3">Your Ranking Insight</h2>
+
+                        {% if current_user_rank.rank %}
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-3">
+                                    <p class="text-muted small mb-1">Current Rank</p>
+                                    <p class="h3 mb-0">#{{ current_user_rank.rank }}</p>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <p class="text-muted small mb-1">Your Minutes</p>
+                                    <p class="h3 mb-0">{{ current_user_rank.minutes }}</p>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <p class="text-muted small mb-1">Your Workouts</p>
+                                    <p class="h3 mb-0">{{ current_user_rank.workouts }}</p>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <p class="text-muted small mb-1">Minutes to Next Rank</p>
+                                    <p class="h3 mb-0">{{ current_user_rank.minutes_to_next_rank }}</p>
+                                </div>
+                            </div>
+
+                            {% if current_user_rank.rank == 1 %}
+                                <p class="small text-muted mt-3 mb-0">
+                                    You are currently leading the leaderboard.
+                                </p>
+                            {% else %}
+                                <p class="small text-muted mt-3 mb-0">
+                                    Add {{ current_user_rank.minutes_to_next_rank }} more minute(s) to overtake the user directly above you.
+                                </p>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted mb-0">
+                                You are not currently ranked. Add a workout to appear on the leaderboard.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
                 <div class="row g-3">
                     {% for user in leaderboard[:3] %}
                         <div class="col-md-4">

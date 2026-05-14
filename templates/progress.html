@@ -177,6 +177,37 @@
                             <div class="card shadow-sm border-0 h-100">
                                 <div class="card-body p-4">
                                     <h2 class="h4 mb-3">Workout Type Breakdown</h2>
+                                    <canvas id="workoutTypeChart" height="220"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-body p-4">
+                                    <h2 class="h4 mb-3">Training Minutes by Type</h2>
+                                    <canvas id="trainingMinutesChart" height="220"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body p-4">
+                                    <h2 class="h4 mb-3">Recent Training Trend</h2>
+                                    <canvas id="trainingTrendChart" height="110"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mb-4">
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-body p-4">
+                                    <h2 class="h4 mb-3">Workout Type Breakdown</h2>
 
                                     {% for workout_type, count in type_counts.items() %}
                                         <div class="mb-3">
@@ -265,6 +296,83 @@
                         </div>
                     </div>
                 </section>
+
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <script>
+                    const typeChartLabels = {{ type_chart_labels | tojson }};
+                    const typeChartCounts = {{ type_chart_counts | tojson }};
+                    const minutesChartLabels = {{ minutes_chart_labels | tojson }};
+                    const minutesChartValues = {{ minutes_chart_values | tojson }};
+                    const trendChartLabels = {{ trend_chart_labels | tojson }};
+                    const trendChartMinutes = {{ trend_chart_minutes | tojson }};
+
+                    const chartColours = [
+                        "#00a86b",
+                        "#635bff",
+                        "#00d4ff",
+                        "#ff80bf",
+                        "#ffd166",
+                        "#8a94a6",
+                    ];
+
+                    if (typeChartLabels.length > 0 && typeChartCounts.length > 0) {
+                        new Chart(document.getElementById("workoutTypeChart"), {
+                            type: "doughnut",
+                            data: {
+                                labels: typeChartLabels,
+                                datasets: [{
+                                    data: typeChartCounts,
+                                    backgroundColor: chartColours,
+                                }],
+                            },
+                        });
+                    }
+
+                    if (minutesChartLabels.length > 0 && minutesChartValues.length > 0) {
+                        new Chart(document.getElementById("trainingMinutesChart"), {
+                            type: "bar",
+                            data: {
+                                labels: minutesChartLabels,
+                                datasets: [{
+                                    label: "Minutes",
+                                    data: minutesChartValues,
+                                    backgroundColor: "#00a86b",
+                                }],
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                    },
+                                },
+                            },
+                        });
+                    }
+
+                    if (trendChartLabels.length > 0 && trendChartMinutes.length > 0) {
+                        new Chart(document.getElementById("trainingTrendChart"), {
+                            type: "line",
+                            data: {
+                                labels: trendChartLabels,
+                                datasets: [{
+                                    label: "Minutes",
+                                    data: trendChartMinutes,
+                                    borderColor: "#00a86b",
+                                    backgroundColor: "rgba(0, 168, 107, 0.16)",
+                                    fill: true,
+                                    tension: 0.3,
+                                }],
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                    },
+                                },
+                            },
+                        });
+                    }
+                </script>
             {% endif %}
 
         </div>

@@ -1,9 +1,12 @@
 import os
+import random
+import smtplib
 from datetime import date, datetime, timedelta
+from email.message import EmailMessage
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf.csrf import CSRFProtect, generate_csrf
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -32,7 +35,7 @@ db = SQLAlchemy(app)
 
 # ---------------------------------------------------------------------------
 # CSRF protection — applies to every state-changing POST form automatically.
-# API routes that use JSON bodies are exempt (they use session auth instead).
+# API routes that use JSON bodies are exempt.
 # ---------------------------------------------------------------------------
 csrf = CSRFProtect(app)
 
@@ -70,8 +73,6 @@ class Workout(db.Model):
     intensity = db.Column(db.String(20), nullable=False)
     notes = db.Column(db.Text, nullable=True)
 
-    # Populated automatically from the live timer when a workout is finished.
-    # NULL means the workout was logged via the old manual form.
     started_at = db.Column(db.DateTime, nullable=True)
     finished_at = db.Column(db.DateTime, nullable=True)
 
@@ -88,13 +89,6 @@ class Workout(db.Model):
         return f"<Workout {self.type} on {self.date}>"
 
 
-# ---------------------------------------------------------------------------
-# Exercise catalogue
-# ---------------------------------------------------------------------------
-# Built-in exercises have user_id = NULL.
-# Custom exercises created by a user have user_id = that user's id.
-# ---------------------------------------------------------------------------
-
 MUSCLE_GROUPS = [
     "Chest",
     "Back",
@@ -105,6 +99,7 @@ MUSCLE_GROUPS = [
     "Core",
     "Cardio",
 ]
+
 
 class Exercise(db.Model):
     __tablename__ = "exercises"
@@ -135,10 +130,6 @@ class Exercise(db.Model):
         }
 
 
-# ---------------------------------------------------------------------------
-# Individual sets logged during a workout
-# ---------------------------------------------------------------------------
-
 class WorkoutSet(db.Model):
     __tablename__ = "workout_sets"
 
@@ -146,9 +137,9 @@ class WorkoutSet(db.Model):
     workout_id = db.Column(db.Integer, db.ForeignKey("workouts.id"), nullable=False)
     exercise_id = db.Column(db.Integer, db.ForeignKey("exercises.id"), nullable=False)
 
-    set_number = db.Column(db.Integer, nullable=False)   # 1, 2, 3 …
+    set_number = db.Column(db.Integer, nullable=False)
     reps = db.Column(db.Integer, nullable=False)
-    weight_kg = db.Column(db.Float, nullable=False)       # 0 for bodyweight
+    weight_kg = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
         return (
@@ -176,99 +167,90 @@ def ensure_database_ready():
 
         os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-        # ------------------------------------------------------------------ #
-        # Migrate users table: add avatar_filename if missing (legacy DBs)    #
-        # ------------------------------------------------------------------ #
         user_columns = [
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(users)")).fetchall()
         ]
+
         if "avatar_filename" not in user_columns:
             db.session.execute(
                 text("ALTER TABLE users ADD COLUMN avatar_filename VARCHAR(255)")
             )
             db.session.commit()
 
-        # ------------------------------------------------------------------ #
-        # Migrate workouts table: add started_at / finished_at if missing     #
-        # ------------------------------------------------------------------ #
         workout_columns = [
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(workouts)")).fetchall()
         ]
+
         if "started_at" not in workout_columns:
             db.session.execute(
                 text("ALTER TABLE workouts ADD COLUMN started_at DATETIME")
             )
             db.session.commit()
+
         if "finished_at" not in workout_columns:
             db.session.execute(
                 text("ALTER TABLE workouts ADD COLUMN finished_at DATETIME")
             )
             db.session.commit()
 
-        # ------------------------------------------------------------------ #
-        # Seed built-in exercise catalogue (runs once; skipped if populated)  #
-        # ------------------------------------------------------------------ #
         if Exercise.query.filter_by(user_id=None).count() == 0:
             builtin_exercises = [
-                # Chest
-                Exercise(name="Bench Press",         muscle_group="Chest"),
+                Exercise(name="Bench Press", muscle_group="Chest"),
                 Exercise(name="Incline Bench Press", muscle_group="Chest"),
-                Exercise(name="Dumbbell Fly",        muscle_group="Chest"),
-                Exercise(name="Push-Up",             muscle_group="Chest"),
-                Exercise(name="Cable Crossover",     muscle_group="Chest"),
-                # Back
-                Exercise(name="Deadlift",            muscle_group="Back"),
-                Exercise(name="Pull-Up",             muscle_group="Back"),
-                Exercise(name="Barbell Row",         muscle_group="Back"),
-                Exercise(name="Lat Pulldown",        muscle_group="Back"),
-                Exercise(name="Seated Cable Row",    muscle_group="Back"),
-                # Shoulders
-                Exercise(name="Overhead Press",      muscle_group="Shoulders"),
-                Exercise(name="Lateral Raise",       muscle_group="Shoulders"),
-                Exercise(name="Front Raise",         muscle_group="Shoulders"),
-                Exercise(name="Arnold Press",        muscle_group="Shoulders"),
-                Exercise(name="Rear Delt Fly",       muscle_group="Shoulders"),
-                # Biceps
-                Exercise(name="Barbell Curl",        muscle_group="Biceps"),
-                Exercise(name="Dumbbell Curl",       muscle_group="Biceps"),
-                Exercise(name="Hammer Curl",         muscle_group="Biceps"),
-                Exercise(name="Preacher Curl",       muscle_group="Biceps"),
-                Exercise(name="Cable Curl",          muscle_group="Biceps"),
-                # Triceps
-                Exercise(name="Tricep Pushdown",              muscle_group="Triceps"),
-                Exercise(name="Skull Crusher",                muscle_group="Triceps"),
-                Exercise(name="Overhead Tricep Extension",    muscle_group="Triceps"),
-                Exercise(name="Close-Grip Bench Press",       muscle_group="Triceps"),
-                Exercise(name="Dips",                         muscle_group="Triceps"),
-                # Legs
-                Exercise(name="Squat",               muscle_group="Legs"),
-                Exercise(name="Leg Press",           muscle_group="Legs"),
-                Exercise(name="Romanian Deadlift",   muscle_group="Legs"),
-                Exercise(name="Leg Curl",            muscle_group="Legs"),
-                Exercise(name="Leg Extension",       muscle_group="Legs"),
-                Exercise(name="Calf Raise",          muscle_group="Legs"),
-                Exercise(name="Lunges",              muscle_group="Legs"),
-                # Core
-                Exercise(name="Plank",               muscle_group="Core"),
-                Exercise(name="Crunch",              muscle_group="Core"),
-                Exercise(name="Hanging Leg Raise",   muscle_group="Core"),
-                Exercise(name="Russian Twist",       muscle_group="Core"),
-                Exercise(name="Ab Wheel Rollout",    muscle_group="Core"),
-                # Cardio
-                Exercise(name="Treadmill Run",       muscle_group="Cardio"),
-                Exercise(name="Cycling",             muscle_group="Cardio"),
-                Exercise(name="Rowing Machine",      muscle_group="Cardio"),
-                Exercise(name="Jump Rope",           muscle_group="Cardio"),
-                Exercise(name="Stair Climber",       muscle_group="Cardio"),
+                Exercise(name="Dumbbell Fly", muscle_group="Chest"),
+                Exercise(name="Push-Up", muscle_group="Chest"),
+                Exercise(name="Cable Crossover", muscle_group="Chest"),
+
+                Exercise(name="Deadlift", muscle_group="Back"),
+                Exercise(name="Pull-Up", muscle_group="Back"),
+                Exercise(name="Barbell Row", muscle_group="Back"),
+                Exercise(name="Lat Pulldown", muscle_group="Back"),
+                Exercise(name="Seated Cable Row", muscle_group="Back"),
+
+                Exercise(name="Overhead Press", muscle_group="Shoulders"),
+                Exercise(name="Lateral Raise", muscle_group="Shoulders"),
+                Exercise(name="Front Raise", muscle_group="Shoulders"),
+                Exercise(name="Arnold Press", muscle_group="Shoulders"),
+                Exercise(name="Rear Delt Fly", muscle_group="Shoulders"),
+
+                Exercise(name="Barbell Curl", muscle_group="Biceps"),
+                Exercise(name="Dumbbell Curl", muscle_group="Biceps"),
+                Exercise(name="Hammer Curl", muscle_group="Biceps"),
+                Exercise(name="Preacher Curl", muscle_group="Biceps"),
+                Exercise(name="Cable Curl", muscle_group="Biceps"),
+
+                Exercise(name="Tricep Pushdown", muscle_group="Triceps"),
+                Exercise(name="Skull Crusher", muscle_group="Triceps"),
+                Exercise(name="Overhead Tricep Extension", muscle_group="Triceps"),
+                Exercise(name="Close-Grip Bench Press", muscle_group="Triceps"),
+                Exercise(name="Dips", muscle_group="Triceps"),
+
+                Exercise(name="Squat", muscle_group="Legs"),
+                Exercise(name="Leg Press", muscle_group="Legs"),
+                Exercise(name="Romanian Deadlift", muscle_group="Legs"),
+                Exercise(name="Leg Curl", muscle_group="Legs"),
+                Exercise(name="Leg Extension", muscle_group="Legs"),
+                Exercise(name="Calf Raise", muscle_group="Legs"),
+                Exercise(name="Lunges", muscle_group="Legs"),
+
+                Exercise(name="Plank", muscle_group="Core"),
+                Exercise(name="Crunch", muscle_group="Core"),
+                Exercise(name="Hanging Leg Raise", muscle_group="Core"),
+                Exercise(name="Russian Twist", muscle_group="Core"),
+                Exercise(name="Ab Wheel Rollout", muscle_group="Core"),
+
+                Exercise(name="Treadmill Run", muscle_group="Cardio"),
+                Exercise(name="Cycling", muscle_group="Cardio"),
+                Exercise(name="Rowing Machine", muscle_group="Cardio"),
+                Exercise(name="Jump Rope", muscle_group="Cardio"),
+                Exercise(name="Stair Climber", muscle_group="Cardio"),
             ]
+
             db.session.add_all(builtin_exercises)
             db.session.commit()
 
-        # ------------------------------------------------------------------ #
-        # Seed demo user and sample workouts                                  #
-        # ------------------------------------------------------------------ #
         existing_demo = User.query.filter_by(email="demo@fittrack.com").first()
 
         if existing_demo is None:
@@ -324,7 +306,6 @@ def ensure_database_ready():
             db.session.commit()
 
 
-
 def is_logged_in():
     return "user_id" in session
 
@@ -343,6 +324,50 @@ def allowed_image(filename):
     )
 
 
+def is_valid_password(password, minimum_length=6):
+    if any(char.isspace() for char in password):
+        return False
+
+    return len(password) >= minimum_length
+
+
+def send_reset_code_email(to_email, code):
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    smtp_from = os.environ.get("SMTP_FROM", smtp_user)
+
+    if not smtp_host or not smtp_user or not smtp_password or not smtp_from:
+        print("==================================================")
+        print("Password reset code for local development")
+        print(f"Email: {to_email}")
+        print(f"Code: {code}")
+        print("SMTP is not configured, so no real email was sent.")
+        print("==================================================")
+        return True
+
+    message = EmailMessage()
+    message["Subject"] = "Your FitTrack password reset code"
+    message["From"] = smtp_from
+    message["To"] = to_email
+    message.set_content(
+        f"Your FitTrack password reset code is: {code}\n\n"
+        "This code will expire in 10 minutes.\n\n"
+        "If you did not request this, you can ignore this email."
+    )
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(message)
+        return True
+    except Exception as error:
+        print(f"Failed to send reset email: {error}")
+        return False
+
+
 def user_to_profile_dict(user):
     return {
         "name": user.name,
@@ -351,6 +376,22 @@ def user_to_profile_dict(user):
         "member_since": user.member_since or "Unknown",
         "location": user.location or "Not set",
         "avatar_filename": user.avatar_filename,
+    }
+
+
+@app.context_processor
+def inject_nav_profile():
+    user = current_user()
+
+    if user is None:
+        return {
+            "nav_profile": None,
+            "nav_email": None,
+        }
+
+    return {
+        "nav_profile": user_to_profile_dict(user),
+        "nav_email": user.email,
     }
 
 
@@ -373,19 +414,15 @@ def get_user_workout(user, workout_id):
 
 
 def calculate_streak(user_workouts):
-    """Return the current consecutive-day workout streak.
-
-    Counts backwards from today: each calendar day that has at least one
-    workout extends the streak.  A gap of more than one day resets it.
-    Workouts logged for a future date are ignored.
-    """
     today = date.today()
     workout_dates = set()
-    for w in user_workouts:
+
+    for workout in user_workouts:
         try:
-            d = date.fromisoformat(w.date)
-            if d <= today:
-                workout_dates.add(d)
+            workout_date = date.fromisoformat(workout.date)
+
+            if workout_date <= today:
+                workout_dates.add(workout_date)
         except ValueError:
             continue
 
@@ -393,17 +430,18 @@ def calculate_streak(user_workouts):
         return 0
 
     streak = 0
-    check = today
-    while check in workout_dates:
-        streak += 1
-        check -= timedelta(days=1)
+    check_date = today
 
-    # If today has no workout yet, check if yesterday starts a streak
+    while check_date in workout_dates:
+        streak += 1
+        check_date -= timedelta(days=1)
+
     if streak == 0:
-        check = today - timedelta(days=1)
-        while check in workout_dates:
+        check_date = today - timedelta(days=1)
+
+        while check_date in workout_dates:
             streak += 1
-            check -= timedelta(days=1)
+            check_date -= timedelta(days=1)
 
     return streak
 
@@ -473,26 +511,33 @@ def register():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        goal = request.form.get("goal", "").strip()
-        location = request.form.get("location", "").strip()
+        confirm_password = request.form.get("confirm_password", "")
 
-        if not name or not email or not password:
-            flash("Name, email, and password are required.")
+        if not name or not email or not password or not confirm_password:
+            flash("Name, email, password, and confirm password are required.")
             return render_template("register.html")
 
         existing_user = User.query.filter_by(email=email).first()
 
         if existing_user:
-            flash("An account with that email already exists.")
+            flash("This email is already registered. Please log in or use another email.")
+            return render_template("register.html")
+
+        if not is_valid_password(password, 6):
+            flash("Password must be at least 6 characters and cannot contain spaces.")
+            return render_template("register.html")
+
+        if password != confirm_password:
+            flash("Password and confirm password do not match.")
             return render_template("register.html")
 
         new_user = User(
             name=name,
             email=email,
             password_hash=generate_password_hash(password),
-            goal=goal or "Stay consistent",
+            goal="Stay consistent",
             member_since=date.today().strftime("%B %Y"),
-            location=location or "Not set",
+            location="Not set",
             avatar_filename=None,
         )
 
@@ -524,6 +569,118 @@ def login():
         flash("Invalid email or password.")
 
     return render_template("login.html")
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+
+        if not email:
+            flash("Please enter your email address.")
+            return render_template("forgot_password.html")
+
+        user = User.query.filter_by(email=email).first()
+
+        if user is None:
+            flash("No account was found with that email address.")
+            return render_template("forgot_password.html")
+
+        reset_code = str(random.randint(100000, 999999))
+        expires_at = datetime.now() + timedelta(minutes=10)
+
+        session["reset_email"] = email
+        session["reset_code"] = reset_code
+        session["reset_code_expires_at"] = expires_at.isoformat()
+        session["reset_verified"] = False
+
+        email_sent = send_reset_code_email(email, reset_code)
+
+        if not email_sent:
+            flash("The reset code could not be sent. Please try again later.")
+            return render_template("forgot_password.html")
+
+        flash("A verification code has been sent to your email.")
+        return redirect(url_for("verify_reset_code"))
+
+    return render_template("forgot_password.html")
+
+
+@app.route("/verify-reset-code", methods=["GET", "POST"])
+def verify_reset_code():
+    if "reset_email" not in session or "reset_code" not in session:
+        flash("Please request a password reset code first.")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        entered_code = request.form.get("code", "").strip()
+        stored_code = session.get("reset_code")
+        expires_at_text = session.get("reset_code_expires_at")
+
+        try:
+            expires_at = datetime.fromisoformat(expires_at_text)
+        except (TypeError, ValueError):
+            flash("The verification session is invalid. Please request a new code.")
+            return redirect(url_for("forgot_password"))
+
+        if datetime.now() > expires_at:
+            session.pop("reset_code", None)
+            session.pop("reset_code_expires_at", None)
+            session["reset_verified"] = False
+            flash("The verification code has expired. Please request a new code.")
+            return redirect(url_for("forgot_password"))
+
+        if entered_code != stored_code:
+            flash("The verification code is incorrect.")
+            return render_template("verify_reset_code.html", email=session.get("reset_email"))
+
+        session["reset_verified"] = True
+        flash("Verification successful. Please set a new password.")
+        return redirect(url_for("reset_password"))
+
+    return render_template("verify_reset_code.html", email=session.get("reset_email"))
+
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    if not session.get("reset_verified") or "reset_email" not in session:
+        flash("Please verify your reset code first.")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not password or not confirm_password:
+            flash("Password and confirm password are required.")
+            return render_template("reset_password.html")
+
+        if not is_valid_password(password, 6):
+            flash("Password must be at least 6 characters and cannot contain spaces.")
+            return render_template("reset_password.html")
+
+        if password != confirm_password:
+            flash("Password and confirm password do not match.")
+            return render_template("reset_password.html")
+
+        user = User.query.filter_by(email=session["reset_email"]).first()
+
+        if user is None:
+            flash("Account not found. Please request a new password reset.")
+            return redirect(url_for("forgot_password"))
+
+        user.password_hash = generate_password_hash(password)
+        db.session.commit()
+
+        session.pop("reset_email", None)
+        session.pop("reset_code", None)
+        session.pop("reset_code_expires_at", None)
+        session.pop("reset_verified", None)
+
+        flash("Password reset successfully. Please log in.")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html")
 
 
 @app.route("/dashboard")
@@ -650,9 +807,9 @@ def workouts():
         session.clear()
         return redirect(url_for("login"))
 
-    search_query    = request.args.get("search", "").strip()
+    search_query = request.args.get("search", "").strip()
     intensity_filter = request.args.get("intensity", "").strip()
-    sort_by         = request.args.get("sort", "newest").strip()
+    sort_by = request.args.get("sort", "newest").strip()
 
     query = Workout.query.filter_by(user_id=user.id)
 
@@ -671,7 +828,7 @@ def workouts():
     else:
         query = query.order_by(Workout.date.desc(), Workout.id.desc())
 
-    workout_list = [workout_to_dict(w) for w in query.all()]
+    workout_list = [workout_to_dict(workout) for workout in query.all()]
 
     return render_template(
         "workouts.html",
@@ -684,11 +841,6 @@ def workouts():
 
 @app.route("/workouts/add")
 def add_workout():
-    """Landing page for the new workout flow.
-
-    Renders the muscle-group / exercise selector with a live timer.
-    The actual saving is handled by POST /workouts/finish.
-    """
     if not is_logged_in():
         return redirect(url_for("login"))
 
@@ -704,59 +856,46 @@ def add_workout():
     )
 
 
-# ---------------------------------------------------------------------------
-# API: exercise catalogue
-# ---------------------------------------------------------------------------
-
 @csrf.exempt
 @app.route("/api/exercises")
 def api_exercises():
-    """Return exercises for a given muscle group as JSON.
-
-    Query params:
-        muscle_group  – required, e.g. "Chest"
-
-    Returns built-in exercises (user_id IS NULL) plus the current user's
-    custom exercises for that muscle group.
-    """
     if not is_logged_in():
         return jsonify({"error": "Unauthorised"}), 401
 
     user = current_user()
+
     if user is None:
         return jsonify({"error": "Unauthorised"}), 401
 
     muscle_group = request.args.get("muscle_group", "").strip()
+
     if not muscle_group:
         return jsonify({"error": "muscle_group parameter is required"}), 400
 
     exercises = Exercise.query.filter(
         Exercise.muscle_group == muscle_group,
         db.or_(
-            Exercise.user_id == None,   # built-ins
-            Exercise.user_id == user.id # user's own custom exercises
+            Exercise.user_id == None,
+            Exercise.user_id == user.id
         )
     ).order_by(Exercise.name).all()
 
-    return jsonify([ex.to_dict() for ex in exercises])
+    return jsonify([exercise.to_dict() for exercise in exercises])
 
 
 @csrf.exempt
 @app.route("/api/exercises", methods=["POST"])
 def api_add_exercise():
-    """Create a custom exercise for the current user.
-
-    Expects JSON body:
-        { "name": "...", "muscle_group": "..." }
-    """
     if not is_logged_in():
         return jsonify({"error": "Unauthorised"}), 401
 
     user = current_user()
+
     if user is None:
         return jsonify({"error": "Unauthorised"}), 401
 
     data = request.get_json(silent=True)
+
     if not data:
         return jsonify({"error": "JSON body required"}), 400
 
@@ -769,7 +908,6 @@ def api_add_exercise():
     if muscle_group not in MUSCLE_GROUPS:
         return jsonify({"error": f"muscle_group must be one of: {', '.join(MUSCLE_GROUPS)}"}), 400
 
-    # Prevent duplicates: same name + muscle group for this user or built-ins
     duplicate = Exercise.query.filter(
         Exercise.name.ilike(name),
         Exercise.muscle_group == muscle_group,
@@ -784,54 +922,31 @@ def api_add_exercise():
         muscle_group=muscle_group,
         user_id=user.id,
     )
+
     db.session.add(new_exercise)
     db.session.commit()
 
     return jsonify(new_exercise.to_dict()), 201
 
 
-# ---------------------------------------------------------------------------
-# Finish workout: save sets + calculate duration from timer
-# ---------------------------------------------------------------------------
-
 @csrf.exempt
 @app.route("/workouts/finish", methods=["POST"])
 def finish_workout():
-    """Receive the completed workout from the frontend and persist it.
-
-    Expects JSON body:
-    {
-        "started_at":  "<ISO 8601 string>",   // e.g. "2026-05-06T09:00:00"
-        "finished_at": "<ISO 8601 string>",
-        "notes":       "optional free text",
-        "sets": [
-            {
-                "exercise_id": 3,
-                "set_number":  1,
-                "reps":        10,
-                "weight_kg":   80.0
-            },
-            ...
-        ]
-    }
-
-    The workout's `type` is derived from the muscle groups exercised,
-    `intensity` from average weight lifted, and `duration` from the timer.
-    """
     if not is_logged_in():
         return jsonify({"error": "Unauthorised"}), 401
 
     user = current_user()
+
     if user is None:
         return jsonify({"error": "Unauthorised"}), 401
 
     data = request.get_json(silent=True)
+
     if not data:
         return jsonify({"error": "JSON body required"}), 400
 
-    # ---- parse timestamps ------------------------------------------------ #
     try:
-        started_at  = datetime.fromisoformat(data["started_at"])
+        started_at = datetime.fromisoformat(data["started_at"])
         finished_at = datetime.fromisoformat(data["finished_at"])
     except (KeyError, ValueError):
         return jsonify({"error": "started_at and finished_at must be valid ISO datetime strings"}), 400
@@ -842,65 +957,64 @@ def finish_workout():
     duration_seconds = int((finished_at - started_at).total_seconds())
     duration_minutes = max(1, round(duration_seconds / 60))
 
-    # ---- validate sets --------------------------------------------------- #
     raw_sets = data.get("sets", [])
+
     if not raw_sets:
         return jsonify({"error": "At least one set is required"}), 400
 
     validated_sets = []
-    for i, s in enumerate(raw_sets):
+
+    for index, raw_set in enumerate(raw_sets):
         try:
-            exercise_id = int(s["exercise_id"])
-            set_number  = int(s["set_number"])
-            reps        = int(s["reps"])
-            weight_kg   = float(s["weight_kg"])
+            exercise_id = int(raw_set["exercise_id"])
+            set_number = int(raw_set["set_number"])
+            reps = int(raw_set["reps"])
+            weight_kg = float(raw_set["weight_kg"])
         except (KeyError, ValueError, TypeError):
-            return jsonify({"error": f"Set {i} is missing or has invalid fields"}), 400
+            return jsonify({"error": f"Set {index} is missing or has invalid fields"}), 400
 
         if reps <= 0:
-            return jsonify({"error": f"Set {i}: reps must be greater than 0"}), 400
-        if weight_kg < 0:
-            return jsonify({"error": f"Set {i}: weight_kg cannot be negative"}), 400
+            return jsonify({"error": f"Set {index}: reps must be greater than 0"}), 400
 
-        # Confirm the exercise exists and belongs to this user or is built-in
+        if weight_kg < 0:
+            return jsonify({"error": f"Set {index}: weight_kg cannot be negative"}), 400
+
         exercise = Exercise.query.filter(
             Exercise.id == exercise_id,
             db.or_(Exercise.user_id == None, Exercise.user_id == user.id)
         ).first()
 
         if exercise is None:
-            return jsonify({"error": f"Set {i}: exercise_id {exercise_id} not found"}), 404
+            return jsonify({"error": f"Set {index}: exercise_id {exercise_id} not found"}), 404
 
         validated_sets.append({
-            "exercise":   exercise,
+            "exercise": exercise,
             "set_number": set_number,
-            "reps":       reps,
-            "weight_kg":  weight_kg,
+            "reps": reps,
+            "weight_kg": weight_kg,
         })
 
-    # ---- derive workout metadata ----------------------------------------- #
-    # Type: comma-joined unique muscle groups that were trained
     muscle_groups_trained = list(dict.fromkeys(
-        s["exercise"].muscle_group for s in validated_sets
+        saved_set["exercise"].muscle_group
+        for saved_set in validated_sets
     ))
+
     workout_type = ", ".join(muscle_groups_trained)
 
-    # Intensity: based on average weight across all sets
-    weights = [s["weight_kg"] for s in validated_sets]
-    avg_weight = sum(weights) / len(weights)
+    weights = [saved_set["weight_kg"] for saved_set in validated_sets]
+    average_weight = sum(weights) / len(weights)
 
-    if avg_weight == 0:
-        intensity = "Low"        # bodyweight only
-    elif avg_weight < 40:
+    if average_weight == 0:
         intensity = "Low"
-    elif avg_weight < 80:
+    elif average_weight < 40:
+        intensity = "Low"
+    elif average_weight < 80:
         intensity = "Medium"
     else:
         intensity = "High"
 
     notes = (data.get("notes") or "").strip() or "No notes added."
 
-    # ---- persist --------------------------------------------------------- #
     new_workout = Workout(
         date=started_at.strftime("%Y-%m-%d"),
         type=workout_type,
@@ -911,38 +1025,44 @@ def finish_workout():
         finished_at=finished_at,
         user_id=user.id,
     )
-    db.session.add(new_workout)
-    db.session.flush()  # get new_workout.id before committing
 
-    for s in validated_sets:
+    db.session.add(new_workout)
+    db.session.flush()
+
+    for saved_set in validated_sets:
         workout_set = WorkoutSet(
             workout_id=new_workout.id,
-            exercise_id=s["exercise"].id,
-            set_number=s["set_number"],
-            reps=s["reps"],
-            weight_kg=s["weight_kg"],
+            exercise_id=saved_set["exercise"].id,
+            set_number=saved_set["set_number"],
+            reps=saved_set["reps"],
+            weight_kg=saved_set["weight_kg"],
         )
+
         db.session.add(workout_set)
 
     db.session.commit()
 
-    # ---- build summary for the frontend ---------------------------------- #
-    total_volume_kg = sum(s["reps"] * s["weight_kg"] for s in validated_sets)
+    total_volume_kg = sum(
+        saved_set["reps"] * saved_set["weight_kg"]
+        for saved_set in validated_sets
+    )
+
     sets_per_exercise = {}
-    for s in validated_sets:
-        ex_name = s["exercise"].name
-        sets_per_exercise[ex_name] = sets_per_exercise.get(ex_name, 0) + 1
+
+    for saved_set in validated_sets:
+        exercise_name = saved_set["exercise"].name
+        sets_per_exercise[exercise_name] = sets_per_exercise.get(exercise_name, 0) + 1
 
     return jsonify({
-        "workout_id":       new_workout.id,
-        "date":             new_workout.date,
-        "type":             workout_type,
+        "workout_id": new_workout.id,
+        "date": new_workout.date,
+        "type": workout_type,
         "duration_minutes": duration_minutes,
-        "intensity":        intensity,
-        "total_sets":       len(validated_sets),
-        "total_volume_kg":  round(total_volume_kg, 1),
-        "exercises":        sets_per_exercise,
-        "muscle_groups":    muscle_groups_trained,
+        "intensity": intensity,
+        "total_sets": len(validated_sets),
+        "total_volume_kg": round(total_volume_kg, 1),
+        "exercises": sets_per_exercise,
+        "muscle_groups": muscle_groups_trained,
     }), 201
 
 
@@ -1133,4 +1253,3 @@ def logout():
 if __name__ == "__main__":
     ensure_database_ready()
     app.run(debug=True)
-

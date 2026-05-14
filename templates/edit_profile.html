@@ -26,40 +26,77 @@
                     class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#editProfileNav"
-                    aria-controls="editProfileNav"
+                    data-bs-target="#appNav"
+                    aria-controls="appNav"
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="editProfileNav">
-                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                <div class="collapse navbar-collapse" id="appNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
                         </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('profile') }}">Profile</a>
-                        </li>
-
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
                         </li>
-
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
                         </li>
-
-                        <li class="nav-item ms-lg-3">
-                            <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
-                        </li>
                     </ul>
+
+                    <div class="d-flex align-items-center mt-3 mt-lg-0">
+                        <div class="dropdown">
+                            <button
+                                class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Open profile menu"
+                            >
+                                {% if nav_profile and nav_profile.avatar_filename %}
+                                    <img
+                                        src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                        alt="Profile"
+                                        class="profile-icon"
+                                    >
+                                {% else %}
+                                    <span class="profile-icon profile-icon-fallback">
+                                        {% if nav_profile and nav_profile.name %}
+                                            {% set name_parts = nav_profile.name.split() %}
+                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                        {% elif nav_email %}
+                                            {{ nav_email[0]|upper }}
+                                        {% else %}
+                                            U
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -107,7 +144,7 @@
                             <div class="mb-4">
                                 <label class="form-label fw-semibold">Current Avatar</label>
 
-                                <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-start gap-3 flex-wrap">
                                     <div
                                         class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm border border-3 border-success overflow-hidden"
                                         style="width: 96px; height: 96px; font-size: 2rem; font-weight: 700;"
@@ -120,15 +157,27 @@
                                                 style="object-fit: cover;"
                                             >
                                         {% else %}
-                                            {{ profile.name[0] }}
+                                            {% set name_parts = profile.name.split() %}
+                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
                                         {% endif %}
                                     </div>
 
-                                    <div>
+                                    <div class="flex-grow-1">
                                         <p class="mb-1 fw-semibold">{{ profile.name }}</p>
-                                        <p class="mb-0 text-muted small">
+                                        <p class="mb-2 text-muted small">
                                             Upload a new image below to replace your current avatar.
                                         </p>
+
+                                        {% if profile.avatar_filename %}
+                                            <button
+                                                type="submit"
+                                                name="action"
+                                                value="remove_avatar"
+                                                class="btn btn-outline-danger btn-sm"
+                                            >
+                                                Remove current avatar
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -146,21 +195,6 @@
                                     Accepted formats: PNG, JPG, JPEG, or GIF.
                                 </div>
                             </div>
-
-                            {% if profile.avatar_filename %}
-                                <div class="form-check mb-3">
-                                    <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        id="remove_avatar"
-                                        name="remove_avatar"
-                                        value="yes"
-                                    >
-                                    <label class="form-check-label" for="remove_avatar">
-                                        Remove current avatar and use default initial
-                                    </label>
-                                </div>
-                            {% endif %}
 
                             <div class="mb-3">
                                 <label for="name" class="form-label">Name</label>
@@ -197,7 +231,7 @@
                             </div>
 
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-success">
+                                <button type="submit" name="action" value="save" class="btn btn-success">
                                     Save Changes
                                 </button>
 

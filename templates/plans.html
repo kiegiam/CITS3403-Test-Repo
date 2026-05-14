@@ -26,27 +26,24 @@
                     class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#mainNav"
-                    aria-controls="mainNav"
+                    data-bs-target="#appNav"
+                    aria-controls="appNav"
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                <div class="collapse navbar-collapse" id="appNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('plans') }}">Plans</a>
+                            <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
@@ -54,10 +51,52 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
                         </li>
-                        <li class="nav-item ms-lg-3">
-                            <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
-                        </li>
                     </ul>
+
+                    <div class="d-flex align-items-center mt-3 mt-lg-0">
+                        <div class="dropdown">
+                            <button
+                                class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Open profile menu"
+                            >
+                                {% if nav_profile and nav_profile.avatar_filename %}
+                                    <img
+                                        src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                        alt="Profile"
+                                        class="profile-icon"
+                                    >
+                                {% else %}
+                                    <span class="profile-icon profile-icon-fallback">
+                                        {% if nav_profile and nav_profile.name %}
+                                            {% set name_parts = nav_profile.name.split() %}
+                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                        {% elif nav_email %}
+                                            {{ nav_email[0]|upper }}
+                                        {% else %}
+                                            U
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -97,7 +136,9 @@
                                     <li class="list-group-item px-0">Focus on major muscle groups</li>
                                     <li class="list-group-item px-0">Track weight and duration</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-outline-success">Log Strength Workout</a>
+                                <a href="{{ url_for('add_workout', plan='strength') }}" class="btn btn-success">
+                                    Log Strength Session
+                                    </a>
                             </div>
                         </div>
                     </div>
@@ -114,7 +155,9 @@
                                     <li class="list-group-item px-0">Mix low and medium intensity</li>
                                     <li class="list-group-item px-0">Record distance or notes</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-outline-success">Log Cardio Workout</a>
+                                <a href="{{ url_for('add_workout', plan='cardio') }}" class="btn btn-primary">
+                                    Log Cardio Session
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -131,7 +174,9 @@
                                     <li class="list-group-item px-0">Focus on controlled movement</li>
                                     <li class="list-group-item px-0">Note tight or sore areas</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-outline-success">Log Flexibility Workout</a>
+                                <a href="{{ url_for('add_workout', plan='flexibility') }}" class="btn btn-warning">
+                                    Log Flexibility Session
+                                </a>
                             </div>
                         </div>
                     </div>

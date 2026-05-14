@@ -26,21 +26,18 @@
                     class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#dashboardNav"
-                    aria-controls="dashboardNav"
+                    data-bs-target="#appNav"
+                    aria-controls="appNav"
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="dashboardNav">
-                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                <div class="collapse navbar-collapse" id="appNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
                         <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
@@ -54,10 +51,52 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
                         </li>
-                        <li class="nav-item ms-lg-3">
-                            <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
-                        </li>
                     </ul>
+
+                    <div class="d-flex align-items-center mt-3 mt-lg-0">
+                        <div class="dropdown">
+                            <button
+                                class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Open profile menu"
+                            >
+                                {% if nav_profile and nav_profile.avatar_filename %}
+                                    <img
+                                        src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                        alt="Profile"
+                                        class="profile-icon"
+                                    >
+                                {% else %}
+                                    <span class="profile-icon profile-icon-fallback">
+                                        {% if nav_profile and nav_profile.name %}
+                                            {% set name_parts = nav_profile.name.split() %}
+                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                        {% elif nav_email %}
+                                            {{ nav_email[0]|upper }}
+                                        {% else %}
+                                            U
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -70,8 +109,8 @@
                     <div class="card-body p-4">
                         <div class="row align-items-center g-3">
                             <div class="col-lg-8">
-                                <h1 class="h3 mb-2">Welcome to your dashboard</h1>
-                                <p class="mb-0 text-muted">You are logged in as <strong>{{ email }}</strong>.</p>
+                                <h1 class="h3 mb-2">Welcome to your dashboard, <strong>{{ profile.name }}</strong>.</p> </h1>
+                                <p class="mb-0 text-muted">Get started now.</p>
                             </div>
                             <div class="col-lg-4 text-lg-end">
                                 <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
@@ -82,28 +121,119 @@
             </section>
 
             <section class="mb-4">
-                <div class="row text-center g-3">
-                    <div class="col-md-4">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
-                            <h2 class="h1 mb-1">{{ statistics.total_workouts }}</h2>
-                            <p class="mb-0 text-muted">Total Workouts</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
-                            <h2 class="h1 mb-1">{{ statistics.total_minutes }}</h2>
-                            <p class="mb-0 text-muted">Total Minutes</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
-                            <h2 class="h1 mb-1">{{ statistics.current_streak }}</h2>
-                            <p class="mb-0 text-muted">Day Streak</p>
+                <div class="card shadow-sm border-0 hero-card">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center g-3">
+                            <div class="col-lg-8">
+                                <h1 class="h3 mb-2">Your Week in FitTrack</h1>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
+            <section class="mb-4">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100 dashboard-info-card">
+                            <div class="card-body">
+                                <h2 class="h6 text-muted mb-2">Sessions This Week</h2>
+                                <div class="display-6 fw-bold">{{ weekly_summary.total_sessions }}</div>
+                                <p class="mb-0 text-muted small">Logged across all plans.</p>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100 dashboard-info-card">
+                            <div class="card-body">
+                                <h2 class="h6 text-muted mb-2">Minutes This Week</h2>
+                                <div class="display-6 fw-bold">{{ weekly_summary.total_minutes }}</div>
+                                <p class="mb-0 text-muted small">Total active minutes this week.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100 dashboard-info-card">
+                            <div class="card-body">
+                                <h2 class="h6 text-muted mb-2">Active Days</h2>
+                                <div class="display-6 fw-bold">{{ weekly_summary.active_days }}</div>
+                                <p class="mb-0 text-muted small">Days with at least one session.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Weekly Activity Snapshot</h2>
+
+                        <div class="weekly-bars">
+                            {% for day in weekly_summary.chart_days %}
+                                <div class="weekly-bar-col text-center">
+                                    <div class="weekly-bar-value small text-muted mb-2">
+                                        {{ day.total_minutes }}m
+                                    </div>
+
+                                    <div class="weekly-bar-track mx-auto" style="height: {{ day.bar_height }}px;">
+                                        {% for segment in day.segments %}
+                                            <div
+                                                class="weekly-bar-segment {{ segment.class }}"
+                                                style="height: {{ segment.percent }}%;"
+                                            ></div>
+                                        {% endfor %}
+                                    </div>
+
+                                    {% if day.recommendations %}
+                                        <div class="weekly-rec-tags mt-2">
+                                            {% for rec in day.recommendations %}
+                                                <span class="weekly-rec-tag bg-{{ rec.theme }}">
+                                                    {{ rec.label }}
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="small mt-2 {% if day.is_today %}text-success fw-semibold{% else %}text-muted{% endif %}">
+                                        {{ day.label }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Upcoming Workout Planner</h2>
+
+                        <div class="row g-3">
+                            {% for card in upcoming_plan_cards %}
+                                <div class="col-lg-4">
+                                    <div class="border rounded-4 p-3 h-100 bg-light">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h3 class="h6 mb-0">{{ card.label }}</h3>
+                                            <span class="badge bg-{{ card.theme }}">{{ card.range_text }}</span>
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <div class="small text-muted">Logged this week</div>
+                                            <div class="display-6 fw-bold">{{ card.count_this_week }}</div>
+                                        </div>
+
+                                        <p class="mb-2">{{ card.message }}</p>
+                                        <p class="mb-0 small fw-semibold text-{{ card.theme }}">
+                                            {{ card.next_window }}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
             <section class="mb-4">
                 <div class="row g-4">
                     <div class="col-lg-7">
@@ -117,12 +247,14 @@
                                 <div class="list-group list-group-flush">
                                     {% for workout in recent_workouts %}
                                         <div class="list-group-item px-0">
-                                            <div class="d-flex justify-content-between flex-wrap gap-2">
+                                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                                                 <div>
-                                                    <h3 class="h6 mb-1">{{ workout.type }}</h3>
-                                                    <p class="mb-0 text-muted small">{{ workout.date }} · {{ workout.intensity }} intensity</p>
+                                                    <div class="fw-semibold">{{ workout.type }}</div>
+                                                    <div class="small text-muted">{{ workout.date }} · {{ workout.intensity }}</div>
                                                 </div>
-                                                <span class="badge text-bg-success align-self-start">{{ workout.duration }} min</span>
+                                                <span class="badge bg-{{ workout.theme }} recent-workout-badge">
+                                                    {{ workout.duration }} min
+                                                </span>
                                             </div>
                                         </div>
                                     {% endfor %}

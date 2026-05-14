@@ -1,7 +1,7 @@
 import os
-from datetime import date, datetime
-
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from datetime import date, datetime, timedelta
+import re
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,8 +15,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///fittrack.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # User-uploaded avatar settings
-app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
-app.config["ALLOWED_IMAGE_EXTENSIONS"] = {"png", "jpg", "jpeg", "gif"}
+app.config["UPLOAD_FOLDER"] = os.path.join(app.static_folder, "uploads")
+app.config["ALLOWED_IMAGE_EXTENSIONS"] = {"png", "jpg", "jpeg", "gif", "webp"}
+
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 db = SQLAlchemy(app)
 
@@ -89,6 +91,28 @@ MUSCLE_GROUPS = [
     "Core",
     "Cardio",
 ]
+
+PLAN_RULES = {
+    "strength": {
+        "label": "Strength Plan",
+        "prefix": "Strength Training",
+    },
+    "cardio": {
+        "label": "Cardio Plan",
+        "prefix": "Cardio Training",
+    },
+    "flexibility": {
+        "label": "Flexibility Plan",
+        "prefix": "Flexibility Training",
+    },
+}
+
+def get_plan_theme(plan_key):
+    return {
+        "strength": "success",
+        "cardio": "primary",
+        "flexibility": "warning",
+    }.get(plan_key, "secondary")
 
 class Exercise(db.Model):
     __tablename__ = "exercises"
@@ -336,9 +360,319 @@ def user_to_profile_dict(user):
         "location": user.location or "Not set",
         "avatar_filename": user.avatar_filename,
     }
+def allowed_avatar_file(filename):
+    return (
+        "." in filename and
+        filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_IMAGE_EXTENSIONS"]
+    )
 
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def is_valid_email(email):
+    return bool(EMAIL_REGEX.match(email))
+
+
+def is_valid_password(password):
+    if len(password) < 8:
+        return False
+
+    has_letter = any(char.isalpha() for char in password)
+    has_number = any(char.isdigit() for char in password)
+
+    return has_letter and has_number
+
+PLAN_RULES = {
+    "strength": {
+        "label": "Strength Plan",
+        "prefix": "Strength Training",
+        "min_per_week": 3,
+        "max_per_week": 3,
+        "gap_days": 2,
+        "theme": "success",
+    },
+    "cardio": {
+        "label": "Cardio Plan",
+        "prefix": "Cardio Training",
+        "min_per_week": 2,
+        "max_per_week": 4,
+        "gap_days": 1,
+        "theme": "primary",
+    },
+    "flexibility": {
+        "label": "Flexibility Plan",
+        "prefix": "Flexibility Training",
+        "min_per_week": 2,
+        "max_per_week": 5,
+        "gap_days": 1,
+        "theme": "warning",
+    },
+}
+
+
+def parse_workout_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+
+
+def detect_plan_type(workout_type):
+    if not workout_type:
+        return None
+
+    lowered = workout_type.lower()
+
+    if lowered.startswith("strength training -"):
+        return "strength"
+    if lowered.startswith("cardio training -"):
+        return "cardio"
+    if lowered.startswith("flexibility training -"):
+        return "flexibility"
+
+    return None
+
+
+def get_week_bounds(today=None):
+    today = today or date.today()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    return week_start, week_end
+
+
+def get_user_workout_objects(user):
+    return (
+        Workout.query
+        .filter_by(user_id=user.id)
+        .order_by(Workout.date.desc(), Workout.id.desc())
+        .all()
+    )
+
+
+def get_weekly_activity_summary(user):
+    workout_objects = get_user_workout_objects(user)
+    week_start, week_end = get_week_bounds()
+    today = date.today()
+
+    day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+    daily_totals = []
+    for i in range(7):
+        daily_totals.append({
+            "label": day_labels[i],
+            "date": week_start + timedelta(days=i),
+            "total_minutes": 0,
+            "sessions": 0,
+            "strength_minutes": 0,
+            "cardio_minutes": 0,
+            "flexibility_minutes": 0,
+            "other_minutes": 0,
+        })
+
+    for workout in workout_objects:
+        workout_day = parse_workout_date(workout.date)
+        if workout_day is None:
+            continue
+
+        if week_start <= workout_day <= week_end:
+            idx = workout_day.weekday()
+            daily_totals[idx]["total_minutes"] += workout.duration
+            daily_totals[idx]["sessions"] += 1
+
+            plan_key = detect_plan_type(workout.type)
+
+            if plan_key == "strength":
+                daily_totals[idx]["strength_minutes"] += workout.duration
+            elif plan_key == "cardio":
+                daily_totals[idx]["cardio_minutes"] += workout.duration
+            elif plan_key == "flexibility":
+                daily_totals[idx]["flexibility_minutes"] += workout.duration
+            else:
+                daily_totals[idx]["other_minutes"] += workout.duration
+
+    total_sessions = sum(day["sessions"] for day in daily_totals)
+    total_minutes = sum(day["total_minutes"] for day in daily_totals)
+    active_days = sum(1 for day in daily_totals if day["total_minutes"] > 0)
+
+    if total_sessions == 0:
+        headline = "No workouts logged this week yet."
+    else:
+        headline = f"{total_sessions} session(s) logged this week."
+
+    max_minutes = max((day["total_minutes"] for day in daily_totals), default=0)
+
+    chart_days = []
+    for day in daily_totals:
+        total = day["total_minutes"]
+
+        if max_minutes > 0:
+            bar_height = max(14, round((total / max_minutes) * 120)) if total > 0 else 14
+        else:
+            bar_height = 14
+
+        if total == 0:
+            segments = [{"class": "bar-gray", "percent": 100}]
+        else:
+            segments = []
+
+            if day["strength_minutes"] > 0:
+                segments.append({
+                    "class": "bar-strength",
+                    "percent": (day["strength_minutes"] / total) * 100,
+                })
+
+            if day["cardio_minutes"] > 0:
+                segments.append({
+                    "class": "bar-cardio",
+                    "percent": (day["cardio_minutes"] / total) * 100,
+                })
+
+            if day["flexibility_minutes"] > 0:
+                segments.append({
+                    "class": "bar-flexibility",
+                    "percent": (day["flexibility_minutes"] / total) * 100,
+                })
+
+            if day["other_minutes"] > 0:
+                segments.append({
+                    "class": "bar-other",
+                    "percent": (day["other_minutes"] / total) * 100,
+                })
+
+        chart_days.append({
+            "label": "Today" if day["date"] == today else day["label"],
+            "is_today": day["date"] == today,
+            "total_minutes": total,
+            "sessions": day["sessions"],
+            "bar_height": bar_height,
+            "segments": segments,
+        })
+
+    plan_counts = {
+        "strength": sum(day["sessions"] for day in daily_totals if day["strength_minutes"] > 0),
+        "cardio": sum(day["sessions"] for day in daily_totals if day["cardio_minutes"] > 0),
+        "flexibility": sum(day["sessions"] for day in daily_totals if day["flexibility_minutes"] > 0),
+    }
+
+    return {
+        "headline": headline,
+        "total_sessions": total_sessions,
+        "total_minutes": total_minutes,
+        "active_days": active_days,
+        "plan_counts": plan_counts,
+        "chart_days": chart_days,
+    }
+
+
+def get_upcoming_plan_cards(user):
+    workout_objects = get_user_workout_objects(user)
+    today = date.today()
+    week_start, week_end = get_week_bounds(today)
+
+    plan_state = {}
+    for plan_key in PLAN_RULES:
+        plan_state[plan_key] = {
+            "count_this_week": 0,
+            "last_done": None,
+        }
+
+    for workout in workout_objects:
+        plan_key = detect_plan_type(workout.type)
+        if not plan_key:
+            continue
+
+        workout_day = parse_workout_date(workout.date)
+        if workout_day is None:
+            continue
+
+        if week_start <= workout_day <= week_end:
+            plan_state[plan_key]["count_this_week"] += 1
+
+        if plan_state[plan_key]["last_done"] is None or workout_day > plan_state[plan_key]["last_done"]:
+            plan_state[plan_key]["last_done"] = workout_day
+
+    upcoming_cards = []
+
+    for plan_key, rule in PLAN_RULES.items():
+        count_this_week = plan_state[plan_key]["count_this_week"]
+        last_done = plan_state[plan_key]["last_done"]
+
+        earliest_next = today
+        if last_done:
+            earliest_next = max(today, last_done + timedelta(days=rule["gap_days"]))
+
+        next_is_today = earliest_next == today
+
+        if plan_key == "strength":
+            if count_this_week >= rule["min_per_week"]:
+                message = "This week’s strength target is complete."
+                next_window = "Optional recovery or extra session only."
+            else:
+                remaining = rule["min_per_week"] - count_this_week
+                message = f"{remaining} strength session(s) still recommended this week."
+                next_window = "Next recommended session: Today" if next_is_today else \
+                    f"Next recommended session: {earliest_next.strftime('%a %d %b')}"
+        else:
+            if count_this_week < rule["min_per_week"]:
+                remaining = rule["min_per_week"] - count_this_week
+                message = f"{remaining} more session(s) needed to hit the weekly minimum."
+                latest_window = min(week_end, earliest_next + timedelta(days=2))
+                if next_is_today:
+                    next_window = f"Suggested window: Today to {latest_window.strftime('%a %d %b')}"
+                else:
+                    next_window = f"Suggested window: {earliest_next.strftime('%a %d %b')} to {latest_window.strftime('%a %d %b')}"
+            elif count_this_week < rule["max_per_week"]:
+                optional_left = rule["max_per_week"] - count_this_week
+                message = f"Minimum reached. Up to {optional_left} more optional session(s) this week."
+                latest_window = min(week_end, earliest_next + timedelta(days=3))
+                if next_is_today:
+                    next_window = f"Optional window: Today to {latest_window.strftime('%a %d %b')}"
+                else:
+                    next_window = f"Optional window: {earliest_next.strftime('%a %d %b')} to {latest_window.strftime('%a %d %b')}"
+            else:
+                message = "Upper weekly range reached."
+                next_window = "Recover or resume next week."
+
+        recommended_day_index = None
+        if week_start <= earliest_next <= week_end:
+            recommended_day_index = (earliest_next - week_start).days
+
+        upcoming_cards.append(
+            {
+                "plan_key": plan_key,
+                "label": rule["label"],
+                "theme": rule["theme"],
+                "count_this_week": count_this_week,
+                "range_text": f"{rule['min_per_week']}-{rule['max_per_week']} per week"
+                if rule["min_per_week"] != rule["max_per_week"]
+                else f"{rule['min_per_week']} per week",
+                "message": message,
+                "next_window": next_window,
+                "next_is_today": next_is_today,
+                "recommended_day_index": recommended_day_index,
+            }
+        )
+
+    return upcoming_cards
+
+@app.context_processor
+def inject_nav_user():
+    if "user_id" in session:
+        user = current_user()
+        if user:
+            return {
+                "nav_email": user.email,
+                "nav_profile": user_to_profile_dict(user),
+            }
+
+    return {
+        "nav_email": None,
+        "nav_profile": None,
+    }
 
 def workout_to_dict(workout):
+    plan_key = detect_plan_type(workout.type)
+
     return {
         "id": workout.id,
         "date": workout.date,
@@ -346,6 +680,8 @@ def workout_to_dict(workout):
         "duration": workout.duration,
         "intensity": workout.intensity,
         "notes": workout.notes or "No notes added.",
+        "plan_key": plan_key,
+        "theme": get_plan_theme(plan_key),
     }
 
 
@@ -422,37 +758,50 @@ def register():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        goal = request.form.get("goal", "").strip()
-        location = request.form.get("location", "").strip()
 
-        if not name or not email or not password:
-            flash("Name, email, and password are required.")
+        if not name:
+            flash("Name is required.", "danger")
+            return render_template("register.html")
+
+        if not email:
+            flash("Email is required.", "danger")
+            return render_template("register.html")
+
+        if not password:
+            flash("Password is required.", "danger")
+            return render_template("register.html")
+
+        if not is_valid_email(email):
+            flash("Please enter a valid email address.", "danger")
+            return render_template("register.html")
+
+        if not is_valid_password(password):
+            flash(
+                "Password must be at least 8 characters long and contain at least 1 letter and 1 number.",
+                "danger"
+            )
             return render_template("register.html")
 
         existing_user = User.query.filter_by(email=email).first()
-
         if existing_user:
-            flash("An account with that email already exists.")
+            flash("An account with that email already exists.", "danger")
             return render_template("register.html")
 
         new_user = User(
             name=name,
             email=email,
             password_hash=generate_password_hash(password),
-            goal=goal or "Stay consistent",
+            goal="Stay consistent",
             member_since=date.today().strftime("%B %Y"),
-            location=location or "Not set",
+            location="Not set",
             avatar_filename=None,
         )
 
         db.session.add(new_user)
         db.session.commit()
 
-        session["user_id"] = new_user.id
-        session["user_email"] = new_user.email
-
-        flash("Account created successfully.")
-        return redirect(url_for("dashboard"))
+        flash("Account created successfully. Please log in.", "success")
+        return redirect(url_for("login"))
 
     return render_template("register.html")
 
@@ -463,6 +812,18 @@ def login():
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
+        if not email:
+            flash("Email is required.", "danger")
+            return render_template("login.html")
+
+        if not password:
+            flash("Password is required.", "danger")
+            return render_template("login.html")
+
+        if not is_valid_email(email):
+            flash("Please enter a valid email address.", "danger")
+            return render_template("login.html")
+
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password_hash, password):
@@ -470,7 +831,7 @@ def login():
             session["user_email"] = user.email
             return redirect(url_for("dashboard"))
 
-        flash("Invalid email or password.")
+        flash("Invalid email or password.", "danger")
 
     return render_template("login.html")
 
@@ -481,7 +842,6 @@ def dashboard():
         return redirect(url_for("login"))
 
     user = current_user()
-
     if user is None:
         session.clear()
         return redirect(url_for("login"))
@@ -490,23 +850,34 @@ def dashboard():
         Workout.query
         .filter_by(user_id=user.id)
         .order_by(Workout.date.desc(), Workout.id.desc())
-        .limit(3)
+        .limit(5)
         .all()
     )
 
-    recent_workouts = [
-        workout_to_dict(workout)
-        for workout in recent_workout_objects
-    ]
+    recent_workouts = [workout_to_dict(workout) for workout in recent_workout_objects]
+    weekly_summary = get_weekly_activity_summary(user)
+    upcoming_plan_cards = get_upcoming_plan_cards(user)
 
-    statistics = get_statistics(user)
+    for day in weekly_summary["chart_days"]:
+        day["recommendations"] = []
+
+    for card in upcoming_plan_cards:
+        idx = card.get("recommended_day_index")
+        if idx is not None and 0 <= idx < len(weekly_summary["chart_days"]):
+            weekly_summary["chart_days"][idx]["recommendations"].append({
+                "label": card["label"],
+                "theme": card["theme"],
+            })
 
     return render_template(
         "dashboard.html",
         email=user.email,
+        profile=user_to_profile_dict(user),
         recent_workouts=recent_workouts,
-        statistics=statistics,
+        weekly_summary=weekly_summary,
+        upcoming_plan_cards=upcoming_plan_cards,
     )
+    
 
 
 @app.route("/profile")
@@ -536,12 +907,29 @@ def edit_profile():
         return redirect(url_for("login"))
 
     user = current_user()
-
     if user is None:
         session.clear()
         return redirect(url_for("login"))
 
     if request.method == "POST":
+        action = request.form.get("action", "save")
+
+        if action == "remove_avatar":
+            if user.avatar_filename:
+                avatar_path = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    user.avatar_filename
+                )
+
+                if os.path.exists(avatar_path):
+                    os.remove(avatar_path)
+
+                user.avatar_filename = None
+                db.session.commit()
+
+            flash("Avatar removed. Default initials will now be used.")
+            return redirect(url_for("edit_profile"))
+
         name = request.form.get("name", "").strip()
         goal = request.form.get("goal", "").strip()
         location = request.form.get("location", "").strip()
@@ -559,34 +947,35 @@ def edit_profile():
         user.location = location or "Not set"
 
         if avatar_file and avatar_file.filename:
-            if not allowed_image(avatar_file.filename):
-                flash("Avatar must be an image file: png, jpg, jpeg, or gif.")
+            if not allowed_avatar_file(avatar_file.filename):
+                flash("Please upload a valid image file: PNG, JPG, JPEG, or GIF.")
                 return render_template(
                     "edit_profile.html",
                     profile=user_to_profile_dict(user)
                 )
 
-            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+            if user.avatar_filename:
+                old_avatar_path = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    user.avatar_filename
+                )
+                if os.path.exists(old_avatar_path):
+                    os.remove(old_avatar_path)
 
-            original_filename = secure_filename(avatar_file.filename)
-            file_extension = original_filename.rsplit(".", 1)[1].lower()
+            original_name = secure_filename(avatar_file.filename)
+            extension = original_name.rsplit(".", 1)[1].lower()
+            new_filename = f"{user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{extension}"
 
-            avatar_filename = f"user_{user.id}_avatar.{file_extension}"
-            avatar_path = os.path.join(app.config["UPLOAD_FOLDER"], avatar_filename)
+            save_path = os.path.join(app.config["UPLOAD_FOLDER"], new_filename)
+            avatar_file.save(save_path)
 
-            avatar_file.save(avatar_path)
-            user.avatar_filename = avatar_filename
+            user.avatar_filename = new_filename
 
         db.session.commit()
-
         flash("Profile updated successfully.")
         return redirect(url_for("profile"))
 
-    return render_template(
-        "edit_profile.html",
-        profile=user_to_profile_dict(user)
-    )
-
+    return render_template("edit_profile.html", profile=user_to_profile_dict(user))
 
 @app.route("/workouts")
 def workouts():
@@ -617,27 +1006,26 @@ def workouts():
     )
 
 
-@app.route("/workouts/add")
+@app.route("/workouts/add", methods=["GET"])
 def add_workout():
-    """Landing page for the new workout flow.
-
-    Renders the muscle-group / exercise selector with a live timer.
-    The actual saving is handled by POST /workouts/finish.
-    """
     if not is_logged_in():
         return redirect(url_for("login"))
 
     user = current_user()
-
     if user is None:
         session.clear()
         return redirect(url_for("login"))
 
+    selected_plan = request.args.get("plan", "").strip().lower()
+
     return render_template(
         "add_workout.html",
+        profile=user_to_profile_dict(user),
+        email=user.email,
+        selected_plan=selected_plan,
+        plan_rules=PLAN_RULES,
         muscle_groups=MUSCLE_GROUPS,
     )
-
 
 # ---------------------------------------------------------------------------
 # API: exercise catalogue
@@ -760,6 +1148,8 @@ def finish_workout():
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"error": "JSON body required"}), 400
+    
+    plan_type = (data.get("plan_type") or "").strip().lower()
 
     # ---- parse timestamps ------------------------------------------------ #
     try:
@@ -815,7 +1205,14 @@ def finish_workout():
     muscle_groups_trained = list(dict.fromkeys(
         s["exercise"].muscle_group for s in validated_sets
     ))
-    workout_type = ", ".join(muscle_groups_trained)
+
+    base_workout_type = ", ".join(muscle_groups_trained)
+
+    if plan_type in PLAN_RULES:
+        prefix = PLAN_RULES[plan_type]["prefix"]
+        workout_type = f"{prefix} - {base_workout_type}"
+    else:
+        workout_type = base_workout_type
 
     # Intensity: based on average weight across all sets
     weights = [s["weight_kg"] for s in validated_sets]

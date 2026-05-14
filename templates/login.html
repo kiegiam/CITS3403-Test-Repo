@@ -15,7 +15,7 @@
         href="{{ url_for('static', filename='css/styles.css') }}"
     >
 </head>
-<body class="bg-light">
+<body class="dashboard-page">
 
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-success">
@@ -60,11 +60,13 @@
                             <div class="card-body p-4">
                                 <h1 class="h3 text-center mb-4">Login</h1>
 
-                                {% with messages = get_flashed_messages() %}
+                                {% with messages = get_flashed_messages(with_categories=true) %}
                                     {% if messages %}
-                                        <div class="alert alert-danger" role="alert">
-                                            {{ messages[0] }}
-                                        </div>
+                                        {% for category, message in messages %}
+                                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" role="alert">
+                                                {{ message }}
+                                            </div>
+                                        {% endfor %}
                                     {% endif %}
                                 {% endwith %}
 
@@ -79,7 +81,6 @@
                                             placeholder="demo@fittrack.com"
                                             required
                                         >
-                                        <div id="emailError" class="text-danger small mt-1"></div>
                                     </div>
 
                                     <div class="mb-3">
@@ -92,7 +93,6 @@
                                             placeholder="Enter your password"
                                             required
                                         >
-                                        <div id="passwordError" class="text-danger small mt-1"></div>
                                     </div>
 
                                     <div class="d-grid">

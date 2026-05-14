@@ -14,7 +14,7 @@
         href="{{ url_for('static', filename='css/styles.css') }}"
     >
 </head>
-<body class="bg-light">
+<body class="dashboard-page">
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-success">
             <div class="container">
@@ -56,15 +56,17 @@
                     <div class="card-body p-4">
                         <h1 class="h3 text-center mb-4">Create Account</h1>
 
-                        {% with messages = get_flashed_messages() %}
+                        {% with messages = get_flashed_messages(with_categories=true) %}
                             {% if messages %}
-                                <div class="alert alert-danger" role="alert">
-                                    {{ messages[0] }}
-                                </div>
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" role="alert">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
                             {% endif %}
                         {% endwith %}
 
-                        <form method="POST">
+                        <form method="POST" novalidate>
                             <div class="mb-3">
                                 <label for="name" class="form-label">Name</label>
                                 <input type="text" class="form-control" id="name" name="name" required>
@@ -77,19 +79,20 @@
 
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <input
+                                    type="password"
+                                    class="form-control"
+                                    id="password"
+                                    name="password"
+                                    minlength="8"
+                                    pattern="^(?=.*[A-Za-z])(?=.*\d).{8,}$"
+                                    title="Password must be at least 8 characters and contain at least 1 letter and 1 number."
+                                    required
+                                >
+                                <div class="form-text">
+                                    Must be at least 8 characters and include at least 1 letter and 1 number.
+                                </div>
                             </div>
-
-                            <div class="mb-3">
-                                <label for="goal" class="form-label">Fitness Goal</label>
-                                <input type="text" class="form-control" id="goal" name="goal">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="location" class="form-label">Location</label>
-                                <input type="text" class="form-control" id="location" name="location">
-                            </div>
-
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-success">Register</button>
                             </div>

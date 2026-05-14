@@ -271,22 +271,82 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
-            <button class="navbar-toggler" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#awNav">
+
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#appNav"
+                aria-controls="appNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="awNav">
-                <ul class="navbar-nav ms-auto align-items-lg-center">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="{{ url_for('workouts') }}">My Workouts</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('plans') }}">Plans</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('progress') }}">Progress</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a></li>
-                    <li class="nav-item ms-lg-3">
-                        <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
+
+            <div class="collapse navbar-collapse" id="appNav">
+                <ul class="navbar-nav me-auto align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
                     </li>
                 </ul>
+
+                <div class="d-flex align-items-center mt-3 mt-lg-0">
+                    <div class="dropdown">
+                        <button
+                            class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Open profile menu"
+                        >
+                            {% if nav_profile and nav_profile.avatar_filename %}
+                                <img
+                                    src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                    alt="Profile"
+                                    class="profile-icon"
+                                >
+                            {% else %}
+                                <span class="profile-icon profile-icon-fallback">
+                                    {% if nav_profile and nav_profile.name %}
+                                        {% set name_parts = nav_profile.name.split() %}
+                                        {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                    {% elif nav_email %}
+                                        {{ nav_email[0]|upper }}
+                                    {% else %}
+                                        U
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                    My Profile
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -349,6 +409,7 @@
 <!-- ══════════════════════════════════════════════════════════════════════
      SCREEN 2 — Pick exercises & log sets (workout in progress)
      ══════════════════════════════════════════════════════════════════════ -->
+<input type="hidden" id="plan-type" value="{{ selected_plan }}">
 <div id="screen-workout" class="screen">
 
     <!-- Exercise picker panel -->
@@ -882,6 +943,7 @@ async function finishWorkout() {
                 set_number:  s.set_number,
                 reps:        s.reps || 0,
                 weight_kg:   s.weight_kg || 0,
+                
             });
         }
     }
@@ -905,6 +967,7 @@ async function finishWorkout() {
         started_at:  startedAt.toISOString().slice(0, 19),
         finished_at: finishedAt.toISOString().slice(0, 19),
         notes:       document.getElementById('workout-notes').value.trim(),
+        plan_type: document.getElementById('plan-type')?.value || "",
         sets:        allSets,
     };
 

@@ -1188,12 +1188,37 @@ def progress():
         for workout in recent_workout_objects
     ]
 
+    type_chart_labels = list(type_counts.keys())
+    type_chart_counts = list(type_counts.values())
+    minutes_chart_labels = list(type_minutes.keys())
+    minutes_chart_values = list(type_minutes.values())
+
+    trend_minutes_by_date = {}
+
+    for workout in recent_workout_objects:
+        if workout.date not in trend_minutes_by_date:
+            trend_minutes_by_date[workout.date] = 0
+
+        trend_minutes_by_date[workout.date] += workout.duration
+
+    trend_chart_labels = sorted(trend_minutes_by_date.keys())
+    trend_chart_minutes = [
+        trend_minutes_by_date[workout_date]
+        for workout_date in trend_chart_labels
+    ]
+
     return render_template(
         "progress.html",
         progress_stats=progress_stats,
         type_counts=type_counts,
         type_minutes=type_minutes,
         recent_workouts=recent_workouts,
+        type_chart_labels=type_chart_labels,
+        type_chart_counts=type_chart_counts,
+        minutes_chart_labels=minutes_chart_labels,
+        minutes_chart_values=minutes_chart_values,
+        trend_chart_labels=trend_chart_labels,
+        trend_chart_minutes=trend_chart_minutes,
     )
 
 

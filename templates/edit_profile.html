@@ -26,26 +26,26 @@
                     class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#editProfileNav"
-                    aria-controls="editProfileNav"
+                    data-bs-target="#appNav"
+                    aria-controls="appNav"
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="editProfileNav">
-                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                <div class="collapse navbar-collapse" id="appNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('profile') }}">Profile</a>
+                            <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
+                            <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
                         </li>
 
                         <li class="nav-item">
@@ -55,11 +55,52 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
                         </li>
-
-                        <li class="nav-item ms-lg-3">
-                            <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Logout</a>
-                        </li>
                     </ul>
+
+                    <div class="d-flex align-items-center mt-3 mt-lg-0">
+                        <div class="dropdown">
+                            <button
+                                class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Open profile menu"
+                            >
+                                {% if nav_profile and nav_profile.avatar_filename %}
+                                    <img
+                                        src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                        alt="Profile"
+                                        class="profile-icon"
+                                    >
+                                {% else %}
+                                    <span class="profile-icon profile-icon-fallback">
+                                        {% if nav_profile and nav_profile.name %}
+                                            {% set name_parts = nav_profile.name.split() %}
+                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                        {% elif nav_email %}
+                                            {{ nav_email[0]|upper }}
+                                        {% else %}
+                                            U
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -137,76 +178,69 @@
                             <div class="mb-3">
                                 <label for="avatar" class="form-label">Profile Avatar</label>
                                 <input
-                                    type="file"
                                     class="form-control"
+                                    type="file"
                                     id="avatar"
                                     name="avatar"
-                                    accept="image/png, image/jpeg, image/jpg, image/gif"
+                                    accept="image/*"
                                 >
-                                <div class="form-text">
-                                    Accepted formats: PNG, JPG, JPEG, or GIF.
-                                </div>
                             </div>
 
-                            {% if profile.avatar_filename %}
-                                <div class="form-check mb-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label">Name</label>
                                     <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        id="remove_avatar"
-                                        name="remove_avatar"
-                                        value="yes"
+                                        type="text"
+                                        class="form-control"
+                                        id="name"
+                                        name="name"
+                                        value="{{ profile.name }}"
+                                        required
                                     >
-                                    <label class="form-check-label" for="remove_avatar">
-                                        Remove current avatar and use default initial
-                                    </label>
                                 </div>
-                            {% endif %}
 
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Name</label>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    id="name"
-                                    name="name"
-                                    value="{{ profile.name }}"
-                                    required
-                                >
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input
+                                        type="email"
+                                        class="form-control"
+                                        id="email"
+                                        name="email"
+                                        value="{{ profile.email }}"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="goal" class="form-label">Fitness Goal</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="goal"
+                                        name="goal"
+                                        value="{{ profile.goal }}"
+                                        placeholder="Build strength, lose weight, run longer"
+                                    >
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="location"
+                                        name="location"
+                                        value="{{ profile.location }}"
+                                        placeholder="Perth, WA"
+                                    >
+                                </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="goal" class="form-label">Fitness Goal</label>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    id="goal"
-                                    name="goal"
-                                    value="{{ profile.goal }}"
-                                >
+                            <div class="d-flex gap-3 mt-4 flex-wrap">
+                                <button type="submit" class="btn btn-success">Save Changes</button>
+                                <a href="{{ url_for('profile') }}" class="btn btn-outline-success">Cancel</a>
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">Back to Dashboard</a>
                             </div>
-
-                            <div class="mb-4">
-                                <label for="location" class="form-label">Location</label>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    id="location"
-                                    name="location"
-                                    value="{{ profile.location }}"
-                                >
-                            </div>
-
-                            <div class="d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-success">
-                                    Save Changes
-                                </button>
-
-                                <a href="{{ url_for('profile') }}" class="btn btn-outline-success">
-                                    Cancel
-                                </a>
-                            </div>
-
                         </form>
 
                     </div>

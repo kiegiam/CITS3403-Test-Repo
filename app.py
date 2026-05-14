@@ -52,6 +52,10 @@ class User(db.Model):
     location = db.Column(db.String(100), nullable=True)
     avatar_filename = db.Column(db.String(255), nullable=True)
 
+    # Privacy / visibility settings
+    show_public_profile = db.Column(db.Boolean, nullable=False, default=True)
+    show_public_fitness = db.Column(db.Boolean, nullable=False, default=True)
+
     workouts = db.relationship(
         "Workout",
         backref="owner",
@@ -178,6 +182,18 @@ def ensure_database_ready():
             )
             db.session.commit()
 
+        if "show_public_profile" not in user_columns:
+            db.session.execute(
+                text("ALTER TABLE users ADD COLUMN show_public_profile BOOLEAN DEFAULT 1 NOT NULL")
+            )
+            db.session.commit()
+
+        if "show_public_fitness" not in user_columns:
+            db.session.execute(
+                text("ALTER TABLE users ADD COLUMN show_public_fitness BOOLEAN DEFAULT 1 NOT NULL")
+            )
+            db.session.commit()
+
         workout_columns = [
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(workouts)")).fetchall()
@@ -262,6 +278,8 @@ def ensure_database_ready():
                 member_since=date.today().strftime("%B %Y"),
                 location="Perth, WA",
                 avatar_filename=None,
+                show_public_profile=True,
+                show_public_fitness=True,
             )
 
             db.session.add(demo_user)
@@ -376,6 +394,8 @@ def user_to_profile_dict(user):
         "member_since": user.member_since or "Unknown",
         "location": user.location or "Not set",
         "avatar_filename": user.avatar_filename,
+        "show_public_profile": bool(user.show_public_profile),
+        "show_public_fitness": bool(user.show_public_fitness),
     }
 
 
@@ -500,6 +520,123 @@ def get_progress_data(user):
     return progress_stats, type_counts, type_minutes
 
 
+@app.route("/api/workout-chart-data")
+def api_workout_chart_data():
+    if not is_logged_in():
+        return jsonify({"error": "Unauthorised"}), 401
+
+    user = current_user()
+
+    if user is None:
+        return jsonify({"error": "Unauthorised"}), 401
+
+    range_days = request.args.get("range", "30")
+    intensity_filter = request.args.get("intensity", "All")
+    metric = request.args.get("metric", "duration")
+
+    try:
+        range_days = int(range_days)
+    except ValueError:
+        range_days = 30
+
+    if range_days not in [7, 30, 90]:
+        range_days = 30
+
+    if intensity_filter not in ["All", "Low", "Medium", "High"]:
+        intensity_filter = "All"
+
+    if metric not in ["duration", "count"]:
+        metric = "duration"
+
+    today = date.today()
+    start_date = today - timedelta(days=range_days - 1)
+
+    user_workouts = Workout.query.filter_by(user_id=user.id).all()
+    filtered_workouts = []
+
+    for workout in user_workouts:
+        try:
+            workout_date = date.fromisoformat(workout.date)
+        except ValueError:
+            continue
+
+        if workout_date < start_date or workout_date > today:
+            continue
+
+        if intensity_filter != "All" and workout.intensity != intensity_filter:
+            continue
+
+        filtered_workouts.append(workout)
+
+    labels = []
+    duration_values = []
+    count_values = []
+
+    for day_offset in range(range_days):
+        current_date = start_date + timedelta(days=day_offset)
+        current_date_text = current_date.isoformat()
+
+        day_workouts = [
+            workout for workout in filtered_workouts
+            if workout.date == current_date_text
+        ]
+
+        total_duration = sum(workout.duration for workout in day_workouts)
+        workout_count = len(day_workouts)
+
+        labels.append(current_date_text)
+        duration_values.append(total_duration)
+        count_values.append(workout_count)
+
+    intensity_counts = {
+        "Low": 0,
+        "Medium": 0,
+        "High": 0,
+    }
+
+    for workout in filtered_workouts:
+        if workout.intensity in intensity_counts:
+            intensity_counts[workout.intensity] += 1
+
+    total_workouts = len(filtered_workouts)
+    total_minutes = sum(workout.duration for workout in filtered_workouts)
+
+    if total_workouts == 0:
+        average_minutes = 0
+    else:
+        average_minutes = round(total_minutes / total_workouts, 1)
+
+    workout_details = []
+
+    for workout in filtered_workouts:
+        workout_details.append({
+            "id": workout.id,
+            "date": workout.date,
+            "type": workout.type,
+            "duration": workout.duration,
+            "intensity": workout.intensity,
+            "notes": workout.notes or "No notes added.",
+            "edit_url": url_for("edit_workout", workout_id=workout.id),
+            "delete_url": url_for("delete_workout", workout_id=workout.id),
+        })
+
+    return jsonify({
+        "range": range_days,
+        "intensity": intensity_filter,
+        "metric": metric,
+        "labels": labels,
+        "durations": duration_values,
+        "counts": count_values,
+        "intensity_counts": intensity_counts,
+        "summary": {
+            "total_workouts": total_workouts,
+            "total_minutes": total_minutes,
+            "average_minutes": average_minutes,
+        },
+        "workouts": workout_details,
+    })
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -539,6 +676,8 @@ def register():
             member_since=date.today().strftime("%B %Y"),
             location="Not set",
             avatar_filename=None,
+            show_public_profile=True,
+            show_public_fitness=True,
         )
 
         db.session.add(new_user)
@@ -765,6 +904,10 @@ def edit_profile():
         user.name = name
         user.goal = goal or "Stay consistent"
         user.location = location or "Not set"
+
+        if "privacy_settings_present" in request.form:
+            user.show_public_profile = request.form.get("show_public_profile") == "on"
+            user.show_public_fitness = request.form.get("show_public_fitness") == "on"
 
         if avatar_file and avatar_file.filename:
             if not allowed_image(avatar_file.filename):
@@ -1227,7 +1370,7 @@ def ranking():
     if not is_logged_in():
         return redirect(url_for("login"))
 
-    users = User.query.all()
+    users = User.query.filter_by(show_public_fitness=True).all()
     leaderboard = []
 
     for user in users:
@@ -1236,14 +1379,24 @@ def ranking():
         total_workouts = len(user_workouts)
         total_minutes = sum(workout.duration for workout in user_workouts)
 
+        if user.show_public_profile:
+            display_name = user.name
+            avatar_filename = user.avatar_filename
+        else:
+            display_name = "Private User"
+            avatar_filename = None
+
         leaderboard.append(
             {
                 "user_id": user.id,
-                "name": user.name,
+                "name": display_name,
                 "workouts": total_workouts,
                 "minutes": total_minutes,
-                "streak": 6,
+                "streak": calculate_streak(user_workouts),
                 "shared": True,
+                "avatar_filename": avatar_filename,
+                "profile_public": bool(user.show_public_profile),
+                "fitness_public": bool(user.show_public_fitness),
             }
         )
 

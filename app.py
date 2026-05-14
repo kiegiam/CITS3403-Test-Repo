@@ -1238,6 +1238,7 @@ def ranking():
 
         leaderboard.append(
             {
+                "user_id": user.id,
                 "name": user.name,
                 "workouts": total_workouts,
                 "minutes": total_minutes,
@@ -1259,10 +1260,37 @@ def ranking():
         "top_user_name": leaderboard[0]["name"] if leaderboard else None,
     }
 
+    current_user_rank = {
+        "rank": None,
+        "minutes": 0,
+        "workouts": 0,
+        "minutes_to_next_rank": 0,
+    }
+
+    for index, user_data in enumerate(leaderboard):
+        if user_data["user_id"] == session["user_id"]:
+            minutes_to_next_rank = 0
+
+            if index > 0:
+                minutes_to_next_rank = max(
+                    0,
+                    leaderboard[index - 1]["minutes"] - user_data["minutes"] + 1
+                )
+
+            current_user_rank = {
+                "rank": index + 1,
+                "minutes": user_data["minutes"],
+                "workouts": user_data["workouts"],
+                "minutes_to_next_rank": minutes_to_next_rank,
+            }
+
+            break
+
     return render_template(
         "ranking.html",
         leaderboard=leaderboard,
-        ranking_summary=ranking_summary
+        ranking_summary=ranking_summary,
+        current_user_rank=current_user_rank
     )
 
 

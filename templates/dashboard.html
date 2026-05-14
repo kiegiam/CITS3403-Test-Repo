@@ -15,182 +15,361 @@
         href="{{ url_for('static', filename='css/styles.css') }}"
     >
 </head>
+
 <body class="bg-light">
 
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-            <div class="container">
-                <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
 
-                <button
-                    class="navbar-toggler"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#appNav"
-                    aria-controls="appNav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation"
-                >
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#appNav"
+                aria-controls="appNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                <div class="collapse navbar-collapse" id="appNav">
-                    <ul class="navbar-nav me-auto align-items-lg-center">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
-                        </li>
-                    </ul>
+            <div class="collapse navbar-collapse" id="appNav">
+                <ul class="navbar-nav me-auto align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
 
-                    <div class="d-flex align-items-center mt-3 mt-lg-0">
-                        <div class="dropdown">
-                            <button
-                                class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                aria-label="Open profile menu"
-                            >
-                                {% if nav_profile and nav_profile.avatar_filename %}
-                                    <img
-                                        src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
-                                        alt="Profile"
-                                        class="profile-icon"
-                                    >
-                                {% else %}
-                                    <span class="profile-icon profile-icon-fallback">
-                                        {% if nav_profile and nav_profile.name %}
-                                            {% set name_parts = nav_profile.name.split() %}
-                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
-                                        {% elif nav_email %}
-                                            {{ nav_email[0]|upper }}
-                                        {% else %}
-                                            U
-                                        {% endif %}
-                                    </span>
-                                {% endif %}
-                            </button>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
+                    </li>
 
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
-                                        My Profile
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
-                                        Logout
-                                    </a>
-                                </li>
-                            </ul>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center mt-3 mt-lg-0">
+                    <div class="dropdown">
+                        <button
+                            class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Open profile menu"
+                        >
+                            {% if nav_profile and nav_profile.avatar_filename %}
+                                <img
+                                    src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                    alt="Profile"
+                                    class="profile-icon"
+                                >
+                            {% else %}
+                                <span class="profile-icon profile-icon-fallback">
+                                    {% if nav_profile and nav_profile.name %}
+                                        {% set name_parts = nav_profile.name.split() %}
+                                        {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                    {% elif nav_email %}
+                                        {{ nav_email[0]|upper }}
+                                    {% else %}
+                                        U
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                    My Profile
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider"></li>
+
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+</header>
+
+<main class="py-5">
+    <div class="container">
+
+        <!-- Top hero -->
+        <section class="card border-0 shadow-sm hero-card mb-4">
+            <div class="card-body p-4 p-lg-5">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <p class="fw-semibold mb-2" style="color: #635bff;">
+                            FitTrack Dashboard
+                        </p>
+
+                        <h1 class="display-6 fw-bold mb-3">
+                            Welcome back{% if nav_profile and nav_profile.name %}, {{ nav_profile.name }}{% endif %}
+                        </h1>
+
+                        <p class="lead text-muted mb-0">
+                            Track your recent workouts, review your progress, and keep building better habits.
+                        </p>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="d-grid gap-3">
+                            <a href="{{ url_for('add_workout') }}" class="btn btn-success btn-lg">
+                                Add Workout
+                            </a>
+
+                            <a href="{{ url_for('progress') }}" class="btn btn-outline-success btn-lg">
+                                View Progress
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-        </nav>
-    </header>
+        </section>
 
-    <main class="py-5">
-        <div class="container">
-            <section class="mb-4">
-                <div class="card shadow-sm border-0 hero-card">
+        <!-- Stats summary -->
+        <section class="row g-4 mb-4">
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100 stat-card">
+                    <div class="card-body text-center p-4">
+                        <p class="text-muted fw-semibold mb-2">WORKOUTS LOGGED</p>
+                        <h2 class="display-5 fw-bold mb-2">
+                            {{ statistics.total_workouts }}
+                        </h2>
+                        <p class="text-muted mb-0">Total workouts</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100 stat-card">
+                    <div class="card-body text-center p-4">
+                        <p class="text-muted fw-semibold mb-2">TRAINING MINUTES</p>
+                        <h2 class="display-5 fw-bold mb-2">
+                            {{ statistics.total_minutes }}
+                        </h2>
+                        <p class="text-muted mb-0">Minutes completed</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100 stat-card">
+                    <div class="card-body text-center p-4">
+                        <p class="text-muted fw-semibold mb-2">CURRENT STREAK</p>
+                        <h2 class="display-5 fw-bold mb-2">
+                            {{ statistics.current_streak }}
+                        </h2>
+                        <p class="text-muted mb-0">Day streak</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100 stat-card">
+                    <div class="card-body text-center p-4">
+                        <p class="text-muted fw-semibold mb-2">THIS WEEK</p>
+                        <h2 class="display-5 fw-bold mb-2">
+                            {{ statistics.workouts_this_week|default(0) }}
+                        </h2>
+                        <p class="text-muted mb-0">Workouts this week</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Focus + snapshot -->
+        <section class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100 dashboard-info-card">
                     <div class="card-body p-4">
-                        <div class="row align-items-center g-3">
-                            <div class="col-lg-8">
-                                <h1 class="h3 mb-2">Welcome to your dashboard</h1>
-                                <p class="mb-0 text-muted">You are logged in as <strong>{{ email }}</strong>.</p>
-                            </div>
-                            <div class="col-lg-4 text-lg-end">
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
-                            </div>
+                        <p class="fw-semibold mb-2" style="color: #635bff;">
+                            Today’s Focus
+                        </p>
+
+                        <h2 class="h3 fw-bold mb-3">
+                            Keep your training record active
+                        </h2>
+
+                        <p class="text-muted mb-4">
+                            No workout logged today yet. Start with a short session to keep your routine moving.
+                        </p>
+
+                        <a href="{{ url_for('add_workout') }}" class="btn btn-success">
+                            Add Today’s Workout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100 dashboard-info-card">
+                    <div class="card-body p-4">
+                        <p class="fw-semibold mb-2" style="color: #635bff;">
+                            Progress Snapshot
+                        </p>
+
+                        <h2 class="h3 fw-bold mb-3">
+                            Your training is building up
+                        </h2>
+
+                        <p class="text-muted mb-4">
+                            You have logged
+                            <strong>{{ statistics.total_workouts }}</strong>
+                            workouts and
+                            <strong>{{ statistics.total_minutes }}</strong>
+                            training minutes so far.
+                        </p>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ url_for('progress') }}" class="btn btn-outline-success">
+                                View Progress
+                            </a>
+
+                            <a href="{{ url_for('workouts') }}" class="btn btn-outline-success">
+                                Training History
+                            </a>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section class="mb-4">
-                <div class="row text-center g-3">
-                    <div class="col-md-4">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
-                            <h2 class="h1 mb-1">{{ statistics.total_workouts }}</h2>
-                            <p class="mb-0 text-muted">Total Workouts</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
-                            <h2 class="h1 mb-1">{{ statistics.total_minutes }}</h2>
-                            <p class="mb-0 text-muted">Total Minutes</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
-                            <h2 class="h1 mb-1">{{ statistics.current_streak }}</h2>
-                            <p class="mb-0 text-muted">Day Streak</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        <!-- Recent + actions -->
+        <section class="row g-4">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm h-100 dashboard-info-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                            <div>
+                                <p class="fw-semibold mb-2" style="color: #635bff;">
+                                    Recent Training
+                                </p>
 
-            <section class="mb-4">
-                <div class="row g-4">
-                    <div class="col-lg-7">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-body p-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h2 class="h4 mb-0">Recent Training</h2>
-                                    <a href="{{ url_for('workouts') }}" class="text-decoration-none">View all</a>
-                                </div>
+                                <h2 class="h3 fw-bold mb-1">
+                                    Latest workouts
+                                </h2>
 
-                                <div class="list-group list-group-flush">
-                                    {% for workout in recent_workouts %}
-                                        <div class="list-group-item px-0">
-                                            <div class="d-flex justify-content-between flex-wrap gap-2">
-                                                <div>
-                                                    <h3 class="h6 mb-1">{{ workout.type }}</h3>
-                                                    <p class="mb-0 text-muted small">{{ workout.date }} · {{ workout.intensity }} intensity</p>
-                                                </div>
-                                                <span class="badge text-bg-success align-self-start">{{ workout.duration }} min</span>
+                                <p class="text-muted mb-0">
+                                    Your most recent saved sessions appear here.
+                                </p>
+                            </div>
+
+                            <a href="{{ url_for('workouts') }}" class="btn btn-outline-success">
+                                View all
+                            </a>
+                        </div>
+
+                        {% if recent_workouts %}
+                            <div class="d-grid gap-3">
+                                {% for workout in recent_workouts %}
+                                    <div class="recent-workout-item p-3 rounded-4 border">
+                                        <div class="d-flex justify-content-between align-items-start gap-3">
+                                            <div>
+                                                <h3 class="h5 fw-bold mb-1">
+                                                    {{ workout.type }}
+                                                </h3>
+
+                                                <p class="text-muted mb-0">
+                                                    {{ workout.date }} · {{ workout.intensity }} intensity
+                                                </p>
                                             </div>
+
+                                            <span class="badge text-bg-success rounded-pill px-3 py-2">
+                                                {{ workout.duration }} min
+                                            </span>
                                         </div>
-                                    {% endfor %}
-                                </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted py-5">
+                                <p class="mb-3">No workouts yet.</p>
+                                <a href="{{ url_for('add_workout') }}" class="btn btn-success">
+                                    Add Your First Workout
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm h-100 dashboard-info-card">
+                    <div class="card-body p-4">
+                        <p class="fw-semibold mb-2" style="color: #635bff;">
+                            Quick Actions
+                        </p>
+
+                        <h2 class="h3 fw-bold mb-4">
+                            What would you like to do next?
+                        </h2>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <a href="{{ url_for('profile') }}" class="quick-action-card text-decoration-none">
+                                    <h3 class="h5 fw-bold mb-2">Profile</h3>
+                                    <p class="text-muted mb-0">Update your personal details</p>
+                                </a>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <a href="{{ url_for('workouts') }}" class="quick-action-card text-decoration-none">
+                                    <h3 class="h5 fw-bold mb-2">Training History</h3>
+                                    <p class="text-muted mb-0">Review all saved workouts</p>
+                                </a>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <a href="{{ url_for('progress') }}" class="quick-action-card text-decoration-none">
+                                    <h3 class="h5 fw-bold mb-2">Progress</h3>
+                                    <p class="text-muted mb-0">Check totals and trends</p>
+                                </a>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <a href="{{ url_for('ranking') }}" class="quick-action-card text-decoration-none">
+                                    <h3 class="h5 fw-bold mb-2">Community</h3>
+                                    <p class="text-muted mb-0">Compare public rankings</p>
+                                </a>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="col-lg-5">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-body p-4">
-                                <h2 class="h4 mb-3">Quick Links</h2>
-                                <div class="d-grid gap-3">
-                                    <a href="{{ url_for('profile') }}" class="btn btn-outline-success">View Profile</a>
-                                    <a href="{{ url_for('workouts') }}" class="btn btn-outline-success">Check Training History</a>
-                                    <a href="{{ url_for('progress') }}" class="btn btn-outline-success">View Progress</a>
-                                    <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">Community Ranking</a>
-                                    <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add New Workout</a>
-                                </div>
-                            </div>
+                        <div class="d-grid mt-4">
+                            <a href="{{ url_for('add_workout') }}" class="btn btn-success btn-lg">
+                                Add New Workout
+                            </a>
                         </div>
                     </div>
                 </div>
-            </section>
-        </div>
-    </main>
+            </div>
+        </section>
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
+    </div>
+</main>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
 </body>
 </html>

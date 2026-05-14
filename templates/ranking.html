@@ -137,6 +137,38 @@
                 </section>
             {% else %}
             <section class="mb-4">
+                <div class="row text-center g-3">
+                    <div class="col-md-3">
+                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                            <h2 class="h1 mb-1">{{ ranking_summary.total_ranked_users }}</h2>
+                            <p class="mb-0 text-muted">Ranked Users</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                            <h2 class="h1 mb-1">{{ ranking_summary.community_total_minutes }}</h2>
+                            <p class="mb-0 text-muted">Community Minutes</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                            <h2 class="h1 mb-1">{{ ranking_summary.top_streak }}</h2>
+                            <p class="mb-0 text-muted">Top Day Streak</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                            <h2 class="h4 mb-1">{{ ranking_summary.top_user_name }}</h2>
+                            <p class="mb-0 text-muted">Current Leader</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
                 <div class="row g-3">
                     {% for user in leaderboard[:3] %}
                         <div class="col-md-4">

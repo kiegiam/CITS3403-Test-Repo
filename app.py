@@ -1252,9 +1252,17 @@ def ranking():
         reverse=True
     )
 
+    ranking_summary = {
+        "total_ranked_users": len(leaderboard),
+        "community_total_minutes": sum(user_data["minutes"] for user_data in leaderboard),
+        "top_streak": max((user_data["streak"] for user_data in leaderboard), default=0),
+        "top_user_name": leaderboard[0]["name"] if leaderboard else None,
+    }
+
     return render_template(
         "ranking.html",
-        leaderboard=leaderboard
+        leaderboard=leaderboard,
+        ranking_summary=ranking_summary
     )
 
 

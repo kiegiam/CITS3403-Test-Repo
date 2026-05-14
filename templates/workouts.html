@@ -11,273 +11,1241 @@
     >
 
     <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/styles.css') }}"
     >
+
+    <style>
+        :root {
+            --ft-bg: #f6f9fc;
+            --ft-text: #0a2540;
+            --ft-muted: #53657d;
+            --ft-border: rgba(10, 37, 64, 0.12);
+            --ft-blue: #635bff;
+            --ft-cyan: #00d4ff;
+            --ft-green: #00a86b;
+            --ft-red: #ef4444;
+            --ft-yellow: #f59e0b;
+            --ft-radius: 28px;
+            --ft-shadow: 0 22px 55px rgba(50, 50, 93, 0.12);
+        }
+
+        body {
+            font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--ft-text);
+            background:
+                radial-gradient(circle at 8% 0%, rgba(99, 91, 255, 0.15), transparent 32%),
+                radial-gradient(circle at 92% 8%, rgba(0, 212, 255, 0.18), transparent 34%),
+                linear-gradient(180deg, #ffffff 0%, var(--ft-bg) 45%, #edf3f8 100%);
+            min-height: 100vh;
+        }
+
+        .workouts-shell {
+            max-width: 1320px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid var(--ft-border);
+            border-radius: var(--ft-radius);
+            box-shadow: var(--ft-shadow);
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .glass-card::before {
+            content: "";
+            display: block;
+            height: 5px;
+            width: 100%;
+            background: linear-gradient(90deg, var(--ft-blue), var(--ft-cyan), var(--ft-green));
+        }
+
+        .section-kicker {
+            color: var(--ft-blue);
+            font-weight: 800;
+            margin-bottom: 0.35rem;
+        }
+
+        .page-title {
+            font-weight: 850;
+            letter-spacing: -0.055em;
+            color: var(--ft-text);
+        }
+
+        .page-subtitle {
+            color: var(--ft-muted);
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            border-radius: 999px;
+            font-weight: 800;
+        }
+
+        .btn-success {
+            border: none;
+            background: linear-gradient(135deg, var(--ft-blue), var(--ft-green)) !important;
+            box-shadow: 0 14px 30px rgba(99, 91, 255, 0.22);
+        }
+
+        .btn-outline-success {
+            color: var(--ft-blue);
+            border-color: rgba(99, 91, 255, 0.28);
+            background: rgba(255, 255, 255, 0.76);
+        }
+
+        .btn-outline-success:hover {
+            color: #ffffff;
+            border-color: transparent;
+            background: var(--ft-blue);
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        .control-label {
+            display: block;
+            font-weight: 800;
+            color: var(--ft-text);
+            margin-bottom: 0.7rem;
+        }
+
+        .chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+        }
+
+        .filter-chip {
+            border: 1px solid rgba(99, 91, 255, 0.22);
+            background: rgba(255, 255, 255, 0.82);
+            color: var(--ft-text);
+            padding: 0.65rem 1rem;
+            border-radius: 999px;
+            font-weight: 800;
+            transition: all 0.18s ease;
+            cursor: pointer;
+            min-width: 92px;
+        }
+
+        .filter-chip:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 91, 255, 0.45);
+            box-shadow: 0 10px 22px rgba(50, 50, 93, 0.10);
+        }
+
+        .filter-chip.active {
+            color: #ffffff;
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--ft-blue), var(--ft-green));
+            box-shadow: 0 14px 28px rgba(99, 91, 255, 0.22);
+        }
+
+        .filter-chip .chip-icon {
+            margin-right: 0.35rem;
+        }
+
+        .metric-card {
+            border: 1px solid var(--ft-border);
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 252, 0.88));
+            padding: 1.25rem;
+            height: 100%;
+        }
+
+        .metric-card .label {
+            color: var(--ft-muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 800;
+        }
+
+        .metric-card .value {
+            font-size: 2.4rem;
+            font-weight: 850;
+            letter-spacing: -0.055em;
+            color: var(--ft-text);
+            line-height: 1.1;
+        }
+
+        .metric-card .hint {
+            color: var(--ft-muted);
+            font-size: 0.9rem;
+        }
+
+        .chart-card {
+            border: 1px solid var(--ft-border);
+            border-radius: var(--ft-radius);
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 15px 35px rgba(50, 50, 93, 0.08);
+            overflow: hidden;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+        }
+
+        .chart-card.is-loading {
+            opacity: 0.35;
+            transform: scale(0.99);
+        }
+
+        .chart-card-header {
+            padding: 1.25rem 1.5rem 0.5rem 1.5rem;
+        }
+
+        .chart-title {
+            font-weight: 850;
+            letter-spacing: -0.035em;
+            margin-bottom: 0.25rem;
+        }
+
+        .chart-subtitle {
+            color: var(--ft-muted);
+            margin-bottom: 0;
+        }
+
+        .chart-box {
+            width: 100%;
+            height: 390px;
+        }
+
+        .line-chart-box {
+            width: 100%;
+            height: 320px;
+        }
+
+        .detail-card {
+            border: 1px solid var(--ft-border);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem;
+            transition: all 0.18s ease;
+        }
+
+        .detail-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(50, 50, 93, 0.10);
+        }
+
+        .intensity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            border-radius: 999px;
+            padding: 0.28rem 0.7rem;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--ft-blue), var(--ft-green));
+        }
+
+        .intensity-low {
+            background: linear-gradient(135deg, #3b82f6, #00a86b);
+        }
+
+        .intensity-medium {
+            background: linear-gradient(135deg, #635bff, #0891b2);
+        }
+
+        .intensity-high {
+            background: linear-gradient(135deg, #ef4444, #f59e0b);
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-table th {
+            color: var(--ft-muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.9rem 0.75rem;
+            border-bottom: 1px solid rgba(10, 37, 64, 0.10);
+        }
+
+        .details-table td {
+            padding: 0.95rem 0.75rem;
+            border-bottom: 1px solid rgba(10, 37, 64, 0.07);
+            vertical-align: middle;
+        }
+
+        .details-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .record-toggle {
+            border: none;
+            background: transparent;
+            color: var(--ft-blue);
+            font-weight: 800;
+            padding: 0;
+        }
+
+        .empty-state {
+            border: 1px dashed rgba(99, 91, 255, 0.28);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.70);
+            padding: 2rem;
+            text-align: center;
+            color: var(--ft-muted);
+        }
+
+        .fade-panel {
+            animation: fadePanel 0.28s ease both;
+        }
+
+        @keyframes fadePanel {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .chart-box {
+                height: 330px;
+            }
+
+            .line-chart-box {
+                height: 280px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .details-table {
+                min-width: 820px;
+            }
+
+            .chart-box {
+                height: 300px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
 
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-            <div class="container">
-                <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+<body>
 
-                <button
-                    class="navbar-toggler"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#appNav"
-                    aria-controls="appNav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation"
-                >
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
 
-                <div class="collapse navbar-collapse" id="appNav">
-                    <ul class="navbar-nav me-auto align-items-lg-center">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('workouts') }}">My Workouts</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
-                        </li>
-                    </ul>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#appNav"
+                aria-controls="appNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                    <div class="d-flex align-items-center mt-3 mt-lg-0">
-                        <div class="dropdown">
-                            <button
-                                class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                aria-label="Open profile menu"
-                            >
-                                {% if nav_profile and nav_profile.avatar_filename %}
-                                    <img
-                                        src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
-                                        alt="Profile"
-                                        class="profile-icon"
-                                    >
-                                {% else %}
-                                    <span class="profile-icon profile-icon-fallback">
-                                        {% if nav_profile and nav_profile.name %}
-                                            {% set name_parts = nav_profile.name.split() %}
-                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
-                                        {% elif nav_email %}
-                                            {{ nav_email[0]|upper }}
-                                        {% else %}
-                                            U
-                                        {% endif %}
-                                    </span>
-                                {% endif %}
+            <div class="collapse navbar-collapse" id="appNav">
+                <ul class="navbar-nav me-auto align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('workouts') }}">My Workouts</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center mt-3 mt-lg-0">
+                    <div class="dropdown">
+                        <button
+                            class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Open profile menu"
+                        >
+                            {% if nav_profile and nav_profile.avatar_filename %}
+                                <img
+                                    src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                    alt="Profile"
+                                    class="profile-icon"
+                                >
+                            {% else %}
+                                <span class="profile-icon profile-icon-fallback">
+                                    {% if nav_profile and nav_profile.name %}
+                                        {% set name_parts = nav_profile.name.split() %}
+                                        {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                    {% elif nav_email %}
+                                        {{ nav_email[0]|upper }}
+                                    {% else %}
+                                        U
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                    My Profile
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+</header>
+
+<main class="py-5">
+    <div class="container workouts-shell">
+
+        <section class="glass-card mb-4">
+            <div class="p-4 p-lg-5">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <p class="section-kicker">Training Analytics</p>
+
+                        <h1 class="display-5 page-title mb-3">
+                            My Workouts
+                        </h1>
+
+                        <p class="page-subtitle mb-0">
+                            Explore your workout history with interactive charts, intensity filters,
+                            and trend views instead of reading through a long list.
+                        </p>
+                    </div>
+
+                    <div class="col-lg-4 text-lg-end">
+                        <a href="{{ url_for('add_workout') }}" class="btn btn-success btn-lg px-4">
+                            Add Workout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-card mb-4">
+            <div class="p-4 p-lg-5">
+                <div class="row g-4 align-items-start">
+                    <div class="col-lg-4">
+                        <label class="control-label">Time range</label>
+                        <div class="chip-group" id="rangeControls">
+                            <button class="filter-chip" data-range="7">7 Days</button>
+                            <button class="filter-chip active" data-range="30">30 Days</button>
+                            <button class="filter-chip" data-range="90">90 Days</button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <label class="control-label">Intensity</label>
+                        <div class="chip-group" id="intensityControls">
+                            <button class="filter-chip active" data-intensity="All">
+                                <span class="chip-icon">◎</span>All
                             </button>
+                            <button class="filter-chip" data-intensity="Low">
+                                <span class="chip-icon">○</span>Low
+                            </button>
+                            <button class="filter-chip" data-intensity="Medium">
+                                <span class="chip-icon">◐</span>Medium
+                            </button>
+                            <button class="filter-chip" data-intensity="High">
+                                <span class="chip-icon">●</span>High
+                            </button>
+                        </div>
+                    </div>
 
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
-                                        My Profile
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
-                                        Logout
-                                    </a>
-                                </li>
-                            </ul>
+                    <div class="col-lg-4">
+                        <label class="control-label">Chart metric</label>
+                        <div class="chip-group" id="metricControls">
+                            <button class="filter-chip active" data-metric="duration">
+                                Minutes
+                            </button>
+                            <button class="filter-chip" data-metric="count">
+                                Workout Count
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </nav>
-    </header>
+        </section>
 
-    <main class="py-5">
-        <div class="container">
-            <section class="mb-4">
-                <div class="card shadow-sm border-0 hero-card">
-                    <div class="card-body p-4">
-                        <div class="row align-items-center g-4">
-                            <div class="col-md-8">
-                                <p class="text-success fw-semibold mb-1">Training History</p>
-                                <h1 class="h3 mb-2">My Workouts</h1>
-                                <p class="mb-0 text-muted">
-                                    Check your past workouts, search training records, and monitor your consistency.
-                                </p>
-                            </div>
-                            <div class="col-md-4 text-md-end">
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
-                            </div>
-                        </div>
+        <section class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="label">Total Workouts</div>
+                    <div class="value" id="summaryTotalWorkouts">0</div>
+                    <div class="hint">Based on current filters</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="label">Total Minutes</div>
+                    <div class="value" id="summaryTotalMinutes">0</div>
+                    <div class="hint">Training time in selected range</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="label">Average Minutes</div>
+                    <div class="value" id="summaryAverageMinutes">0</div>
+                    <div class="hint">Average per workout</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="row g-4 mb-4">
+            <div class="col-xl-8">
+                <div class="chart-card" id="barChartCard">
+                    <div class="chart-card-header">
+                        <h2 class="h3 chart-title" id="barChartTitle">
+                            Workout volume by day
+                        </h2>
+                        <p class="chart-subtitle">
+                            Click a bar to view workouts from that date.
+                        </p>
+                    </div>
+
+                    <div id="workoutBarChart" class="chart-box"></div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="chart-card h-100" id="intensityCard">
+                    <div class="chart-card-header">
+                        <h2 class="h3 chart-title">Intensity mix</h2>
+                        <p class="chart-subtitle">
+                            Breakdown of Low, Medium, and High intensity sessions.
+                        </p>
+                    </div>
+
+                    <div id="intensityChart" class="chart-box"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="chart-card mb-4" id="lineChartCard">
+            <div class="chart-card-header">
+                <h2 class="h3 chart-title">Training trend</h2>
+                <p class="chart-subtitle">
+                    A line view of your selected metric over time.
+                </p>
+            </div>
+
+            <div id="workoutLineChart" class="line-chart-box"></div>
+        </section>
+
+        <section class="glass-card mb-4">
+            <div class="p-4 p-lg-5">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
+                    <div>
+                        <p class="section-kicker">Selected day</p>
+                        <h2 class="h3 page-title mb-2" id="selectedDayTitle">
+                            Click a bar to inspect one day
+                        </h2>
+                        <p class="text-muted mb-0" id="selectedDaySubtitle">
+                            Your workout details for the selected date will appear here.
+                        </p>
+                    </div>
+
+                    <button class="btn btn-outline-success" onclick="showAllRecords()">
+                        Show All Filtered Records
+                    </button>
+                </div>
+
+                <div id="selectedWorkoutDetails" class="fade-panel">
+                    <div class="empty-state">
+                        Select a date from the bar chart to view workout cards.
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    <div class="alert alert-success" role="alert">
-                        {{ messages[0] }}
+        <section class="glass-card mb-4">
+            <div class="p-4 p-lg-5">
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+                    <div>
+                        <p class="section-kicker">Detailed Records</p>
+                        <h2 class="h3 page-title mb-0">
+                            Workout list
+                        </h2>
                     </div>
-                {% endif %}
-            {% endwith %}
 
-            <section class="mb-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <form method="GET" action="{{ url_for('workouts') }}">
-                            <div class="row g-3 align-items-end">
+                    <button
+                        class="record-toggle"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#recordsCollapse"
+                        aria-expanded="false"
+                        aria-controls="recordsCollapse"
+                    >
+                        Show / Hide Records
+                    </button>
+                </div>
 
-                                <div class="col-md-4">
-                                    <label for="search" class="form-label">Search Workout Type</label>
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        id="search"
-                                        name="search"
-                                        value="{{ search_query }}"
-                                        placeholder="Running, Gym, Swimming"
-                                    >
-                                </div>
+                <div class="collapse" id="recordsCollapse">
+                    <div class="table-responsive mt-4">
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Duration</th>
+                                    <th>Intensity</th>
+                                    <th>Notes</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
 
-                                <div class="col-md-3">
-                                    <label for="intensity" class="form-label">Filter by Intensity</label>
-                                    <select class="form-select" id="intensity" name="intensity">
-                                        <option value="">All Intensities</option>
-                                        <option value="Low" {% if intensity_filter == "Low" %}selected{% endif %}>Low</option>
-                                        <option value="Medium" {% if intensity_filter == "Medium" %}selected{% endif %}>Medium</option>
-                                        <option value="High" {% if intensity_filter == "High" %}selected{% endif %}>High</option>
-                                    </select>
-                                </div>
+                            <tbody id="recordsTableBody">
+                                {% for workout in workouts %}
+                                    <tr>
+                                        <td>{{ workout.date }}</td>
+                                        <td>{{ workout.type }}</td>
+                                        <td>{{ workout.duration }} min</td>
+                                        <td>
+                                            <span class="intensity-badge intensity-{{ workout.intensity|lower }}">
+                                                {{ workout.intensity }}
+                                            </span>
+                                        </td>
+                                        <td>{{ workout.notes }}</td>
+                                        <td class="text-end">
+                                            <a
+                                                href="{{ url_for('edit_workout', workout_id=workout.id) }}"
+                                                class="btn btn-outline-success btn-sm me-2"
+                                            >
+                                                Edit
+                                            </a>
 
-                                <div class="col-md-3">
-                                    <label for="sort" class="form-label">Sort Workouts</label>
-                                    <select class="form-select" id="sort" name="sort">
-                                        <option value="newest" {% if sort_by == "newest" %}selected{% endif %}>Newest First</option>
-                                        <option value="oldest" {% if sort_by == "oldest" %}selected{% endif %}>Oldest First</option>
-                                        <option value="longest" {% if sort_by == "longest" %}selected{% endif %}>Longest Duration</option>
-                                        <option value="shortest" {% if sort_by == "shortest" %}selected{% endif %}>Shortest Duration</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-success w-100">
-                                        Apply
-                                    </button>
-                                </div>
-
-                            </div>
-
-                            <div class="mt-3">
-                                <a href="{{ url_for('workouts') }}" class="btn btn-outline-secondary btn-sm">
-                                    Clear Filters
-                                </a>
-                            </div>
-                        </form>
+                                            <form
+                                                method="POST"
+                                                action="{{ url_for('delete_workout', workout_id=workout.id) }}"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Are you sure you want to delete this workout?');"
+                                            >
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="empty-state">
+                                                No workouts found. Start by adding your first workout.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </section>
 
-            <section>
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
+                <div class="d-flex gap-2 flex-wrap mt-4">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">
+                        Back to Dashboard
+                    </a>
 
-                        {% if workouts %}
-                            <div class="table-responsive">
-                                <table class="table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Type</th>
-                                            <th>Duration</th>
-                                            <th>Intensity</th>
-                                            <th>Notes</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for workout in workouts %}
-                                            <tr>
-                                                <td>{{ workout.date }}</td>
-                                                <td>{{ workout.type }}</td>
-                                                <td>{{ workout.duration }} min</td>
-                                                <td>
-                                                    <span class="badge text-bg-success">
-                                                        {{ workout.intensity }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    {% if workout.notes %}
-                                                        {{ workout.notes }}
-                                                    {% else %}
-                                                        <span class="text-muted">No notes</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td class="text-end">
-                                                    <div class="d-flex justify-content-end gap-2 flex-wrap">
-                                                        <a
-                                                            href="{{ url_for('edit_workout', workout_id=workout.id) }}"
-                                                            class="btn btn-outline-success btn-sm"
-                                                        >
-                                                            Edit
-                                                        </a>
+                    <a href="{{ url_for('progress') }}" class="btn btn-outline-success">
+                        View Progress
+                    </a>
 
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ url_for('delete_workout', workout_id=workout.id) }}"
-                                                            onsubmit="return confirm('Are you sure you want to delete this workout?');"
-                                                            class="d-inline"
-                                                        >
-                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                                Delete
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <div class="text-center py-5">
-                                <h2 class="h4 mb-3">No workouts found</h2>
-                                <p class="text-muted mb-4">
-                                    Try clearing the filters or add a new workout record.
-                                </p>
-                                <a href="{{ url_for('workouts') }}" class="btn btn-outline-success">
-                                    Clear Filters
-                                </a>
-                                <a href="{{ url_for('add_workout') }}" class="btn btn-success">
-                                    Add Workout
-                                </a>
-                            </div>
-                        {% endif %}
+                    <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">
+                        Community Ranking
+                    </a>
 
-                        <div class="mt-3 d-flex flex-wrap gap-2">
-                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">Back to Dashboard</a>
-                            <a href="{{ url_for('progress') }}" class="btn btn-outline-success">View Progress</a>
-                            <a href="{{ url_for('ranking') }}" class="btn btn-outline-success">Community Ranking</a>
-                            <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add New Workout</a>
-                        </div>
-                    </div>
+                    <a href="{{ url_for('add_workout') }}" class="btn btn-success">
+                        Add New Workout
+                    </a>
                 </div>
-            </section>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+
+<script>
+const state = {
+    range: 30,
+    intensity: "All",
+    metric: "duration",
+    data: null,
+};
+
+const barChart = echarts.init(document.getElementById("workoutBarChart"));
+const lineChart = echarts.init(document.getElementById("workoutLineChart"));
+const intensityChart = echarts.init(document.getElementById("intensityChart"));
+
+const chartCards = [
+    document.getElementById("barChartCard"),
+    document.getElementById("lineChartCard"),
+    document.getElementById("intensityCard"),
+];
+
+function setLoading(isLoading) {
+    chartCards.forEach(card => {
+        card.classList.toggle("is-loading", isLoading);
+    });
+}
+
+function formatShortDate(dateText) {
+    const date = new Date(dateText + "T00:00:00");
+
+    return date.toLocaleDateString("en-AU", {
+        month: "short",
+        day: "numeric",
+    });
+}
+
+function getMetricValues(data) {
+    if (state.metric === "count") {
+        return data.counts;
+    }
+
+    return data.durations;
+}
+
+function getMetricName() {
+    if (state.metric === "count") {
+        return "Workout Count";
+    }
+
+    return "Training Minutes";
+}
+
+function getMetricUnit() {
+    if (state.metric === "count") {
+        return "workout(s)";
+    }
+
+    return "min";
+}
+
+async function loadChartData() {
+    setLoading(true);
+
+    const url = `/api/workout-chart-data?range=${state.range}&intensity=${state.intensity}&metric=${state.metric}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Could not load workout data");
+        }
+
+        state.data = data;
+
+        updateSummary(data);
+        renderBarChart(data);
+        renderLineChart(data);
+        renderIntensityChart(data);
+        renderRecordsTable(data.workouts);
+        resetSelectedDay();
+
+    } catch (error) {
+        document.getElementById("selectedWorkoutDetails").innerHTML = `
+            <div class="empty-state text-danger">
+                ${error.message}
+            </div>
+        `;
+    } finally {
+        setLoading(false);
+    }
+}
+
+function updateSummary(data) {
+    document.getElementById("summaryTotalWorkouts").textContent = data.summary.total_workouts;
+    document.getElementById("summaryTotalMinutes").textContent = data.summary.total_minutes;
+    document.getElementById("summaryAverageMinutes").textContent = data.summary.average_minutes;
+}
+
+function renderBarChart(data) {
+    const values = getMetricValues(data);
+    const labels = data.labels.map(formatShortDate);
+
+    document.getElementById("barChartTitle").textContent =
+        state.metric === "count" ? "Workout count by day" : "Workout minutes by day";
+
+    const option = {
+        animationDuration: 700,
+        animationEasing: "cubicOut",
+        grid: {
+            left: 50,
+            right: 28,
+            top: 38,
+            bottom: 70,
+        },
+        tooltip: {
+            trigger: "axis",
+            axisPointer: {
+                type: "shadow",
+            },
+            formatter: function(params) {
+                const item = params[0];
+                const originalDate = data.labels[item.dataIndex];
+
+                return `
+                    <strong>${originalDate}</strong><br>
+                    ${getMetricName()}: ${item.value} ${getMetricUnit()}
+                `;
+            },
+        },
+        xAxis: {
+            type: "category",
+            data: labels,
+            axisLabel: {
+                color: "#53657d",
+                rotate: data.labels.length > 14 ? 45 : 0,
+            },
+            axisLine: {
+                lineStyle: {
+                    color: "rgba(10, 37, 64, 0.12)",
+                },
+            },
+            axisTick: {
+                show: false,
+            },
+        },
+        yAxis: {
+            type: "value",
+            axisLabel: {
+                color: "#53657d",
+            },
+            splitLine: {
+                lineStyle: {
+                    color: "rgba(10, 37, 64, 0.08)",
+                },
+            },
+        },
+        series: [
+            {
+                name: getMetricName(),
+                type: "bar",
+                data: values,
+                barWidth: data.labels.length > 30 ? "45%" : "58%",
+                itemStyle: {
+                    borderRadius: [12, 12, 0, 0],
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: "#635bff" },
+                        { offset: 0.55, color: "#19b5d1" },
+                        { offset: 1, color: "#00a86b" },
+                    ]),
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 18,
+                        shadowColor: "rgba(99, 91, 255, 0.32)",
+                    },
+                },
+            },
+        ],
+    };
+
+    barChart.setOption(option, true);
+
+    barChart.off("click");
+    barChart.on("click", function(params) {
+        const date = data.labels[params.dataIndex];
+        showRecordsForDate(date);
+    });
+}
+
+function renderLineChart(data) {
+    const values = getMetricValues(data);
+    const labels = data.labels.map(formatShortDate);
+
+    const option = {
+        animationDuration: 800,
+        animationEasing: "cubicOut",
+        grid: {
+            left: 50,
+            right: 28,
+            top: 40,
+            bottom: 58,
+        },
+        tooltip: {
+            trigger: "axis",
+            formatter: function(params) {
+                const item = params[0];
+                const originalDate = data.labels[item.dataIndex];
+
+                return `
+                    <strong>${originalDate}</strong><br>
+                    ${getMetricName()}: ${item.value} ${getMetricUnit()}
+                `;
+            },
+        },
+        xAxis: {
+            type: "category",
+            data: labels,
+            boundaryGap: false,
+            axisLabel: {
+                color: "#53657d",
+                rotate: data.labels.length > 20 ? 45 : 0,
+            },
+            axisLine: {
+                lineStyle: {
+                    color: "rgba(10, 37, 64, 0.12)",
+                },
+            },
+            axisTick: {
+                show: false,
+            },
+        },
+        yAxis: {
+            type: "value",
+            axisLabel: {
+                color: "#53657d",
+            },
+            splitLine: {
+                lineStyle: {
+                    color: "rgba(10, 37, 64, 0.08)",
+                },
+            },
+        },
+        series: [
+            {
+                name: getMetricName(),
+                type: "line",
+                smooth: true,
+                symbolSize: 8,
+                data: values,
+                lineStyle: {
+                    width: 4,
+                    color: "#635bff",
+                },
+                itemStyle: {
+                    color: "#00a86b",
+                    borderColor: "#ffffff",
+                    borderWidth: 2,
+                },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: "rgba(99, 91, 255, 0.24)" },
+                        { offset: 1, color: "rgba(0, 168, 107, 0.02)" },
+                    ]),
+                },
+            },
+        ],
+    };
+
+    lineChart.setOption(option, true);
+}
+
+function renderIntensityChart(data) {
+    const counts = data.intensity_counts;
+
+    const option = {
+        animationDuration: 700,
+        tooltip: {
+            trigger: "item",
+        },
+        legend: {
+            bottom: 8,
+            textStyle: {
+                color: "#53657d",
+            },
+        },
+        series: [
+            {
+                name: "Intensity",
+                type: "pie",
+                radius: ["48%", "72%"],
+                center: ["50%", "44%"],
+                avoidLabelOverlap: true,
+                data: [
+                    {
+                        value: counts.Low,
+                        name: "Low",
+                        itemStyle: { color: "#00a86b" },
+                    },
+                    {
+                        value: counts.Medium,
+                        name: "Medium",
+                        itemStyle: { color: "#635bff" },
+                    },
+                    {
+                        value: counts.High,
+                        name: "High",
+                        itemStyle: { color: "#ef4444" },
+                    },
+                ],
+                label: {
+                    color: "#0a2540",
+                    fontWeight: 700,
+                },
+            },
+        ],
+    };
+
+    intensityChart.setOption(option, true);
+}
+
+function resetSelectedDay() {
+    document.getElementById("selectedDayTitle").textContent = "Click a bar to inspect one day";
+    document.getElementById("selectedDaySubtitle").textContent =
+        "Your workout details for the selected date will appear here.";
+
+    document.getElementById("selectedWorkoutDetails").innerHTML = `
+        <div class="empty-state">
+            Select a date from the bar chart to view workout cards.
         </div>
-    </main>
+    `;
+}
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
+function showRecordsForDate(dateText) {
+    const records = state.data.workouts.filter(workout => workout.date === dateText);
+
+    document.getElementById("selectedDayTitle").textContent = dateText;
+    document.getElementById("selectedDaySubtitle").textContent =
+        records.length === 1
+            ? "1 workout found for this date."
+            : `${records.length} workouts found for this date.`;
+
+    renderWorkoutCards(records);
+}
+
+function showAllRecords() {
+    if (!state.data) {
+        return;
+    }
+
+    document.getElementById("selectedDayTitle").textContent = "All filtered records";
+    document.getElementById("selectedDaySubtitle").textContent =
+        `${state.data.workouts.length} workouts match your current filters.`;
+
+    renderWorkoutCards(state.data.workouts);
+}
+
+function renderWorkoutCards(records) {
+    const container = document.getElementById("selectedWorkoutDetails");
+
+    container.classList.remove("fade-panel");
+    void container.offsetWidth;
+    container.classList.add("fade-panel");
+
+    if (records.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                No workouts found for this selection.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="row g-3">
+            ${records.map(workout => {
+                const intensityClass = `intensity-${workout.intensity.toLowerCase()}`;
+
+                return `
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-card h-100">
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <div>
+                                    <h3 class="h5 fw-bold mb-1">${escapeHtml(workout.type)}</h3>
+                                    <p class="text-muted mb-0">${workout.date}</p>
+                                </div>
+
+                                <span class="intensity-badge ${intensityClass}">
+                                    ${escapeHtml(workout.intensity)}
+                                </span>
+                            </div>
+
+                            <p class="mb-2">
+                                <strong>${workout.duration} min</strong>
+                            </p>
+
+                            <p class="text-muted small mb-3">
+                                ${escapeHtml(workout.notes)}
+                            </p>
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="${workout.edit_url}" class="btn btn-outline-success btn-sm">
+                                    Edit
+                                </a>
+
+                                <form
+                                    method="POST"
+                                    action="${workout.delete_url}"
+                                    onsubmit="return confirm('Are you sure you want to delete this workout?');"
+                                >
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("")}
+        </div>
+    `;
+}
+
+function renderRecordsTable(records) {
+    const tableBody = document.getElementById("recordsTableBody");
+
+    if (!records || records.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state">
+                        No workouts match the current filters.
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tableBody.innerHTML = records.map(workout => {
+        const intensityClass = `intensity-${workout.intensity.toLowerCase()}`;
+
+        return `
+            <tr>
+                <td>${escapeHtml(workout.date)}</td>
+                <td>${escapeHtml(workout.type)}</td>
+                <td>${workout.duration} min</td>
+                <td>
+                    <span class="intensity-badge ${intensityClass}">
+                        ${escapeHtml(workout.intensity)}
+                    </span>
+                </td>
+                <td>${escapeHtml(workout.notes)}</td>
+                <td class="text-end">
+                    <a href="${workout.edit_url}" class="btn btn-outline-success btn-sm me-2">
+                        Edit
+                    </a>
+
+                    <form
+                        method="POST"
+                        action="${workout.delete_url}"
+                        class="d-inline"
+                        onsubmit="return confirm('Are you sure you want to delete this workout?');"
+                    >
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function setActiveChip(containerId, dataName, value) {
+    const container = document.getElementById(containerId);
+
+    container.querySelectorAll(".filter-chip").forEach(button => {
+        button.classList.toggle("active", button.dataset[dataName] === String(value));
+    });
+}
+
+document.getElementById("rangeControls").addEventListener("click", function(event) {
+    const button = event.target.closest("[data-range]");
+
+    if (!button) {
+        return;
+    }
+
+    state.range = parseInt(button.dataset.range);
+    setActiveChip("rangeControls", "range", state.range);
+    loadChartData();
+});
+
+document.getElementById("intensityControls").addEventListener("click", function(event) {
+    const button = event.target.closest("[data-intensity]");
+
+    if (!button) {
+        return;
+    }
+
+    state.intensity = button.dataset.intensity;
+    setActiveChip("intensityControls", "intensity", state.intensity);
+    loadChartData();
+});
+
+document.getElementById("metricControls").addEventListener("click", function(event) {
+    const button = event.target.closest("[data-metric]");
+
+    if (!button) {
+        return;
+    }
+
+    state.metric = button.dataset.metric;
+    setActiveChip("metricControls", "metric", state.metric);
+    loadChartData();
+});
+
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return "";
+    }
+
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+window.addEventListener("resize", function() {
+    barChart.resize();
+    lineChart.resize();
+    intensityChart.resize();
+});
+
+loadChartData();
+</script>
+
 </body>
 </html>

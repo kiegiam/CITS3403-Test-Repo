@@ -1133,3 +1133,4 @@ def logout():
 if __name__ == "__main__":
     ensure_database_ready()
     app.run(debug=True)
+

@@ -171,31 +171,37 @@
                     </div>
                 </section>
             {% else %}
-                <section class="mb-4">
-                    <div class="row g-4">
+                <section class="mb-4 progress-chart-section">
+                    <div class="row g-4 progress-chart-grid">
                         <div class="col-lg-6">
-                            <div class="card shadow-sm border-0 h-100">
+                            <div class="card shadow-sm border-0 h-100 progress-chart-card">
                                 <div class="card-body p-4">
                                     <h2 class="h4 mb-3">Workout Type Breakdown</h2>
-                                    <canvas id="workoutTypeChart" height="220"></canvas>
+                                    <div class="progress-chart-container">
+                                        <canvas id="workoutTypeChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-lg-6">
-                            <div class="card shadow-sm border-0 h-100">
+                            <div class="card shadow-sm border-0 h-100 progress-chart-card">
                                 <div class="card-body p-4">
                                     <h2 class="h4 mb-3">Training Minutes by Type</h2>
-                                    <canvas id="trainingMinutesChart" height="220"></canvas>
+                                    <div class="progress-chart-container">
+                                        <canvas id="trainingMinutesChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-12">
-                            <div class="card shadow-sm border-0">
+                            <div class="card shadow-sm border-0 progress-chart-card">
                                 <div class="card-body p-4">
                                     <h2 class="h4 mb-3">Recent Training Trend</h2>
-                                    <canvas id="trainingTrendChart" height="110"></canvas>
+                                    <div class="progress-chart-container progress-chart-container-wide">
+                                        <canvas id="trainingTrendChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -325,6 +331,9 @@
                                     backgroundColor: chartColours,
                                 }],
                             },
+                            options: {
+                                maintainAspectRatio: false,
+                            },
                         });
                     }
 
@@ -340,6 +349,7 @@
                                 }],
                             },
                             options: {
+                                maintainAspectRatio: false,
                                 scales: {
                                     y: {
                                         beginAtZero: true,
@@ -364,6 +374,7 @@
                                 }],
                             },
                             options: {
+                                maintainAspectRatio: false,
                                 scales: {
                                     y: {
                                         beginAtZero: true,

@@ -1125,9 +1125,7 @@ def finish_workout():
         return jsonify({"error": "JSON body required"}), 400
 
     duration_mode = (data.get("duration_mode") or "stopwatch").strip().lower()
-    manual_duration_hours = data.get("manual_duration_hours")
     manual_duration_minutes = data.get("manual_duration_minutes")
-    manual_duration_seconds = data.get("manual_duration_seconds")
 
     try:
         started_at = datetime.fromisoformat(data["started_at"])
@@ -1137,26 +1135,15 @@ def finish_workout():
 
     if duration_mode == "manual":
         try:
-            hours = int(manual_duration_hours or 0)
-            minutes = int(manual_duration_minutes or 0)
-            seconds = int(manual_duration_seconds or 0)
+            duration_minutes = int(manual_duration_minutes or 0)
         except (TypeError, ValueError):
-            return jsonify({"error": "Manual duration fields must be whole numbers"}), 400
+            return jsonify({"error": "Manual duration must be a whole number of minutes"}), 400
 
-        if hours < 0 or minutes < 0 or seconds < 0:
-            return jsonify({"error": "Manual duration values cannot be negative"}), 400
-        if minutes > 59 or seconds > 59:
-            return jsonify({"error": "Minutes and seconds must be between 0 and 59"}), 400
-
-        total_seconds = (hours * 3600) + (minutes * 60) + seconds
-
-        if total_seconds <= 0:
+        if duration_minutes <= 0:
             return jsonify({"error": "Manual duration must be greater than 0"}), 400
 
-        duration_minutes = max(1, round(total_seconds / 60))
-
         if finished_at <= started_at:
-            finished_at = started_at + timedelta(seconds=total_seconds)
+            finished_at = started_at + timedelta(minutes=duration_minutes)
     else:
         if finished_at <= started_at:
             return jsonify({"error": "finished_at must be after started_at"}), 400

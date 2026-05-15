@@ -20,7 +20,9 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-success">
             <div class="container">
-                <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+                <a class="navbar-brand fw-bold" href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('home') }}{% endif %}">
+    FitTrack
+</a>
 
                 <button
                     class="navbar-toggler"
@@ -135,13 +137,12 @@
                                         <div class="col-md-6">
                                             <label for="date" class="form-label">Date</label>
                                             <input
-                                                type="text"
+                                                type="date"
                                                 class="form-control"
                                                 id="date"
                                                 name="date"
                                                 value="{{ workout.date }}"
-                                                placeholder="YYYY-MM-DD"
-                                                pattern="\d{4}-\d{2}-\d{2}"
+                                                max="{{ today_date }}"
                                                 required
                                             >
                                         </div>

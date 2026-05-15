@@ -15,7 +15,18 @@
         href="{{ url_for('static', filename='css/styles.css') }}"
     >
 </head>
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.flash-auto-dismiss').forEach(alert => {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
 
+            setTimeout(() => {
+                alert.remove();
+            }, 500);
+        });
+    }, 3000);
+</script>
 <body class="home-page">
 
     <header>
@@ -55,6 +66,15 @@
         <!-- Hero -->
         <section class="hero-section py-5">
             <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} flash-auto-dismiss" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
                 <div class="row align-items-center g-5">
                     <div class="col-lg-7">
                         <p class="fw-semibold mb-3" style="color: #635bff;">

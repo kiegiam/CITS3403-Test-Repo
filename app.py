@@ -327,6 +327,11 @@ def ensure_database_ready():
 def is_logged_in():
     return "user_id" in session
 
+def allowed_avatar_file(filename):
+    return (
+        "." in filename and
+        filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_IMAGE_EXTENSIONS"]
+    )
 
 def current_user():
     if "user_id" not in session:
@@ -519,6 +524,17 @@ def get_progress_data(user):
 
     return progress_stats, type_counts, type_minutes
 
+def parse_workout_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+    
+def allowed_avatar_file(filename):
+    return (
+        "." in filename and
+        filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_IMAGE_EXTENSIONS"]
+    )
 
 @app.route("/api/workout-chart-data")
 def api_workout_chart_data():
@@ -639,6 +655,9 @@ def api_workout_chart_data():
 
 @app.route("/")
 def home():
+    if is_logged_in():
+        session.clear()
+        flash("You have been logged out from your current session.", "success")
     return render_template("index.html")
 
 
@@ -883,19 +902,36 @@ def edit_profile():
         return redirect(url_for("login"))
 
     user = current_user()
-
     if user is None:
         session.clear()
         return redirect(url_for("login"))
 
     if request.method == "POST":
+        action = request.form.get("action", "save")
+
+        if action == "remove_avatar":
+            if user.avatar_filename:
+                old_avatar_path = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    user.avatar_filename
+                )
+
+                if os.path.exists(old_avatar_path):
+                    os.remove(old_avatar_path)
+
+                user.avatar_filename = None
+                db.session.commit()
+
+            flash("Profile picture removed. Default initials will now be used.", "success")
+            return redirect(url_for("edit_profile"))
+
         name = request.form.get("name", "").strip()
         goal = request.form.get("goal", "").strip()
         location = request.form.get("location", "").strip()
         avatar_file = request.files.get("avatar")
 
         if not name:
-            flash("Name cannot be empty.")
+            flash("Name cannot be empty.", "danger")
             return render_template(
                 "edit_profile.html",
                 profile=user_to_profile_dict(user)
@@ -905,38 +941,36 @@ def edit_profile():
         user.goal = goal or "Stay consistent"
         user.location = location or "Not set"
 
-        if "privacy_settings_present" in request.form:
-            user.show_public_profile = request.form.get("show_public_profile") == "on"
-            user.show_public_fitness = request.form.get("show_public_fitness") == "on"
-
         if avatar_file and avatar_file.filename:
-            if not allowed_image(avatar_file.filename):
-                flash("Avatar must be an image file: png, jpg, jpeg, or gif.")
+            if not allowed_avatar_file(avatar_file.filename):
+                flash("Please upload a valid image file: PNG, JPG, JPEG, or GIF.", "danger")
                 return render_template(
                     "edit_profile.html",
                     profile=user_to_profile_dict(user)
                 )
 
-            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+            if user.avatar_filename:
+                old_avatar_path = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    user.avatar_filename
+                )
+                if os.path.exists(old_avatar_path):
+                    os.remove(old_avatar_path)
 
-            original_filename = secure_filename(avatar_file.filename)
-            file_extension = original_filename.rsplit(".", 1)[1].lower()
+            original_name = secure_filename(avatar_file.filename)
+            extension = original_name.rsplit(".", 1)[1].lower()
+            new_filename = f"{user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{extension}"
 
-            avatar_filename = f"user_{user.id}_avatar.{file_extension}"
-            avatar_path = os.path.join(app.config["UPLOAD_FOLDER"], avatar_filename)
+            save_path = os.path.join(app.config["UPLOAD_FOLDER"], new_filename)
+            avatar_file.save(save_path)
 
-            avatar_file.save(avatar_path)
-            user.avatar_filename = avatar_filename
+            user.avatar_filename = new_filename
 
         db.session.commit()
-
-        flash("Profile updated successfully.")
+        flash("Profile updated successfully.", "success")
         return redirect(url_for("profile"))
 
-    return render_template(
-        "edit_profile.html",
-        profile=user_to_profile_dict(user)
-    )
+    return render_template("edit_profile.html", profile=user_to_profile_dict(user))
 
 
 @app.route("/workouts")
@@ -1041,6 +1075,8 @@ def api_add_exercise():
 
     if not data:
         return jsonify({"error": "JSON body required"}), 400
+    duration_mode = (data.get("duration_mode") or "stopwatch").strip().lower()
+    manual_duration_min = data.get("manual_duration_min")
 
     name = (data.get("name") or "").strip()
     muscle_group = (data.get("muscle_group") or "").strip()
@@ -1088,17 +1124,32 @@ def finish_workout():
     if not data:
         return jsonify({"error": "JSON body required"}), 400
 
+    duration_mode = (data.get("duration_mode") or "stopwatch").strip().lower()
+    manual_duration_minutes = data.get("manual_duration_minutes")
+
     try:
         started_at = datetime.fromisoformat(data["started_at"])
         finished_at = datetime.fromisoformat(data["finished_at"])
     except (KeyError, ValueError):
         return jsonify({"error": "started_at and finished_at must be valid ISO datetime strings"}), 400
 
-    if finished_at <= started_at:
-        return jsonify({"error": "finished_at must be after started_at"}), 400
+    if duration_mode == "manual":
+        try:
+            duration_minutes = int(manual_duration_minutes or 0)
+        except (TypeError, ValueError):
+            return jsonify({"error": "Manual duration must be a whole number of minutes"}), 400
 
-    duration_seconds = int((finished_at - started_at).total_seconds())
-    duration_minutes = max(1, round(duration_seconds / 60))
+        if duration_minutes <= 0:
+            return jsonify({"error": "Manual duration must be greater than 0"}), 400
+
+        if finished_at <= started_at:
+            finished_at = started_at + timedelta(minutes=duration_minutes)
+    else:
+        if finished_at <= started_at:
+            return jsonify({"error": "finished_at must be after started_at"}), 400
+
+        duration_seconds = int((finished_at - started_at).total_seconds())
+        duration_minutes = max(1, round(duration_seconds / 60))
 
     raw_sets = data.get("sets", [])
 
@@ -1170,43 +1221,24 @@ def finish_workout():
     )
 
     db.session.add(new_workout)
-    db.session.flush()
-
-    for saved_set in validated_sets:
-        workout_set = WorkoutSet(
-            workout_id=new_workout.id,
-            exercise_id=saved_set["exercise"].id,
-            set_number=saved_set["set_number"],
-            reps=saved_set["reps"],
-            weight_kg=saved_set["weight_kg"],
-        )
-
-        db.session.add(workout_set)
-
     db.session.commit()
 
-    total_volume_kg = sum(
-        saved_set["reps"] * saved_set["weight_kg"]
-        for saved_set in validated_sets
-    )
+    total_volume_kg = sum(saved_set["reps"] * saved_set["weight_kg"] for saved_set in validated_sets)
 
-    sets_per_exercise = {}
-
+    exercise_summary = {}
     for saved_set in validated_sets:
-        exercise_name = saved_set["exercise"].name
-        sets_per_exercise[exercise_name] = sets_per_exercise.get(exercise_name, 0) + 1
+        name = saved_set["exercise"].name
+        exercise_summary[name] = exercise_summary.get(name, 0) + 1
 
     return jsonify({
-        "workout_id": new_workout.id,
-        "date": new_workout.date,
-        "type": workout_type,
+        "success": True,
         "duration_minutes": duration_minutes,
-        "intensity": intensity,
         "total_sets": len(validated_sets),
-        "total_volume_kg": round(total_volume_kg, 1),
-        "exercises": sets_per_exercise,
+        "total_volume_kg": total_volume_kg,
+        "intensity": intensity,
         "muscle_groups": muscle_groups_trained,
-    }), 201
+        "exercises": exercise_summary,
+    }), 200
 
 
 @app.route("/workouts/<int:workout_id>/edit", methods=["GET", "POST"])
@@ -1215,72 +1247,78 @@ def edit_workout(workout_id):
         return redirect(url_for("login"))
 
     user = current_user()
-
     if user is None:
         session.clear()
         return redirect(url_for("login"))
 
-    workout = get_user_workout(user, workout_id)
-
-    if workout is None:
-        flash("Workout not found.")
-        return redirect(url_for("workouts"))
+    workout = Workout.query.filter_by(id=workout_id, user_id=user.id).first_or_404()
 
     if request.method == "POST":
-        date_value = request.form.get("date", "").strip()
+        workout_date = request.form.get("date", "").strip()
         workout_type = request.form.get("type", "").strip()
         duration = request.form.get("duration", "").strip()
         intensity = request.form.get("intensity", "").strip()
         notes = request.form.get("notes", "").strip()
 
-        if not date_value or not workout_type or not duration or not intensity:
-            flash("Please complete all required fields.")
+        if not workout_date or not workout_type or not duration or not intensity:
+            flash("Please complete all required fields.", "danger")
             return render_template(
                 "edit_workout.html",
-                workout=workout
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
             )
 
         try:
-            datetime.strptime(date_value, "%Y-%m-%d")
+            selected_date = datetime.strptime(workout_date, "%Y-%m-%d").date()
         except ValueError:
-            flash("Date must use the format YYYY-MM-DD.")
+            flash("Please enter a valid date.", "danger")
             return render_template(
                 "edit_workout.html",
-                workout=workout
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
+            )
+
+        if selected_date > date.today():
+            flash("Please enter a valid date. Workout date cannot be later than today.", "danger")
+            return render_template(
+                "edit_workout.html",
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
             )
 
         try:
             duration_value = int(duration)
         except ValueError:
-            flash("Duration must be a number.")
+            flash("Duration must be a number.", "danger")
             return render_template(
                 "edit_workout.html",
-                workout=workout
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
             )
 
         if duration_value <= 0:
-            flash("Duration must be greater than 0.")
+            flash("Duration must be greater than 0.", "danger")
             return render_template(
                 "edit_workout.html",
-                workout=workout
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
             )
 
-        workout.date = date_value
+        workout.date = workout_date
         workout.type = workout_type
         workout.duration = duration_value
         workout.intensity = intensity
         workout.notes = notes or "No notes added."
 
         db.session.commit()
-
-        flash("Workout updated successfully.")
+        flash("Workout updated successfully.", "success")
         return redirect(url_for("workouts"))
 
     return render_template(
         "edit_workout.html",
-        workout=workout
+        workout=workout_to_dict(workout),
+        today_date=date.today().isoformat()
     )
-
 
 @app.route("/workouts/<int:workout_id>/delete", methods=["POST"])
 def delete_workout(workout_id):
@@ -1370,6 +1408,11 @@ def ranking():
     if not is_logged_in():
         return redirect(url_for("login"))
 
+    current = current_user()
+    if current is None:
+        session.clear()
+        return redirect(url_for("login"))
+
     users = User.query.filter_by(show_public_fitness=True).all()
     leaderboard = []
 
@@ -1378,13 +1421,32 @@ def ranking():
 
         total_workouts = len(user_workouts)
         total_minutes = sum(workout.duration for workout in user_workouts)
+        workout_dates = [
+            parse_workout_date(workout.date)
+            for workout in user_workouts
+            if parse_workout_date(workout.date) is not None
+        ]
+
+        if workout_dates:
+            latest_workout_date = max(workout_dates)
+
+            if latest_workout_date == date.today():
+                last_workout_display = "Today"
+            elif latest_workout_date == date.today() - timedelta(days=1):
+                last_workout_display = "Yesterday"
+            else:
+                last_workout_display = latest_workout_date.strftime("%d %b %Y")
+        else:
+            last_workout_display = "No workouts"
 
         if user.show_public_profile:
             display_name = user.name
             avatar_filename = user.avatar_filename
+            initials = "".join(part[0].upper() for part in user.name.split()[:2]) if user.name else "U"
         else:
             display_name = "Private User"
             avatar_filename = None
+            initials = None
 
         leaderboard.append(
             {
@@ -1397,6 +1459,8 @@ def ranking():
                 "avatar_filename": avatar_filename,
                 "profile_public": bool(user.show_public_profile),
                 "fitness_public": bool(user.show_public_fitness),
+                "initials": initials,
+                "last_workout": last_workout_display,
             }
         )
 
@@ -1436,16 +1500,17 @@ def ranking():
                 "workouts": user_data["workouts"],
                 "minutes_to_next_rank": minutes_to_next_rank,
             }
-
             break
+
+    community_disabled = not bool(current.show_public_fitness)
 
     return render_template(
         "ranking.html",
         leaderboard=leaderboard,
         ranking_summary=ranking_summary,
-        current_user_rank=current_user_rank
+        current_user_rank=current_user_rank,
+        community_disabled=community_disabled,
     )
-
 
 @app.route("/plans")
 def plans():

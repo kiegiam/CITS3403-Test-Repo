@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 
     <style>
-        /* ── Base ────────────────────────────────────────────────────── */
         :root {
             --green:      #16a34a;
             --green-dark: #15803d;
@@ -24,38 +23,31 @@
         body { font-family: 'DM Sans', sans-serif; background: #f8fafc; }
         code, .mono { font-family: 'DM Mono', monospace; }
 
-        /* ── Screens ─────────────────────────────────────────────────── */
         .screen { display: none; }
         .screen.active { display: block; }
 
-        /* ── Timer pill (fixed top-right during workout) ─────────────── */
         #timer-pill {
             position: fixed;
             top: 72px;
             right: 1.25rem;
             z-index: 1040;
-            background: #111827;
-            color: #fff;
-            padding: 0.4rem 1rem;
+            background: transparent;
+            color: transparent;
+            padding: 0;
             border-radius: 999px;
             font-family: 'DM Mono', monospace;
             font-size: 1.05rem;
             letter-spacing: 0.05em;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            box-shadow: none;
             display: none;
+            pointer-events: none;
         }
         #timer-pill.visible { display: block; }
         #timer-pill .dot {
-            display: inline-block;
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #4ade80;
-            margin-right: 0.45rem;
-            animation: blink 1s infinite;
+            display: none;
         }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-        /* ── Muscle group grid ───────────────────────────────────────── */
         .muscle-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -81,7 +73,6 @@
         }
         .muscle-btn .icon { font-size: 1.6rem; display: block; margin-bottom: 0.35rem; }
 
-        /* ── Exercise list ───────────────────────────────────────────── */
         .exercise-item {
             display: flex;
             align-items: center;
@@ -110,7 +101,6 @@
             margin-left: 0.5rem;
         }
 
-        /* ── Set logger table ────────────────────────────────────────── */
         .exercise-block {
             border: 1.5px solid var(--border);
             border-radius: var(--radius);
@@ -193,7 +183,6 @@
         }
         .btn-remove-exercise:hover { color: #fff; }
 
-        /* ── Summary screen ──────────────────────────────────────────── */
         .stat-card {
             background: #fff;
             border: 1.5px solid var(--border);
@@ -225,7 +214,6 @@
         }
         .exercise-summary-row:last-child { border-bottom: none; }
 
-        /* ── Misc ────────────────────────────────────────────────────── */
         .step-label {
             font-size: 0.75rem;
             font-weight: 700;
@@ -240,6 +228,7 @@
             color: var(--muted);
         }
         .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
         #toast-container {
             position: fixed;
             bottom: 1.5rem;
@@ -262,15 +251,27 @@
             transition: opacity 0.2s;
         }
         .toast-msg.show { opacity: 1; }
+
+        .duration-card-display {
+            background: rgba(25, 135, 84, 0.06);
+            border: 1px solid rgba(25, 135, 84, 0.15);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .mono {
+            font-variant-numeric: tabular-nums;
+        }
     </style>
 </head>
 <body class="bg-light">
 
-<!-- ── Navbar ─────────────────────────────────────────────────────────── -->
 <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+            <a class="navbar-brand fw-bold" href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('home') }}{% endif %}">
+                FitTrack
+            </a>
 
             <button
                 class="navbar-toggler"
@@ -352,247 +353,315 @@
     </nav>
 </header>
 
-<!-- ── Live timer pill ────────────────────────────────────────────────── -->
 <div id="timer-pill">
     <span class="dot"></span>
-    <span id="timer-display">0:00</span>
+    <span id="timer-display">00:00:00</span>
 </div>
 
 <div id="toast-container"></div>
 
 <main class="py-5">
-<div class="container" style="max-width: 760px;">
+    <div class="container" style="max-width: 760px;">
 
-<!-- ══════════════════════════════════════════════════════════════════════
-     SCREEN 1 — Pick muscle groups
-     ══════════════════════════════════════════════════════════════════════ -->
-<div id="screen-muscles" class="screen active">
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body p-4">
-            <p class="step-label">Step 1 of 2</p>
-            <h1 class="h3 mb-1">What are you training today?</h1>
-            <p class="text-muted mb-4">Pick one or more muscle groups. You can add exercises from each.</p>
+        <div id="screen-muscles" class="screen active">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <p class="step-label">Step 1 of 2</p>
+                    <h1 class="h3 mb-1">What are you training today?</h1>
+                    <p class="text-muted mb-4">Pick one or more muscle groups. You can add exercises from each.</p>
 
-            <div class="muscle-grid mb-4">
-                {% set icons = {
-                    'Chest':     '🫁',
-                    'Back':      '🔙',
-                    'Shoulders': '🏋️',
-                    'Biceps':    '💪',
-                    'Triceps':   '🦾',
-                    'Legs':      '🦵',
-                    'Core':      '🎯',
-                    'Cardio':    '🏃'
-                } %}
-                {% for group in muscle_groups %}
-                <button
-                    class="muscle-btn"
-                    data-group="{{ group }}"
-                    onclick="toggleMuscle(this)"
-                >
-                    <span class="icon">{{ icons.get(group, '💪') }}</span>
-                    {{ group }}
-                </button>
-                {% endfor %}
+                    <div class="muscle-grid mb-4">
+                        {% set icons = {
+                            'Chest':     '🫁',
+                            'Back':      '🔙',
+                            'Shoulders': '🏋️',
+                            'Biceps':    '💪',
+                            'Triceps':   '🦾',
+                            'Legs':      '🦵',
+                            'Core':      '🎯',
+                            'Cardio':    '🏃'
+                        } %}
+                        {% for group in muscle_groups %}
+                        <button
+                            class="muscle-btn"
+                            data-group="{{ group }}"
+                            onclick="toggleMuscle(this)"
+                            type="button"
+                        >
+                            <span class="icon">{{ icons.get(group, '💪') }}</span>
+                            {{ group }}
+                        </button>
+                        {% endfor %}
+                    </div>
+
+                    <button
+                        class="btn btn-success w-100"
+                        onclick="goToExercises()"
+                        type="button"
+                    >
+                        Choose Exercises →
+                    </button>
+                </div>
             </div>
-
-            <button
-                class="btn btn-success w-100"
-                onclick="goToExercises()"
-            >
-                Choose Exercises →
-            </button>
         </div>
-    </div>
-</div>
 
-<!-- ══════════════════════════════════════════════════════════════════════
-     SCREEN 2 — Pick exercises & log sets (workout in progress)
-     ══════════════════════════════════════════════════════════════════════ -->
-<input type="hidden" id="plan-type" value="{{ selected_plan }}">
-<div id="screen-workout" class="screen">
+        <div id="screen-workout" class="screen">
+            <input type="hidden" id="plan-type" value="{{ selected_plan }}">
 
-    <!-- Exercise picker panel -->
-    <div class="card shadow-sm border-0 mb-3" id="exercise-picker-card">
-        <div class="card-body p-4">
-            <p class="step-label">Step 2 of 2 — Workout in progress</p>
-            <h2 class="h5 mb-3">Add exercises to your workout</h2>
+            <div class="card shadow-sm border-0 mb-3" id="exercise-picker-card">
+                <div class="card-body p-4">
+                    <p class="step-label">Step 2 of 2 — Workout in progress</p>
+                    <h2 class="h5 mb-3">Add exercises to your workout</h2>
 
-            <!-- Muscle group tabs -->
-            <div id="group-tabs" class="d-flex flex-wrap gap-2 mb-3"></div>
+                    <div id="group-tabs" class="d-flex flex-wrap gap-2 mb-3"></div>
 
-            <!-- Exercise list for selected tab -->
-            <div id="exercise-list" class="mb-3">
-                <div class="empty-state">
-                    <div class="icon">🔄</div>
-                    <p class="mb-0">Loading exercises…</p>
+                    <div id="exercise-list" class="mb-3">
+                        <div class="empty-state">
+                            <div class="icon">🔄</div>
+                            <p class="mb-0">Loading exercises…</p>
+                        </div>
+                    </div>
+
+                    <details class="mb-0">
+                        <summary class="text-success fw-semibold" style="cursor:pointer; font-size:0.9rem;">
+                            + Add a custom exercise
+                        </summary>
+                        <div class="mt-3 p-3 rounded bg-light border">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input
+                                        type="text"
+                                        id="custom-name"
+                                        class="form-control form-control-sm"
+                                        placeholder="Exercise name"
+                                    >
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="custom-group" class="form-select form-select-sm">
+                                        {% for group in muscle_groups %}
+                                        <option value="{{ group }}">{{ group }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button
+                                        class="btn btn-success btn-sm w-100"
+                                        onclick="addCustomExercise()"
+                                        type="button"
+                                    >Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
 
-            <!-- Add custom exercise -->
-            <details class="mb-0">
-                <summary class="text-success fw-semibold" style="cursor:pointer; font-size:0.9rem;">
-                    + Add a custom exercise
-                </summary>
-                <div class="mt-3 p-3 rounded bg-light border">
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <input
-                                type="text"
-                                id="custom-name"
-                                class="form-control form-control-sm"
-                                placeholder="Exercise name"
-                            >
-                        </div>
-                        <div class="col-md-4">
-                            <select id="custom-group" class="form-select form-select-sm">
-                                {% for group in muscle_groups %}
-                                <option value="{{ group }}">{{ group }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button
-                                class="btn btn-success btn-sm w-100"
-                                onclick="addCustomExercise()"
-                            >Add</button>
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">Your sets</h2>
+                        <span class="text-muted small" id="set-count-label">0 sets logged</span>
+                    </div>
+
+                    <div id="exercise-blocks">
+                        <div class="empty-state" id="no-sets-msg">
+                            <div class="icon">➕</div>
+                            <p class="mb-0 text-muted">Add an exercise above to start logging sets</p>
                         </div>
                     </div>
                 </div>
-            </details>
-        </div>
-    </div>
-
-    <!-- Active set logger -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h5 mb-0">Your sets</h2>
-                <span class="text-muted small" id="set-count-label">0 sets logged</span>
             </div>
 
-            <div id="exercise-blocks">
-                <div class="empty-state" id="no-sets-msg">
-                    <div class="icon">➕</div>
-                    <p class="mb-0 text-muted">Add an exercise above to start logging sets</p>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                        <div>
+                            <p class="step-label mb-1">Workout Duration</p>
+                            <h2 class="h5 mb-0">Choose how to set workout duration</h2>
+                        </div>
+                    </div>
+
+                    <div class="btn-group mb-3" role="group" aria-label="Duration mode">
+                        <button
+                            type="button"
+                            id="duration-tab-stopwatch"
+                            class="btn btn-success"
+                            onclick="setDurationMode('stopwatch')"
+                        >
+                            Stopwatch
+                        </button>
+                        <button
+                            type="button"
+                            id="duration-tab-manual"
+                            class="btn btn-outline-success"
+                            onclick="setDurationMode('manual')"
+                        >
+                            Manual Entry
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="duration-mode" value="stopwatch">
+
+                    <div id="duration-stopwatch-panel">
+                        <div class="duration-card-display">
+                            <div class="small text-muted mb-1">Live workout timer</div>
+                            <div id="timer-display-large" class="display-6 fw-bold mono">00:00:00</div>
+            
+                        
+                        </div>
+                    </div>
+
+                    <div id="duration-manual-panel" class="d-none">
+                        <div class="row g-3">
+                            <div class="col-sm-4">
+                                <label for="manual-duration-hours" class="form-label">Hours</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    class="form-control"
+                                    id="manual-duration-hours"
+                                    placeholder="0"
+                                >
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="manual-duration-minutes" class="form-label">Minutes</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    step="1"
+                                    class="form-control"
+                                    id="manual-duration-minutes"
+                                    placeholder="45"
+                                    oninput="if (this.value !== '') { if (parseInt(this.value, 10) > 59) this.value = 59; if (parseInt(this.value, 10) < 0) this.value = 0; }"
+                                >
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="manual-duration-seconds" class="form-label">Seconds</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    step="1"
+                                    class="form-control"
+                                    id="manual-duration-seconds"
+                                    placeholder="0"
+                                    oninput="if (this.value !== '') { if (parseInt(this.value, 10) > 59) this.value = 59; if (parseInt(this.value, 10) < 0) this.value = 0; }"
+                                >
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-2 mb-0">
+                            Use this if you want to enter the full workout duration manually instead of using the stopwatch.
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Notes + finish -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-body p-4">
-            <label for="workout-notes" class="form-label fw-semibold">Notes <span class="text-muted fw-normal">(optional)</span></label>
-            <textarea
-                id="workout-notes"
-                class="form-control mb-4"
-                rows="2"
-                placeholder="How did it feel? Any PRs today?"
-            ></textarea>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <label for="workout-notes" class="form-label fw-semibold">Notes</label>
+                    <textarea
+                        id="workout-notes"
+                        class="form-control"
+                        rows="4"
+                        placeholder="How did the workout feel?"
+                    ></textarea>
+                </div>
+            </div>
 
-            <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex gap-2 flex-wrap mb-4">
                 <button
+                    id="finish-workout-btn"
                     class="btn btn-success flex-grow-1"
                     onclick="finishWorkout()"
+                    type="button"
                 >
                     🏁 Finish Workout
                 </button>
-                <a href="{{ url_for('workouts') }}" class="btn btn-outline-secondary">
-                    Discard
-                </a>
+                <button
+                    class="btn btn-outline-secondary"
+                    onclick="showScreen('screen-muscles')"
+                    type="button"
+                >
+                    Back
+                </button>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- ══════════════════════════════════════════════════════════════════════
-     SCREEN 3 — Post-workout summary
-     ══════════════════════════════════════════════════════════════════════ -->
-<div id="screen-summary" class="screen">
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body p-4">
+        <div id="screen-summary" class="screen">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="display-3">✅</div>
+                        <h1 class="h3 mt-2 mb-1">Workout Complete!</h1>
+                        <p class="text-muted mb-0" id="summary-date"></p>
+                    </div>
 
-            <!-- Trophy header -->
-            <div class="text-center mb-4">
-                <div style="font-size:3.5rem; line-height:1;">🏆</div>
-                <h1 class="h3 mt-2 mb-1">Workout Complete!</h1>
-                <p class="text-muted mb-0" id="summary-date"></p>
-            </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="value" id="sum-duration">–</div>
+                                <div class="label">Minutes</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="value" id="sum-sets">–</div>
+                                <div class="label">Total Sets</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="value" id="sum-volume">–</div>
+                                <div class="label">kg Lifted</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="value" id="sum-intensity">–</div>
+                                <div class="label">Intensity</div>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- Stat grid -->
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="stat-card">
-                        <div class="value" id="sum-duration">–</div>
-                        <div class="label">Minutes</div>
+                    <div class="mb-3">
+                        <p class="fw-semibold mb-2">Muscle groups trained</p>
+                        <div id="sum-muscles" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="fw-semibold mb-2">Exercise breakdown</p>
+                        <div id="sum-exercises"></div>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ url_for('workouts') }}" class="btn btn-success flex-grow-1">
+                            View My Workouts
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">
+                            Dashboard
+                        </a>
                     </div>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-card">
-                        <div class="value" id="sum-sets">–</div>
-                        <div class="label">Total Sets</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-card">
-                        <div class="value" id="sum-volume">–</div>
-                        <div class="label">kg Lifted</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-card">
-                        <div class="value" id="sum-intensity">–</div>
-                        <div class="label">Intensity</div>
-                    </div>
-                </div>
             </div>
-
-            <!-- Muscle groups trained -->
-            <div class="mb-3">
-                <p class="fw-semibold mb-2">Muscle groups trained</p>
-                <div id="sum-muscles" class="d-flex flex-wrap gap-2"></div>
-            </div>
-
-            <!-- Exercise breakdown -->
-            <div class="mb-4">
-                <p class="fw-semibold mb-2">Exercise breakdown</p>
-                <div id="sum-exercises"></div>
-            </div>
-
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ url_for('workouts') }}" class="btn btn-success flex-grow-1">
-                    View My Workouts
-                </a>
-                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">
-                    Dashboard
-                </a>
-            </div>
-
         </div>
-    </div>
-</div>
 
-</div><!-- /container -->
+    </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-/* ================================================================
-   State
-   ================================================================ */
-let selectedGroups   = new Set();   // muscle groups chosen on screen 1
-let activeTab        = null;        // currently visible tab on screen 2
-let exerciseCache    = {};          // { "Chest": [...], ... }
-let addedExercises   = {};          // { exerciseId: {id, name, muscle_group} }
-let workoutSets      = {};          // { exerciseId: [{set_number, reps, weight_kg}, ...] }
+let selectedGroups   = new Set();
+let activeTab        = null;
+let exerciseCache    = {};
+let addedExercises   = {};
+let workoutSets      = {};
 
 let timerInterval    = null;
-let startedAt        = null;        // Date object
+let startedAt        = null;
+let durationMode     = 'stopwatch';
 
-/* ================================================================
-   Utilities
-   ================================================================ */
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -615,9 +684,36 @@ function totalSetCount() {
     return Object.values(workoutSets).reduce((acc, sets) => acc + sets.length, 0);
 }
 
-/* ================================================================
-   Screen 1 — Muscle group selection
-   ================================================================ */
+function setDurationMode(mode) {
+    durationMode = mode;
+    document.getElementById('duration-mode').value = mode;
+
+    const stopwatchTab = document.getElementById('duration-tab-stopwatch');
+    const manualTab = document.getElementById('duration-tab-manual');
+    const stopwatchPanel = document.getElementById('duration-stopwatch-panel');
+    const manualPanel = document.getElementById('duration-manual-panel');
+
+    if (mode === 'stopwatch') {
+        stopwatchTab.classList.add('btn-success');
+        stopwatchTab.classList.remove('btn-outline-success');
+
+        manualTab.classList.add('btn-outline-success');
+        manualTab.classList.remove('btn-success');
+
+        stopwatchPanel.classList.remove('d-none');
+        manualPanel.classList.add('d-none');
+    } else {
+        manualTab.classList.add('btn-success');
+        manualTab.classList.remove('btn-outline-success');
+
+        stopwatchTab.classList.add('btn-outline-success');
+        stopwatchTab.classList.remove('btn-success');
+
+        manualPanel.classList.remove('d-none');
+        stopwatchPanel.classList.add('d-none');
+    }
+}
+
 function toggleMuscle(btn) {
     const group = btn.dataset.group;
     if (selectedGroups.has(group)) {
@@ -635,7 +731,6 @@ function goToExercises() {
         return;
     }
 
-    // Build tabs
     const tabsEl = document.getElementById('group-tabs');
     tabsEl.innerHTML = '';
     selectedGroups.forEach(group => {
@@ -647,33 +742,28 @@ function goToExercises() {
         tabsEl.appendChild(btn);
     });
 
-    // Start timer
     startedAt = new Date();
     const pill = document.getElementById('timer-pill');
     pill.classList.add('visible');
-    timerInterval = setInterval(updateTimer, 1000);
 
-    // Show first tab
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
     switchTab([...selectedGroups][0]);
     showScreen('screen-workout');
 }
 
-/* ================================================================
-   Screen 2 — Exercise tabs
-   ================================================================ */
 async function switchTab(group) {
     activeTab = group;
 
-    // Highlight active tab
     document.querySelectorAll('#group-tabs button').forEach(b => {
         b.classList.toggle('btn-success', b.dataset.group === group);
         b.classList.toggle('btn-outline-success', b.dataset.group !== group);
     });
 
-    // Set default for custom exercise dropdown
     document.getElementById('custom-group').value = group;
 
-    // Fetch exercises (cached)
     if (!exerciseCache[group]) {
         document.getElementById('exercise-list').innerHTML =
             '<div class="empty-state"><div class="icon">🔄</div><p>Loading…</p></div>';
@@ -722,7 +812,6 @@ function escapeAttr(str) {
 
 function toggleExercise(id, name, muscleGroup, isCustom) {
     if (addedExercises[id]) {
-        // Already added — just scroll to its block
         const block = document.getElementById(`block-${id}`);
         if (block) block.scrollIntoView({ behavior: 'smooth', block: 'center' });
         toast(`${name} is already in your workout`);
@@ -732,27 +821,21 @@ function toggleExercise(id, name, muscleGroup, isCustom) {
     addedExercises[id] = { id, name, muscle_group: muscleGroup };
     workoutSets[id] = [];
 
-    // Mark as added in list
     const item = document.getElementById(`ex-item-${id}`);
     if (item) {
         item.classList.add('added');
         item.querySelector('span:last-child').textContent = '✅';
     }
 
-    // Remove empty state
     document.getElementById('no-sets-msg')?.remove();
 
-    // Create exercise block
     renderExerciseBlock(id);
-    addSet(id);  // auto-add first set
+    addSet(id);
     updateSetCountLabel();
 
     toast(`${name} added`);
 }
 
-/* ================================================================
-   Screen 2 — Set logger
-   ================================================================ */
 function renderExerciseBlock(exerciseId) {
     const ex = addedExercises[exerciseId];
     const container = document.getElementById('exercise-blocks');
@@ -788,9 +871,8 @@ function addSet(exerciseId) {
     const sets = workoutSets[exerciseId];
     const setNum = sets.length + 1;
 
-    // Prefill with previous set's values if available
     const prev = sets[sets.length - 1];
-    const prevReps   = prev ? prev.reps   : '';
+    const prevReps = prev ? prev.reps : '';
     const prevWeight = prev ? prev.weight_kg : '';
 
     sets.push({ set_number: setNum, reps: prevReps, weight_kg: prevWeight });
@@ -839,7 +921,6 @@ function removeSet(exerciseId, setNum) {
     workoutSets[exerciseId] = workoutSets[exerciseId].filter(s => s.set_number !== setNum);
     document.getElementById(`set-row-${exerciseId}-${setNum}`)?.remove();
 
-    // Re-number remaining sets in display
     renumberSets(exerciseId);
     updateSetCountLabel();
 }
@@ -859,7 +940,6 @@ function removeExercise(exerciseId) {
     delete workoutSets[exerciseId];
     document.getElementById(`block-${exerciseId}`)?.remove();
 
-    // Un-mark in exercise list
     const item = document.getElementById(`ex-item-${exerciseId}`);
     if (item) {
         item.classList.remove('added');
@@ -883,11 +963,8 @@ function updateSetCountLabel() {
         count === 1 ? '1 set logged' : `${count} sets logged`;
 }
 
-/* ================================================================
-   Custom exercise
-   ================================================================ */
 async function addCustomExercise() {
-    const name  = document.getElementById('custom-name').value.trim();
+    const name = document.getElementById('custom-name').value.trim();
     const group = document.getElementById('custom-group').value;
 
     if (!name) { toast('Enter an exercise name'); return; }
@@ -905,7 +982,6 @@ async function addCustomExercise() {
             return;
         }
 
-        // Add to cache and refresh list if on the same tab
         if (!exerciseCache[group]) exerciseCache[group] = [];
         exerciseCache[group].push(data);
         exerciseCache[group].sort((a,b) => a.name.localeCompare(b.name));
@@ -919,31 +995,28 @@ async function addCustomExercise() {
     }
 }
 
-/* ================================================================
-   Timer
-   ================================================================ */
 function updateTimer() {
     if (!startedAt) return;
     const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
-    const m = Math.floor(elapsed / 60);
-    const s = elapsed % 60;
-    document.getElementById('timer-display').textContent =
-        `${m}:${String(s).padStart(2,'0')}`;
+    const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+    const seconds = String(elapsed % 60).padStart(2, '0');
+    const formatted = `${hours}:${minutes}:${seconds}`;
+
+    document.getElementById('timer-display').textContent = formatted;
+    const largeDisplay = document.getElementById('timer-display-large');
+    if (largeDisplay) largeDisplay.textContent = formatted;
 }
 
-/* ================================================================
-   Finish workout
-   ================================================================ */
 async function finishWorkout() {
     const allSets = [];
     for (const [exerciseId, sets] of Object.entries(workoutSets)) {
         for (const s of sets) {
             allSets.push({
                 exercise_id: parseInt(exerciseId),
-                set_number:  s.set_number,
-                reps:        s.reps || 0,
-                weight_kg:   s.weight_kg || 0,
-                
+                set_number: s.set_number,
+                reps: s.reps || 0,
+                weight_kg: s.weight_kg || 0,
             });
         }
     }
@@ -953,7 +1026,6 @@ async function finishWorkout() {
         return;
     }
 
-    // Validate inputs
     const invalid = allSets.find(s => !s.reps || s.reps <= 0);
     if (invalid) {
         toast('Fill in reps for every set before finishing');
@@ -964,15 +1036,34 @@ async function finishWorkout() {
     const finishedAt = new Date();
 
     const payload = {
-        started_at:  startedAt.toISOString().slice(0, 19),
+        started_at: startedAt.toISOString().slice(0, 19),
         finished_at: finishedAt.toISOString().slice(0, 19),
-        notes:       document.getElementById('workout-notes').value.trim(),
+        notes: document.getElementById('workout-notes').value.trim(),
         plan_type: document.getElementById('plan-type')?.value || "",
-        sets:        allSets,
+        duration_mode: document.getElementById('duration-mode')?.value || 'stopwatch',
+        manual_duration_hours: document.getElementById('manual-duration-hours')?.value || "",
+        manual_duration_minutes: document.getElementById('manual-duration-minutes')?.value || "",
+        manual_duration_seconds: document.getElementById('manual-duration-seconds')?.value || "",
+        sets: allSets,
     };
 
-    // Disable button while saving
-    const btn = document.querySelector('#screen-workout .btn-success');
+        if (payload.duration_mode === 'manual') {
+            const h = parseInt(payload.manual_duration_hours || 0, 10);
+            const m = parseInt(payload.manual_duration_minutes || 0, 10);
+            const s = parseInt(payload.manual_duration_seconds || 0, 10);
+
+            if (
+                isNaN(h) || isNaN(m) || isNaN(s) ||
+                h < 0 || m < 0 || s < 0 ||
+                m > 59 || s > 59 ||
+                (h === 0 && m === 0 && s === 0)
+            ) {
+                toast('Enter a valid manual duration. Minutes and seconds must be between 0 and 59.');
+                return;
+            }
+        }
+
+    const btn = document.getElementById('finish-workout-btn');
     btn.disabled = true;
     btn.textContent = 'Saving…';
 
@@ -991,10 +1082,8 @@ async function finishWorkout() {
             return;
         }
 
-        // Hide timer pill
         document.getElementById('timer-pill').classList.remove('visible');
 
-        // Populate summary
         populateSummary(data, finishedAt);
         showScreen('screen-summary');
 
@@ -1005,26 +1094,21 @@ async function finishWorkout() {
     }
 }
 
-/* ================================================================
-   Screen 3 — Summary
-   ================================================================ */
 function populateSummary(data, finishedAt) {
     const dateStr = finishedAt.toLocaleDateString('en-AU', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     document.getElementById('summary-date').textContent = dateStr;
     document.getElementById('sum-duration').textContent = data.duration_minutes;
-    document.getElementById('sum-sets').textContent     = data.total_sets;
-    document.getElementById('sum-volume').textContent   = data.total_volume_kg.toLocaleString();
+    document.getElementById('sum-sets').textContent = data.total_sets;
+    document.getElementById('sum-volume').textContent = data.total_volume_kg.toLocaleString();
     document.getElementById('sum-intensity').textContent = data.intensity;
 
-    // Muscle group badges
     const musclesEl = document.getElementById('sum-muscles');
     musclesEl.innerHTML = data.muscle_groups.map(g =>
         `<span class="badge text-bg-success px-3 py-2">${escapeHtml(g)}</span>`
     ).join('');
 
-    // Exercise breakdown
     const exEl = document.getElementById('sum-exercises');
     exEl.innerHTML = Object.entries(data.exercises).map(([name, sets]) => `
         <div class="exercise-summary-row">

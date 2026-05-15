@@ -798,3 +798,50 @@ footer {
     background-color: #635bff;
     border-color: #635bff;
 }
+.ranking-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+}
+
+.ranking-avatar-large {
+    width: 72px;
+    height: 72px;
+}
+
+.ranking-avatar-fallback {
+    background-color: #198754;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+.private-user-avatar {
+    background-color: #f1f3f5;
+    object-fit: cover;
+}
+.duration-card-display {
+    background: rgba(25, 135, 84, 0.06);
+    border: 1px solid rgba(25, 135, 84, 0.15);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+}
+
+.mono {
+    font-variant-numeric: tabular-nums;
+}
+.duration-card-display {
+    background: rgba(25, 135, 84, 0.06);
+    border: 1px solid rgba(25, 135, 84, 0.15);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+}
+
+.mono {
+    font-variant-numeric: tabular-nums;
+}

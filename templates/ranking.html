@@ -20,7 +20,9 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-success">
             <div class="container">
-                <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+                <a class="navbar-brand fw-bold" href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('home') }}{% endif %}">
+    FitTrack
+</a>
 
                 <button
                     class="navbar-toggler"
@@ -123,7 +125,21 @@
                 </div>
             </section>
 
-            {% if not leaderboard or leaderboard[0].minutes == 0 %}
+            {% if community_disabled %}
+                <section>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-5 text-center">
+                            <h2 class="h4 mb-3">You have disabled community features</h2>
+                            <p class="text-muted mb-4">
+                                Enable them in your privacy settings here.
+                            </p>
+                            <a href="{{ url_for('edit_profile') }}" class="btn btn-success">
+                                Go to Privacy Settings
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            {% elif not leaderboard or leaderboard[0].minutes == 0 %}
                 <section>
                     <div class="card shadow-sm border-0">
                         <div class="card-body p-5 text-center">
@@ -230,6 +246,26 @@
                                         {% endif %}
                                     </div>
 
+                                    {% if user.profile_public %}
+                                        {% if user.avatar_filename %}
+                                            <img
+                                                src="{{ url_for('static', filename='uploads/' ~ user.avatar_filename) }}"
+                                                alt="{{ user.name }}"
+                                                class="ranking-avatar ranking-avatar-large mb-3"
+                                            >
+                                        {% else %}
+                                            <div class="ranking-avatar ranking-avatar-large ranking-avatar-fallback mx-auto mb-3">
+                                                {{ user.initials }}
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <img
+                                            src="{{ url_for('static', filename='background image/blank-profile-picture.png') }}"
+                                            alt="Private user"
+                                            class="ranking-avatar ranking-avatar-large mb-3 private-user-avatar"
+                                        >
+                                    {% endif %}
+
                                     <h2 class="h5 mb-1">{{ user.name }}</h2>
                                     <p class="text-muted small mb-3">Rank #{{ loop.index }}</p>
 
@@ -271,7 +307,7 @@
                                         <th>Total Workouts</th>
                                         <th>Total Minutes</th>
                                         <th>Day Streak</th>
-                                        <th>Progress Visibility</th>
+                                        <th>Last Workout</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -289,16 +325,36 @@
                                                 {% endif %}
                                             </td>
 
-                                            <td class="fw-semibold">{{ user.name }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    {% if user.profile_public %}
+                                                        {% if user.avatar_filename %}
+                                                            <img
+                                                                src="{{ url_for('static', filename='uploads/' ~ user.avatar_filename) }}"
+                                                                alt="{{ user.name }}"
+                                                                class="ranking-avatar"
+                                                            >
+                                                        {% else %}
+                                                            <div class="ranking-avatar ranking-avatar-fallback">
+                                                                {{ user.initials }}
+                                                            </div>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <img
+                                                            src="{{ url_for('static', filename='background image/blank-profile-picture.png') }}"
+                                                            alt="Private user"
+                                                            class="ranking-avatar private-user-avatar"
+                                                        >
+                                                    {% endif %}
+
+                                                    <span class="fw-semibold">{{ user.name }}</span>
+                                                </div>
+                                            </td>
                                             <td>{{ user.workouts }}</td>
                                             <td>{{ user.minutes }} min</td>
                                             <td>{{ user.streak }} days</td>
                                             <td>
-                                                {% if user.shared %}
-                                                    <span class="badge text-bg-success">Shared on leaderboard</span>
-                                                {% else %}
-                                                    <span class="badge text-bg-secondary">Not shared</span>
-                                                {% endif %}
+                                                <span class="badge text-bg-success">{{ user.last_workout }}</span>
                                             </td>
                                         </tr>
                                     {% endfor %}

@@ -825,3 +825,23 @@ footer {
     background-color: #f1f3f5;
     object-fit: cover;
 }
+.duration-card-display {
+    background: rgba(25, 135, 84, 0.06);
+    border: 1px solid rgba(25, 135, 84, 0.15);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+}
+
+.mono {
+    font-variant-numeric: tabular-nums;
+}
+.duration-card-display {
+    background: rgba(25, 135, 84, 0.06);
+    border: 1px solid rgba(25, 135, 84, 0.15);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+}
+
+.mono {
+    font-variant-numeric: tabular-nums;
+}

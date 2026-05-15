@@ -15,7 +15,18 @@
         href="{{ url_for('static', filename='css/styles.css') }}"
     >
 </head>
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.flash-auto-dismiss').forEach(alert => {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
 
+            setTimeout(() => {
+                alert.remove();
+            }, 500);
+        });
+    }, 3000);
+</script>
 <body class="home-page">
 
     <header>
@@ -58,7 +69,7 @@
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
-                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" role="alert">
+                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} flash-auto-dismiss" role="alert">
                                 {{ message }}
                             </div>
                         {% endfor %}

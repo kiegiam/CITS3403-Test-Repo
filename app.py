@@ -1075,6 +1075,8 @@ def api_add_exercise():
 
     if not data:
         return jsonify({"error": "JSON body required"}), 400
+    duration_mode = (data.get("duration_mode") or "stopwatch").strip().lower()
+    manual_duration_min = data.get("manual_duration_min")
 
     name = (data.get("name") or "").strip()
     muscle_group = (data.get("muscle_group") or "").strip()
@@ -1122,17 +1124,45 @@ def finish_workout():
     if not data:
         return jsonify({"error": "JSON body required"}), 400
 
+    duration_mode = (data.get("duration_mode") or "stopwatch").strip().lower()
+    manual_duration_hours = data.get("manual_duration_hours")
+    manual_duration_minutes = data.get("manual_duration_minutes")
+    manual_duration_seconds = data.get("manual_duration_seconds")
+
     try:
         started_at = datetime.fromisoformat(data["started_at"])
         finished_at = datetime.fromisoformat(data["finished_at"])
     except (KeyError, ValueError):
         return jsonify({"error": "started_at and finished_at must be valid ISO datetime strings"}), 400
 
-    if finished_at <= started_at:
-        return jsonify({"error": "finished_at must be after started_at"}), 400
+    if duration_mode == "manual":
+        try:
+            hours = int(manual_duration_hours or 0)
+            minutes = int(manual_duration_minutes or 0)
+            seconds = int(manual_duration_seconds or 0)
+        except (TypeError, ValueError):
+            return jsonify({"error": "Manual duration fields must be whole numbers"}), 400
 
-    duration_seconds = int((finished_at - started_at).total_seconds())
-    duration_minutes = max(1, round(duration_seconds / 60))
+        if hours < 0 or minutes < 0 or seconds < 0:
+            return jsonify({"error": "Manual duration values cannot be negative"}), 400
+        if minutes > 59 or seconds > 59:
+            return jsonify({"error": "Minutes and seconds must be between 0 and 59"}), 400
+
+        total_seconds = (hours * 3600) + (minutes * 60) + seconds
+
+        if total_seconds <= 0:
+            return jsonify({"error": "Manual duration must be greater than 0"}), 400
+
+        duration_minutes = max(1, round(total_seconds / 60))
+
+        if finished_at <= started_at:
+            finished_at = started_at + timedelta(seconds=total_seconds)
+    else:
+        if finished_at <= started_at:
+            return jsonify({"error": "finished_at must be after started_at"}), 400
+
+        duration_seconds = int((finished_at - started_at).total_seconds())
+        duration_minutes = max(1, round(duration_seconds / 60))
 
     raw_sets = data.get("sets", [])
 
@@ -1204,43 +1234,24 @@ def finish_workout():
     )
 
     db.session.add(new_workout)
-    db.session.flush()
-
-    for saved_set in validated_sets:
-        workout_set = WorkoutSet(
-            workout_id=new_workout.id,
-            exercise_id=saved_set["exercise"].id,
-            set_number=saved_set["set_number"],
-            reps=saved_set["reps"],
-            weight_kg=saved_set["weight_kg"],
-        )
-
-        db.session.add(workout_set)
-
     db.session.commit()
 
-    total_volume_kg = sum(
-        saved_set["reps"] * saved_set["weight_kg"]
-        for saved_set in validated_sets
-    )
+    total_volume_kg = sum(saved_set["reps"] * saved_set["weight_kg"] for saved_set in validated_sets)
 
-    sets_per_exercise = {}
-
+    exercise_summary = {}
     for saved_set in validated_sets:
-        exercise_name = saved_set["exercise"].name
-        sets_per_exercise[exercise_name] = sets_per_exercise.get(exercise_name, 0) + 1
+        name = saved_set["exercise"].name
+        exercise_summary[name] = exercise_summary.get(name, 0) + 1
 
     return jsonify({
-        "workout_id": new_workout.id,
-        "date": new_workout.date,
-        "type": workout_type,
+        "success": True,
         "duration_minutes": duration_minutes,
-        "intensity": intensity,
         "total_sets": len(validated_sets),
-        "total_volume_kg": round(total_volume_kg, 1),
-        "exercises": sets_per_exercise,
+        "total_volume_kg": total_volume_kg,
+        "intensity": intensity,
         "muscle_groups": muscle_groups_trained,
-    }), 201
+        "exercises": exercise_summary,
+    }), 200
 
 
 @app.route("/workouts/<int:workout_id>/edit", methods=["GET", "POST"])

@@ -21,7 +21,9 @@
 <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">FitTrack</a>
+            <a class="navbar-brand fw-bold" href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('home') }}{% endif %}">
+    FitTrack
+</a>
 
             <button
                 class="navbar-toggler"

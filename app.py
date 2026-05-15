@@ -519,7 +519,12 @@ def get_progress_data(user):
 
     return progress_stats, type_counts, type_minutes
 
-
+def parse_workout_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+    
 @app.route("/api/workout-chart-data")
 def api_workout_chart_data():
     if not is_logged_in():
@@ -1370,6 +1375,11 @@ def ranking():
     if not is_logged_in():
         return redirect(url_for("login"))
 
+    current = current_user()
+    if current is None:
+        session.clear()
+        return redirect(url_for("login"))
+
     users = User.query.filter_by(show_public_fitness=True).all()
     leaderboard = []
 
@@ -1378,13 +1388,32 @@ def ranking():
 
         total_workouts = len(user_workouts)
         total_minutes = sum(workout.duration for workout in user_workouts)
+        workout_dates = [
+            parse_workout_date(workout.date)
+            for workout in user_workouts
+            if parse_workout_date(workout.date) is not None
+        ]
+
+        if workout_dates:
+            latest_workout_date = max(workout_dates)
+
+            if latest_workout_date == date.today():
+                last_workout_display = "Today"
+            elif latest_workout_date == date.today() - timedelta(days=1):
+                last_workout_display = "Yesterday"
+            else:
+                last_workout_display = latest_workout_date.strftime("%d %b %Y")
+        else:
+            last_workout_display = "No workouts"
 
         if user.show_public_profile:
             display_name = user.name
             avatar_filename = user.avatar_filename
+            initials = "".join(part[0].upper() for part in user.name.split()[:2]) if user.name else "U"
         else:
             display_name = "Private User"
             avatar_filename = None
+            initials = None
 
         leaderboard.append(
             {
@@ -1397,6 +1426,8 @@ def ranking():
                 "avatar_filename": avatar_filename,
                 "profile_public": bool(user.show_public_profile),
                 "fitness_public": bool(user.show_public_fitness),
+                "initials": initials,
+                "last_workout": last_workout_display,
             }
         )
 
@@ -1436,16 +1467,17 @@ def ranking():
                 "workouts": user_data["workouts"],
                 "minutes_to_next_rank": minutes_to_next_rank,
             }
-
             break
+
+    community_disabled = not bool(current.show_public_fitness)
 
     return render_template(
         "ranking.html",
         leaderboard=leaderboard,
         ranking_summary=ranking_summary,
-        current_user_rank=current_user_rank
+        current_user_rank=current_user_rank,
+        community_disabled=community_disabled,
     )
-
 
 @app.route("/plans")
 def plans():

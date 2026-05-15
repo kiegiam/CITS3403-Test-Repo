@@ -1260,72 +1260,78 @@ def edit_workout(workout_id):
         return redirect(url_for("login"))
 
     user = current_user()
-
     if user is None:
         session.clear()
         return redirect(url_for("login"))
 
-    workout = get_user_workout(user, workout_id)
-
-    if workout is None:
-        flash("Workout not found.")
-        return redirect(url_for("workouts"))
+    workout = Workout.query.filter_by(id=workout_id, user_id=user.id).first_or_404()
 
     if request.method == "POST":
-        date_value = request.form.get("date", "").strip()
+        workout_date = request.form.get("date", "").strip()
         workout_type = request.form.get("type", "").strip()
         duration = request.form.get("duration", "").strip()
         intensity = request.form.get("intensity", "").strip()
         notes = request.form.get("notes", "").strip()
 
-        if not date_value or not workout_type or not duration or not intensity:
-            flash("Please complete all required fields.")
+        if not workout_date or not workout_type or not duration or not intensity:
+            flash("Please complete all required fields.", "danger")
             return render_template(
                 "edit_workout.html",
-                workout=workout
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
             )
 
         try:
-            datetime.strptime(date_value, "%Y-%m-%d")
+            selected_date = datetime.strptime(workout_date, "%Y-%m-%d").date()
         except ValueError:
-            flash("Date must use the format YYYY-MM-DD.")
+            flash("Please enter a valid date.", "danger")
             return render_template(
                 "edit_workout.html",
-                workout=workout
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
+            )
+
+        if selected_date > date.today():
+            flash("Please enter a valid date. Workout date cannot be later than today.", "danger")
+            return render_template(
+                "edit_workout.html",
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
             )
 
         try:
             duration_value = int(duration)
         except ValueError:
-            flash("Duration must be a number.")
+            flash("Duration must be a number.", "danger")
             return render_template(
                 "edit_workout.html",
-                workout=workout
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
             )
 
         if duration_value <= 0:
-            flash("Duration must be greater than 0.")
+            flash("Duration must be greater than 0.", "danger")
             return render_template(
                 "edit_workout.html",
-                workout=workout
+                workout=workout_to_dict(workout),
+                today_date=date.today().isoformat()
             )
 
-        workout.date = date_value
+        workout.date = workout_date
         workout.type = workout_type
         workout.duration = duration_value
         workout.intensity = intensity
         workout.notes = notes or "No notes added."
 
         db.session.commit()
-
-        flash("Workout updated successfully.")
+        flash("Workout updated successfully.", "success")
         return redirect(url_for("workouts"))
 
     return render_template(
         "edit_workout.html",
-        workout=workout
+        workout=workout_to_dict(workout),
+        today_date=date.today().isoformat()
     )
-
 
 @app.route("/workouts/<int:workout_id>/delete", methods=["POST"])
 def delete_workout(workout_id):

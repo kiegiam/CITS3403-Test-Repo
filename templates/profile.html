@@ -106,7 +106,15 @@
 
     <main class="py-5">
         <div class="container">
-
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             <section class="mb-4">
                 <div class="card shadow-sm border-0 hero-card overflow-hidden">
                     <div class="card-body p-0">

@@ -327,6 +327,11 @@ def ensure_database_ready():
 def is_logged_in():
     return "user_id" in session
 
+def allowed_avatar_file(filename):
+    return (
+        "." in filename and
+        filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_IMAGE_EXTENSIONS"]
+    )
 
 def current_user():
     if "user_id" not in session:
@@ -525,6 +530,12 @@ def parse_workout_date(value):
     except (TypeError, ValueError):
         return None
     
+def allowed_avatar_file(filename):
+    return (
+        "." in filename and
+        filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_IMAGE_EXTENSIONS"]
+    )
+
 @app.route("/api/workout-chart-data")
 def api_workout_chart_data():
     if not is_logged_in():
@@ -644,6 +655,9 @@ def api_workout_chart_data():
 
 @app.route("/")
 def home():
+    if is_logged_in():
+        session.clear()
+        flash("You have been logged out from your current session.", "success")
     return render_template("index.html")
 
 
@@ -888,19 +902,36 @@ def edit_profile():
         return redirect(url_for("login"))
 
     user = current_user()
-
     if user is None:
         session.clear()
         return redirect(url_for("login"))
 
     if request.method == "POST":
+        action = request.form.get("action", "save")
+
+        if action == "remove_avatar":
+            if user.avatar_filename:
+                old_avatar_path = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    user.avatar_filename
+                )
+
+                if os.path.exists(old_avatar_path):
+                    os.remove(old_avatar_path)
+
+                user.avatar_filename = None
+                db.session.commit()
+
+            flash("Profile picture removed. Default initials will now be used.", "success")
+            return redirect(url_for("edit_profile"))
+
         name = request.form.get("name", "").strip()
         goal = request.form.get("goal", "").strip()
         location = request.form.get("location", "").strip()
         avatar_file = request.files.get("avatar")
 
         if not name:
-            flash("Name cannot be empty.")
+            flash("Name cannot be empty.", "danger")
             return render_template(
                 "edit_profile.html",
                 profile=user_to_profile_dict(user)
@@ -910,38 +941,36 @@ def edit_profile():
         user.goal = goal or "Stay consistent"
         user.location = location or "Not set"
 
-        if "privacy_settings_present" in request.form:
-            user.show_public_profile = request.form.get("show_public_profile") == "on"
-            user.show_public_fitness = request.form.get("show_public_fitness") == "on"
-
         if avatar_file and avatar_file.filename:
-            if not allowed_image(avatar_file.filename):
-                flash("Avatar must be an image file: png, jpg, jpeg, or gif.")
+            if not allowed_avatar_file(avatar_file.filename):
+                flash("Please upload a valid image file: PNG, JPG, JPEG, or GIF.", "danger")
                 return render_template(
                     "edit_profile.html",
                     profile=user_to_profile_dict(user)
                 )
 
-            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+            if user.avatar_filename:
+                old_avatar_path = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    user.avatar_filename
+                )
+                if os.path.exists(old_avatar_path):
+                    os.remove(old_avatar_path)
 
-            original_filename = secure_filename(avatar_file.filename)
-            file_extension = original_filename.rsplit(".", 1)[1].lower()
+            original_name = secure_filename(avatar_file.filename)
+            extension = original_name.rsplit(".", 1)[1].lower()
+            new_filename = f"{user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{extension}"
 
-            avatar_filename = f"user_{user.id}_avatar.{file_extension}"
-            avatar_path = os.path.join(app.config["UPLOAD_FOLDER"], avatar_filename)
+            save_path = os.path.join(app.config["UPLOAD_FOLDER"], new_filename)
+            avatar_file.save(save_path)
 
-            avatar_file.save(avatar_path)
-            user.avatar_filename = avatar_filename
+            user.avatar_filename = new_filename
 
         db.session.commit()
-
-        flash("Profile updated successfully.")
+        flash("Profile updated successfully.", "success")
         return redirect(url_for("profile"))
 
-    return render_template(
-        "edit_profile.html",
-        profile=user_to_profile_dict(user)
-    )
+    return render_template("edit_profile.html", profile=user_to_profile_dict(user))
 
 
 @app.route("/workouts")

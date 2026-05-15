@@ -821,3 +821,7 @@ footer {
     justify-content: center;
     font-weight: 700;
 }
+.private-user-avatar {
+    background-color: #f1f3f5;
+    object-fit: cover;
+}

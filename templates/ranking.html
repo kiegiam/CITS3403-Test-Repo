@@ -258,6 +258,12 @@
                                                 {{ user.initials }}
                                             </div>
                                         {% endif %}
+                                    {% else %}
+                                        <img
+                                            src="{{ url_for('static', filename='background image/blank-profile-picture.png') }}"
+                                            alt="Private user"
+                                            class="ranking-avatar ranking-avatar-large mb-3 private-user-avatar"
+                                        >
                                     {% endif %}
 
                                     <h2 class="h5 mb-1">{{ user.name }}</h2>
@@ -333,6 +339,12 @@
                                                                 {{ user.initials }}
                                                             </div>
                                                         {% endif %}
+                                                    {% else %}
+                                                        <img
+                                                            src="{{ url_for('static', filename='background image/blank-profile-picture.png') }}"
+                                                            alt="Private user"
+                                                            class="ranking-avatar private-user-avatar"
+                                                        >
                                                     {% endif %}
 
                                                     <span class="fw-semibold">{{ user.name }}</span>

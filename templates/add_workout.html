@@ -366,6 +366,13 @@
         {% if selected_plan %}
             <section class="plan-guidance-card card shadow-sm border-0 mb-4">
                 <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <span class="badge text-bg-success">Plan guided mode</span>
+                        <a href="{{ url_for('plans') }}" class="btn btn-outline-success btn-sm">
+                            Back to Plans
+                        </a>
+                    </div>
+
                     {% if selected_plan == "strength" %}
                         <span class="badge text-bg-success mb-3">Strength Plan</span>
                         <h1 class="h4 mb-2">Strength Plan guidance</h1>
@@ -429,6 +436,12 @@
                     <p class="step-label">Step 1 of 2</p>
                     <h1 class="h3 mb-1">What are you training today?</h1>
                     <p class="text-muted mb-4">Pick one or more muscle groups. You can add exercises from each.</p>
+                    {% if selected_plan %}
+                        <p class="plan-guidance-note mb-4">
+                            Recommended muscle groups are already selected for this plan. You can add or remove
+                            groups before starting.
+                        </p>
+                    {% endif %}
 
                     <div class="muscle-grid mb-4">
                         {% set recommended_groups = [] %}

@@ -1798,6 +1798,40 @@ def plans():
         100,
         round(today_minutes / daily_minutes_goal * 100)
     )
+    week_start = date.today() - timedelta(days=date.today().weekday())
+    week_end = week_start + timedelta(days=6)
+    week_workouts = Workout.query.filter_by(user_id=user.id).all()
+    weekly_schedule = []
+
+    for day_offset in range(7):
+        schedule_date = week_start + timedelta(days=day_offset)
+        schedule_date_text = schedule_date.isoformat()
+        day_minutes = sum(
+            workout.duration
+            for workout in week_workouts
+            if workout.date == schedule_date_text
+        )
+        is_today = schedule_date == date.today()
+
+        if day_minutes > 0:
+            status = "Completed"
+        elif is_today:
+            status = "Today"
+        elif schedule_date.weekday() == 6:
+            status = "Rest"
+        elif schedule_date > date.today() and schedule_date <= week_end:
+            status = "Planned"
+        else:
+            status = "Rest"
+
+        weekly_schedule.append({
+            "day_name": schedule_date.strftime("%A"),
+            "date_number": schedule_date.day,
+            "date": schedule_date_text,
+            "is_today": is_today,
+            "minutes": day_minutes,
+            "status": status,
+        })
 
     return render_template(
         "plans.html",
@@ -1806,6 +1840,7 @@ def plans():
         weight_goal_kg=weight_goal_kg,
         today_minutes=today_minutes,
         today_goal_percent=today_goal_percent,
+        weekly_schedule=weekly_schedule,
     )
 
 

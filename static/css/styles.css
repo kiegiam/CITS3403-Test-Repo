@@ -2074,6 +2074,42 @@ body.premium-app-page::after {
     color: var(--ft-ink);
 }
 
+.premium-app-page .stat-box h2,
+.premium-app-page .stat-box .h1,
+.premium-app-page .recommendation-day strong,
+.premium-app-page .weekly-schedule-day strong,
+.premium-app-page .weekly-plan-day strong,
+.premium-app-page .top-rank-stats strong,
+.premium-app-page .ranking-minutes-text,
+.premium-app-page .ranking-insight-grid .h3,
+.premium-app-page .ranking-insight-grid p:not(.text-muted) {
+    color: var(--ft-ink) !important;
+}
+
+.premium-app-page .recommendation-day p,
+.premium-app-page .weekly-schedule-day .small,
+.premium-app-page .weekly-plan-day .small,
+.premium-app-page .top-rank-stats .small,
+.premium-app-page .ranking-insight-grid .small,
+.premium-app-page .ranking-insight-grid .text-muted {
+    color: var(--ft-ink-muted) !important;
+}
+
+.premium-app-page .recommended-exercise-chip {
+    color: #10243a !important;
+    border-color: rgba(134, 220, 255, 0.28) !important;
+    background: rgba(236, 244, 250, 0.92) !important;
+}
+
+.premium-app-page .recommended-exercise-chip strong {
+    color: #10243a !important;
+}
+
+.premium-app-page .recommended-exercise-meta small {
+    color: #29445f !important;
+    background: rgba(99, 91, 255, 0.10);
+}
+
 .premium-app-page .intensity-badge {
     color: #06101d;
     background: linear-gradient(135deg, var(--ft-aqua), var(--ft-lime));

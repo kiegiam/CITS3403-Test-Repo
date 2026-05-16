@@ -363,6 +363,66 @@
 <main class="py-5">
     <div class="container" style="max-width: 760px;">
 
+        {% if selected_plan %}
+            <section class="plan-guidance-card card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    {% if selected_plan == "strength" %}
+                        <span class="badge text-bg-success mb-3">Strength Plan</span>
+                        <h1 class="h4 mb-2">Strength Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Build a steady resistance session around controlled sets and major muscle groups.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Chest, back, shoulders, legs, or core</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Medium to High</p>
+                            </div>
+                        </div>
+                    {% elif selected_plan == "cardio" %}
+                        <span class="badge text-bg-primary mb-3">Cardio Plan</span>
+                        <h1 class="h4 mb-2">Cardio Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Keep the session focused on endurance, breathing rhythm, and consistent movement.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Cardio exercises or leg-focused movement</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Low to Medium</p>
+                            </div>
+                        </div>
+                    {% elif selected_plan == "flexibility" %}
+                        <span class="badge text-bg-warning mb-3">Flexibility Plan</span>
+                        <h1 class="h4 mb-2">Flexibility Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Use this session for mobility, recovery, and gentle controlled movement.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Core, legs, shoulders, or recovery work</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Low</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <p class="plan-guidance-note mb-0 mt-3">
+                        This is only a guide. You can still change the selected muscle groups below.
+                    </p>
+                </div>
+            </section>
+        {% endif %}
+
         <div id="screen-muscles" class="screen active">
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-4">

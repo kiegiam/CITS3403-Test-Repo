@@ -104,6 +104,139 @@ MUSCLE_GROUPS = [
     "Cardio",
 ]
 
+TRACKING_TYPE_BY_EXERCISE = {
+    # Chest
+    "Bench Press": "strength",
+    "Incline Bench Press": "strength",
+    "Dumbbell Fly": "strength",
+    "Push-Up": "bodyweight_reps",
+    "Cable Crossover": "strength",
+
+    # Back
+    "Deadlift": "strength",
+    "Pull-Up": "bodyweight_reps",
+    "Barbell Row": "strength",
+    "Lat Pulldown": "strength",
+    "Seated Cable Row": "strength",
+
+    # Shoulders
+    "Overhead Press": "strength",
+    "Lateral Raise": "strength",
+    "Front Raise": "strength",
+    "Arnold Press": "strength",
+    "Rear Delt Fly": "strength",
+
+    # Biceps
+    "Barbell Curl": "strength",
+    "Dumbbell Curl": "strength",
+    "Hammer Curl": "strength",
+    "Preacher Curl": "strength",
+    "Cable Curl": "strength",
+
+    # Triceps
+    "Tricep Pushdown": "strength",
+    "Skull Crusher": "strength",
+    "Overhead Tricep Extension": "strength",
+    "Close-Grip Bench Press": "strength",
+    "Dips": "bodyweight_reps",
+
+    # Legs
+    "Squat": "strength",
+    "Leg Press": "strength",
+    "Romanian Deadlift": "strength",
+    "Leg Curl": "strength",
+    "Leg Extension": "strength",
+    "Calf Raise": "strength",
+    "Lunges": "bodyweight_reps",
+
+    # Core
+    "Plank": "timed_hold",
+    "Crunch": "bodyweight_reps",
+    "Hanging Leg Raise": "bodyweight_reps",
+    "Russian Twist": "bodyweight_reps",
+    "Ab Wheel Rollout": "bodyweight_reps",
+
+    # Cardio
+    "Treadmill Run": "cardio_distance",
+    "Cycling": "cardio_distance",
+    "Rowing Machine": "cardio_distance",
+    "Jump Rope": "duration_only",
+    "Stair Climber": "stair_climber",
+}
+
+
+def infer_tracking_type(name, muscle_group):
+    if name in TRACKING_TYPE_BY_EXERCISE:
+        return TRACKING_TYPE_BY_EXERCISE[name]
+
+    exercise_name = (name or "").lower()
+    group = (muscle_group or "").lower()
+
+    if "stair" in exercise_name:
+        return "stair_climber"
+
+    if any(word in exercise_name for word in [
+        "run", "running", "cycle", "cycling", "bike", "biking",
+        "row", "rowing", "swim", "swimming", "walk", "walking"
+    ]):
+        return "cardio_distance"
+
+    if any(word in exercise_name for word in [
+        "pull-up", "pull up", "push-up", "push up", "dip", "dips",
+        "crunch", "sit-up", "sit up", "leg raise", "rollout", "lunge"
+    ]):
+        return "bodyweight_reps"
+
+    if any(word in exercise_name for word in [
+        "plank", "hold", "wall sit"
+    ]):
+        return "timed_hold"
+
+    if any(word in exercise_name for word in [
+        "jump rope", "stretch", "stretching", "yoga", "mobility"
+    ]):
+        return "duration_only"
+
+    if group == "cardio":
+        return "cardio_distance"
+
+    return "strength"
+
+
+def infer_tracking_type(name, muscle_group):
+    if name in TRACKING_TYPE_BY_EXERCISE:
+        return TRACKING_TYPE_BY_EXERCISE[name]
+
+    exercise_name = (name or "").lower()
+    group = (muscle_group or "").lower()
+
+    if any(word in exercise_name for word in [
+        "run", "running", "cycle", "cycling", "bike", "biking",
+        "row", "rowing", "swim", "swimming", "walk", "walking"
+    ]):
+        return "cardio_distance"
+
+    if any(word in exercise_name for word in [
+        "jump rope", "stair", "elliptical"
+    ]):
+        return "duration_only"
+
+    if any(word in exercise_name for word in [
+        "pull-up", "pull up", "push-up", "push up", "dip", "dips",
+        "crunch", "sit-up", "sit up", "leg raise", "rollout", "lunge"
+    ]):
+        return "bodyweight_reps"
+
+    if any(word in exercise_name for word in [
+        "plank", "hold", "wall sit"
+    ]):
+        return "timed_hold"
+
+    if group == "cardio":
+        return "duration_only"
+
+    return "strength"
+
 
 class Exercise(db.Model):
     __tablename__ = "exercises"
@@ -115,6 +248,7 @@ class Exercise(db.Model):
     # NULL = built-in exercise visible to everyone.
     # Set to a user id = custom exercise visible only to that user.
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    is_archived = db.Column(db.Boolean, nullable=False, default=False)
 
     sets = db.relationship(
         "WorkoutSet",
@@ -131,6 +265,7 @@ class Exercise(db.Model):
             "name": self.name,
             "muscle_group": self.muscle_group,
             "is_custom": self.user_id is not None,
+            "is_archived": self.is_archived,
         }
 
 
@@ -144,6 +279,11 @@ class WorkoutSet(db.Model):
     set_number = db.Column(db.Integer, nullable=False)
     reps = db.Column(db.Integer, nullable=False)
     weight_kg = db.Column(db.Float, nullable=False)
+    tracking_type = db.Column(db.String(50), nullable=True)
+    distance_km = db.Column(db.Float, nullable=True)
+    duration_sec = db.Column(db.Integer, nullable=True)
+    duration_min = db.Column(db.Integer, nullable=True)
+    incline_deg = db.Column(db.Float, nullable=True)
 
     def __repr__(self):
         return (
@@ -211,6 +351,41 @@ def ensure_database_ready():
             )
             db.session.commit()
 
+        exercise_columns = [
+            col[1] for col in
+            db.session.execute(text("PRAGMA table_info(exercises)")).fetchall()
+        ]
+
+        if "is_archived" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN is_archived BOOLEAN DEFAULT 0 NOT NULL")
+            )
+            db.session.commit()
+
+        workout_set_columns = [
+            col[1] for col in
+            db.session.execute(text("PRAGMA table_info(workout_sets)")).fetchall()
+        ]
+
+        if "tracking_type" not in workout_set_columns:
+            db.session.execute(text("ALTER TABLE workout_sets ADD COLUMN tracking_type VARCHAR(50)"))
+            db.session.commit()
+
+        if "distance_km" not in workout_set_columns:
+            db.session.execute(text("ALTER TABLE workout_sets ADD COLUMN distance_km FLOAT"))
+            db.session.commit()
+
+        if "duration_sec" not in workout_set_columns:
+            db.session.execute(text("ALTER TABLE workout_sets ADD COLUMN duration_sec INTEGER"))
+            db.session.commit()
+
+        if "duration_min" not in workout_set_columns:
+            db.session.execute(text("ALTER TABLE workout_sets ADD COLUMN duration_min INTEGER"))
+            db.session.commit()
+
+        if "incline_deg" not in workout_set_columns:
+            db.session.execute(text("ALTER TABLE workout_sets ADD COLUMN incline_deg FLOAT"))
+            db.session.commit()
         if Exercise.query.filter_by(user_id=None).count() == 0:
             builtin_exercises = [
                 Exercise(name="Bench Press", muscle_group="Chest"),
@@ -657,7 +832,7 @@ def api_workout_chart_data():
 def home():
     if is_logged_in():
         session.clear()
-        flash("You have been logged out from your current session.", "success")
+        flash("You were logged in on a previous session. You have been logged out.", "success")
     return render_template("index.html")
 
 
@@ -1051,9 +1226,10 @@ def api_exercises():
 
     exercises = Exercise.query.filter(
         Exercise.muscle_group == muscle_group,
+        Exercise.is_archived == False,
         db.or_(
-            Exercise.user_id == None,
-            Exercise.user_id == user.id
+            Exercise.user_id == None,   # built-ins
+            Exercise.user_id == user.id # user's own custom exercises
         )
     ).order_by(Exercise.name).all()
 
@@ -1087,14 +1263,30 @@ def api_add_exercise():
     if muscle_group not in MUSCLE_GROUPS:
         return jsonify({"error": f"muscle_group must be one of: {', '.join(MUSCLE_GROUPS)}"}), 400
 
+        # Prevent duplicates among built-ins and active custom exercises.
     duplicate = Exercise.query.filter(
         Exercise.name.ilike(name),
         Exercise.muscle_group == muscle_group,
-        db.or_(Exercise.user_id == None, Exercise.user_id == user.id)
+        db.or_(Exercise.user_id == None, Exercise.user_id == user.id),
+        Exercise.is_archived == False,
     ).first()
 
     if duplicate:
         return jsonify({"error": "An exercise with that name already exists in this muscle group"}), 409
+
+    # If this user previously archived the same custom exercise,
+    # restore it instead of creating a duplicate row.
+    archived_duplicate = Exercise.query.filter(
+        Exercise.name.ilike(name),
+        Exercise.muscle_group == muscle_group,
+        Exercise.user_id == user.id,
+        Exercise.is_archived == True,
+    ).first()
+
+    if archived_duplicate:
+        archived_duplicate.is_archived = False
+        db.session.commit()
+        return jsonify(archived_duplicate.to_dict()), 200
 
     new_exercise = Exercise(
         name=name,
@@ -1107,6 +1299,30 @@ def api_add_exercise():
 
     return jsonify(new_exercise.to_dict()), 201
 
+@app.route("/api/exercises/<int:exercise_id>", methods=["DELETE"])
+@csrf.exempt
+def api_delete_exercise(exercise_id):
+    if not is_logged_in():
+        return jsonify({"error": "Unauthorised"}), 401
+
+    user = current_user()
+    if user is None:
+        return jsonify({"error": "Unauthorised"}), 401
+
+    # Only the logged-in user's own custom exercises can be archived.
+    # Built-in exercises have user_id=None and cannot be archived by users.
+    exercise = Exercise.query.filter_by(
+        id=exercise_id,
+        user_id=user.id
+    ).first()
+
+    if exercise is None:
+        return jsonify({"error": "Custom exercise not found"}), 404
+
+    exercise.is_archived = True
+    db.session.commit()
+
+    return jsonify({"success": True}), 200
 
 @csrf.exempt
 @app.route("/workouts/finish", methods=["POST"])
@@ -1162,16 +1378,15 @@ def finish_workout():
         try:
             exercise_id = int(raw_set["exercise_id"])
             set_number = int(raw_set["set_number"])
-            reps = int(raw_set["reps"])
-            weight_kg = float(raw_set["weight_kg"])
+            tracking_type = (raw_set.get("tracking_type") or "strength").strip().lower()
+
+            reps = int(raw_set.get("reps", 0) or 0)
+            weight_kg = float(raw_set.get("weight_kg", 0) or 0)
+            distance_km = float(raw_set.get("distance_km", 0) or 0)
+            duration_sec = int(raw_set.get("duration_sec", 0) or 0)
+            duration_min = int(raw_set.get("duration_min", 0) or 0)
         except (KeyError, ValueError, TypeError):
             return jsonify({"error": f"Set {index} is missing or has invalid fields"}), 400
-
-        if reps <= 0:
-            return jsonify({"error": f"Set {index}: reps must be greater than 0"}), 400
-
-        if weight_kg < 0:
-            return jsonify({"error": f"Set {index}: weight_kg cannot be negative"}), 400
 
         exercise = Exercise.query.filter(
             Exercise.id == exercise_id,
@@ -1181,11 +1396,44 @@ def finish_workout():
         if exercise is None:
             return jsonify({"error": f"Set {index}: exercise_id {exercise_id} not found"}), 404
 
+        if tracking_type == "strength":
+            if reps <= 0:
+                return jsonify({"error": f"Set {index}: reps must be greater than 0"}), 400
+            if weight_kg < 0:
+                return jsonify({"error": f"Set {index}: weight_kg cannot be negative"}), 400
+
+        elif tracking_type == "bodyweight_reps":
+            if reps <= 0:
+                return jsonify({"error": f"Set {index}: reps must be greater than 0"}), 400
+
+        elif tracking_type == "cardio_distance":
+            if distance_km <= 0:
+                return jsonify({"error": f"Set {index}: distance_km must be greater than 0"}), 400
+
+        elif tracking_type == "timed_hold":
+            if duration_sec <= 0:
+                return jsonify({"error": f"Set {index}: duration_sec must be greater than 0"}), 400
+
+        elif tracking_type == "duration_only":
+            if duration_min <= 0:
+                return jsonify({"error": f"Set {index}: duration_min must be greater than 0"}), 400
+            
+        elif tracking_type == "stair_climber":
+            if distance_km <= 0:
+                return jsonify({"error": f"Set {index}: distance_km must be greater than 0"}), 400
+
+            if incline_deg < 0 or incline_deg > 90:
+                return jsonify({"error": f"Set {index}: incline_deg must be between 0 and 90"}), 400
+
         validated_sets.append({
             "exercise": exercise,
             "set_number": set_number,
+            "tracking_type": tracking_type,
             "reps": reps,
             "weight_kg": weight_kg,
+            "distance_km": distance_km,
+            "duration_sec": duration_sec,
+            "duration_min": duration_min,
         })
 
     muscle_groups_trained = list(dict.fromkeys(
@@ -1195,17 +1443,10 @@ def finish_workout():
 
     workout_type = ", ".join(muscle_groups_trained)
 
-    weights = [saved_set["weight_kg"] for saved_set in validated_sets]
-    average_weight = sum(weights) / len(weights)
+    intensity = (data.get("intensity") or "Medium").strip().title()
 
-    if average_weight == 0:
-        intensity = "Low"
-    elif average_weight < 40:
-        intensity = "Low"
-    elif average_weight < 80:
-        intensity = "Medium"
-    else:
-        intensity = "High"
+    if intensity not in {"Low", "Medium", "High"}:
+        return jsonify({"error": "Intensity must be Low, Medium, or High"}), 400
 
     notes = (data.get("notes") or "").strip() or "No notes added."
 

@@ -504,61 +504,98 @@ def ensure_database_ready():
         if "incline_deg" not in workout_set_columns:
             db.session.execute(text("ALTER TABLE workout_sets ADD COLUMN incline_deg FLOAT"))
             db.session.commit()
-        if Exercise.query.filter_by(user_id=None).count() == 0:
-            builtin_exercises = [
-                Exercise(name="Bench Press", muscle_group="Chest"),
-                Exercise(name="Incline Bench Press", muscle_group="Chest"),
-                Exercise(name="Dumbbell Fly", muscle_group="Chest"),
-                Exercise(name="Push-Up", muscle_group="Chest"),
-                Exercise(name="Cable Crossover", muscle_group="Chest"),
+        builtin_exercise_catalog = [
+            ("Bench Press", "Chest", "intermediate", "medium", "gym", "strength"),
+            ("Incline Bench Press", "Chest", "intermediate", "medium", "gym", "strength"),
+            ("Dumbbell Fly", "Chest", "intermediate", "medium", "gym", "strength"),
+            ("Push-Up", "Chest", "beginner", "medium", "bodyweight", "strength,consistency"),
+            ("Wall Push-Up", "Chest", "beginner", "low", "bodyweight", "strength,recovery,consistency"),
+            ("Incline Push-Up", "Chest", "beginner", "low", "home", "strength,consistency"),
+            ("Cable Crossover", "Chest", "intermediate", "medium", "gym", "strength"),
 
-                Exercise(name="Deadlift", muscle_group="Back"),
-                Exercise(name="Pull-Up", muscle_group="Back"),
-                Exercise(name="Barbell Row", muscle_group="Back"),
-                Exercise(name="Lat Pulldown", muscle_group="Back"),
-                Exercise(name="Seated Cable Row", muscle_group="Back"),
+            ("Deadlift", "Back", "advanced", "high", "gym", "strength"),
+            ("Pull-Up", "Back", "advanced", "high", "bodyweight", "strength"),
+            ("Barbell Row", "Back", "intermediate", "medium", "gym", "strength"),
+            ("Lat Pulldown", "Back", "beginner", "medium", "gym", "strength"),
+            ("Seated Cable Row", "Back", "beginner", "medium", "gym", "strength"),
+            ("Bird Dog", "Back", "beginner", "low", "bodyweight", "recovery,flexibility,consistency"),
+            ("Cat Cow Stretch", "Back", "beginner", "low", "bodyweight", "recovery,flexibility,consistency"),
 
-                Exercise(name="Overhead Press", muscle_group="Shoulders"),
-                Exercise(name="Lateral Raise", muscle_group="Shoulders"),
-                Exercise(name="Front Raise", muscle_group="Shoulders"),
-                Exercise(name="Arnold Press", muscle_group="Shoulders"),
-                Exercise(name="Rear Delt Fly", muscle_group="Shoulders"),
+            ("Overhead Press", "Shoulders", "intermediate", "medium", "gym", "strength"),
+            ("Lateral Raise", "Shoulders", "beginner", "low", "gym", "strength"),
+            ("Front Raise", "Shoulders", "beginner", "low", "gym", "strength"),
+            ("Arnold Press", "Shoulders", "intermediate", "medium", "gym", "strength"),
+            ("Rear Delt Fly", "Shoulders", "beginner", "low", "gym", "strength"),
+            ("Shoulder Mobility", "Shoulders", "beginner", "low", "bodyweight", "recovery,flexibility,consistency"),
 
-                Exercise(name="Barbell Curl", muscle_group="Biceps"),
-                Exercise(name="Dumbbell Curl", muscle_group="Biceps"),
-                Exercise(name="Hammer Curl", muscle_group="Biceps"),
-                Exercise(name="Preacher Curl", muscle_group="Biceps"),
-                Exercise(name="Cable Curl", muscle_group="Biceps"),
+            ("Barbell Curl", "Biceps", "beginner", "medium", "gym", "strength"),
+            ("Dumbbell Curl", "Biceps", "beginner", "medium", "gym", "strength"),
+            ("Hammer Curl", "Biceps", "beginner", "medium", "gym", "strength"),
+            ("Preacher Curl", "Biceps", "intermediate", "medium", "gym", "strength"),
+            ("Cable Curl", "Biceps", "beginner", "medium", "gym", "strength"),
 
-                Exercise(name="Tricep Pushdown", muscle_group="Triceps"),
-                Exercise(name="Skull Crusher", muscle_group="Triceps"),
-                Exercise(name="Overhead Tricep Extension", muscle_group="Triceps"),
-                Exercise(name="Close-Grip Bench Press", muscle_group="Triceps"),
-                Exercise(name="Dips", muscle_group="Triceps"),
+            ("Tricep Pushdown", "Triceps", "beginner", "medium", "gym", "strength"),
+            ("Skull Crusher", "Triceps", "intermediate", "medium", "gym", "strength"),
+            ("Overhead Tricep Extension", "Triceps", "beginner", "medium", "gym", "strength"),
+            ("Close-Grip Bench Press", "Triceps", "intermediate", "medium", "gym", "strength"),
+            ("Dips", "Triceps", "advanced", "high", "bodyweight", "strength"),
 
-                Exercise(name="Squat", muscle_group="Legs"),
-                Exercise(name="Leg Press", muscle_group="Legs"),
-                Exercise(name="Romanian Deadlift", muscle_group="Legs"),
-                Exercise(name="Leg Curl", muscle_group="Legs"),
-                Exercise(name="Leg Extension", muscle_group="Legs"),
-                Exercise(name="Calf Raise", muscle_group="Legs"),
-                Exercise(name="Lunges", muscle_group="Legs"),
+            ("Squat", "Legs", "intermediate", "medium", "gym", "strength"),
+            ("Bodyweight Squat", "Legs", "beginner", "low", "bodyweight", "strength,consistency"),
+            ("Glute Bridge", "Legs", "beginner", "low", "bodyweight", "strength,recovery,consistency"),
+            ("Leg Press", "Legs", "beginner", "medium", "gym", "strength"),
+            ("Romanian Deadlift", "Legs", "intermediate", "medium", "gym", "strength"),
+            ("Leg Curl", "Legs", "beginner", "medium", "gym", "strength"),
+            ("Leg Extension", "Legs", "beginner", "medium", "gym", "strength"),
+            ("Calf Raise", "Legs", "beginner", "low", "gym", "strength"),
+            ("Lunges", "Legs", "intermediate", "medium", "bodyweight", "strength"),
+            ("Hip Mobility", "Legs", "beginner", "low", "bodyweight", "recovery,flexibility,consistency"),
 
-                Exercise(name="Plank", muscle_group="Core"),
-                Exercise(name="Crunch", muscle_group="Core"),
-                Exercise(name="Hanging Leg Raise", muscle_group="Core"),
-                Exercise(name="Russian Twist", muscle_group="Core"),
-                Exercise(name="Ab Wheel Rollout", muscle_group="Core"),
+            ("Plank", "Core", "beginner", "low", "bodyweight", "strength,consistency"),
+            ("Crunch", "Core", "beginner", "medium", "bodyweight", "strength"),
+            ("Hanging Leg Raise", "Core", "advanced", "high", "gym", "strength"),
+            ("Russian Twist", "Core", "beginner", "medium", "bodyweight", "strength"),
+            ("Ab Wheel Rollout", "Core", "advanced", "high", "gym", "strength"),
 
-                Exercise(name="Treadmill Run", muscle_group="Cardio"),
-                Exercise(name="Cycling", muscle_group="Cardio"),
-                Exercise(name="Rowing Machine", muscle_group="Cardio"),
-                Exercise(name="Jump Rope", muscle_group="Cardio"),
-                Exercise(name="Stair Climber", muscle_group="Cardio"),
-            ]
+            ("Treadmill Run", "Cardio", "intermediate", "high", "gym", "cardio,fat_loss"),
+            ("Cycling", "Cardio", "beginner", "medium", "outdoor", "cardio,fat_loss,consistency"),
+            ("Walking", "Cardio", "beginner", "low", "outdoor", "cardio,recovery,fat_loss,consistency"),
+            ("Elliptical", "Cardio", "beginner", "low", "gym", "cardio,recovery,fat_loss,consistency"),
+            ("Rowing Machine", "Cardio", "intermediate", "medium", "gym", "cardio,fat_loss"),
+            ("Jump Rope", "Cardio", "intermediate", "high", "bodyweight", "cardio,fat_loss"),
+            ("Stair Climber", "Cardio", "intermediate", "high", "gym", "cardio,fat_loss"),
+            ("Yoga Flow", "Core", "beginner", "low", "bodyweight", "flexibility,recovery,consistency"),
+            ("Stretching Routine", "Core", "beginner", "low", "bodyweight", "flexibility,recovery,consistency"),
+        ]
 
-            db.session.add_all(builtin_exercises)
-            db.session.commit()
+        for (
+            name,
+            muscle_group,
+            difficulty_level,
+            intensity_level,
+            equipment_type,
+            plan_tags,
+        ) in builtin_exercise_catalog:
+            exercise = Exercise.query.filter_by(
+                name=name,
+                muscle_group=muscle_group,
+                user_id=None
+            ).first()
+
+            if exercise is None:
+                exercise = Exercise(
+                    name=name,
+                    muscle_group=muscle_group,
+                    user_id=None,
+                )
+                db.session.add(exercise)
+
+            exercise.difficulty_level = difficulty_level
+            exercise.intensity_level = intensity_level
+            exercise.equipment_type = equipment_type
+            exercise.plan_tags = plan_tags
+
+        db.session.commit()
 
         existing_demo = User.query.filter_by(email="demo@fittrack.com").first()
 

@@ -88,6 +88,8 @@ class PlanRecommendation(db.Model):
     training_days = db.Column(db.Integer, nullable=False)
     session_length = db.Column(db.Integer, nullable=False)
     limitation = db.Column(db.String(200), nullable=True)
+    equipment_access = db.Column(db.String(50), nullable=False, default="gym")
+    training_preference = db.Column(db.String(50), nullable=False, default="balanced")
 
     recommended_plan = db.Column(db.String(100), nullable=False)
     recommendation_reason = db.Column(db.Text, nullable=False)
@@ -381,6 +383,23 @@ def ensure_database_ready():
         if "weight_goal_kg" not in user_columns:
             db.session.execute(
                 text("ALTER TABLE users ADD COLUMN weight_goal_kg FLOAT")
+            )
+            db.session.commit()
+
+        plan_recommendation_columns = [
+            col[1] for col in
+            db.session.execute(text("PRAGMA table_info(plan_recommendations)")).fetchall()
+        ]
+
+        if "equipment_access" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN equipment_access VARCHAR(50) DEFAULT 'gym' NOT NULL")
+            )
+            db.session.commit()
+
+        if "training_preference" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN training_preference VARCHAR(50) DEFAULT 'balanced' NOT NULL")
             )
             db.session.commit()
 
@@ -2139,6 +2158,8 @@ def save_plan_recommendation():
     training_days = request.form.get("training_days", "").strip()
     session_length = request.form.get("session_length", "").strip()
     limitation = request.form.get("limitation", "").strip()
+    equipment_access = request.form.get("equipment_access", "").strip()
+    training_preference = request.form.get("training_preference", "").strip()
 
     allowed_goals = [
         "build_strength",
@@ -2156,6 +2177,19 @@ def save_plan_recommendation():
         "back_discomfort",
         "shoulder_discomfort",
         "low_energy",
+    ]
+    allowed_equipment = [
+        "gym",
+        "home",
+        "outdoor",
+        "bodyweight_only",
+    ]
+    allowed_preferences = [
+        "structured",
+        "short_simple",
+        "low_impact",
+        "challenge",
+        "balanced",
     ]
 
     if main_goal not in allowed_goals:
@@ -2176,6 +2210,14 @@ def save_plan_recommendation():
 
     if limitation not in allowed_limitations:
         flash("Please choose a valid limitation option.", "danger")
+        return redirect(url_for("plans"))
+
+    if equipment_access not in allowed_equipment:
+        flash("Please choose a valid equipment access option.", "danger")
+        return redirect(url_for("plans"))
+
+    if training_preference not in allowed_preferences:
+        flash("Please choose a valid training preference.", "danger")
         return redirect(url_for("plans"))
 
     recommendation = build_plan_recommendation(
@@ -2199,6 +2241,8 @@ def save_plan_recommendation():
     saved_recommendation.training_days = int(training_days)
     saved_recommendation.session_length = int(session_length)
     saved_recommendation.limitation = limitation
+    saved_recommendation.equipment_access = equipment_access
+    saved_recommendation.training_preference = training_preference
     saved_recommendation.recommended_plan = recommendation["recommended_plan"]
     saved_recommendation.recommendation_reason = recommendation["recommendation_reason"]
     saved_recommendation.weekly_structure_json = json.dumps(

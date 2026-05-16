@@ -291,6 +291,29 @@
                                     </select>
                                 </div>
 
+                                <div>
+                                    <label for="equipment_access" class="form-label">Equipment access</label>
+                                    <select id="equipment_access" name="equipment_access" class="form-select" required>
+                                        <option value="gym" {% if not saved_recommendation or saved_recommendation.equipment_access == "gym" %}selected{% endif %}>Gym</option>
+                                        <option value="home" {% if saved_recommendation and saved_recommendation.equipment_access == "home" %}selected{% endif %}>Home</option>
+                                        <option value="outdoor" {% if saved_recommendation and saved_recommendation.equipment_access == "outdoor" %}selected{% endif %}>Outdoor</option>
+                                        <option value="bodyweight_only" {% if saved_recommendation and saved_recommendation.equipment_access == "bodyweight_only" %}selected{% endif %}>Bodyweight only</option>
+                                    </select>
+                                    <p class="text-muted small mb-0 mt-1">Choose where you can realistically train.</p>
+                                </div>
+
+                                <div>
+                                    <label for="training_preference" class="form-label">Training preference</label>
+                                    <select id="training_preference" name="training_preference" class="form-select" required>
+                                        <option value="structured" {% if saved_recommendation and saved_recommendation.training_preference == "structured" %}selected{% endif %}>Structured</option>
+                                        <option value="short_simple" {% if saved_recommendation and saved_recommendation.training_preference == "short_simple" %}selected{% endif %}>Short and simple</option>
+                                        <option value="low_impact" {% if saved_recommendation and saved_recommendation.training_preference == "low_impact" %}selected{% endif %}>Low impact</option>
+                                        <option value="challenge" {% if saved_recommendation and saved_recommendation.training_preference == "challenge" %}selected{% endif %}>Challenge</option>
+                                        <option value="balanced" {% if not saved_recommendation or saved_recommendation.training_preference == "balanced" %}selected{% endif %}>Balanced</option>
+                                    </select>
+                                    <p class="text-muted small mb-0 mt-1">Tell us how you prefer workouts to feel.</p>
+                                </div>
+
                                 <div class="personal-plan-full d-grid">
                                     <button type="submit" class="btn btn-success">Get Recommendation</button>
                                 </div>

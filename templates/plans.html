@@ -332,9 +332,36 @@
                                         {% set recommended_start_plan = "strength" %}
                                     {% endif %}
 
-                                    <span class="badge text-bg-success mb-3">Saved recommendation</span>
-                                    <h3 class="h4 mb-2">{{ saved_recommendation.recommended_plan }}</h3>
-                                    <p class="text-muted">{{ saved_recommendation.recommendation_reason }}</p>
+                                    <div class="recommendation-highlight">
+                                        <span class="badge text-bg-success mb-3">Saved recommendation</span>
+                                        <h3 class="h4 mb-2">{{ saved_recommendation.recommended_plan }}</h3>
+
+                                        {% if saved_recommendation.plan_focus %}
+                                            <p class="mb-3">{{ saved_recommendation.plan_focus }}</p>
+                                        {% endif %}
+
+                                        <div class="recommendation-meta">
+                                            {% if saved_recommendation.suggested_intensity %}
+                                                <div>
+                                                    <span>Suggested intensity</span>
+                                                    <strong>{{ saved_recommendation.suggested_intensity }}</strong>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if recommendation_badges %}
+                                                <div>
+                                                    <span>Plan badges</span>
+                                                    <div class="recommendation-badges">
+                                                        {% for badge in recommendation_badges %}
+                                                            <span class="badge text-bg-success">{{ badge }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <p class="text-muted mt-3">{{ saved_recommendation.recommendation_reason }}</p>
 
                                     <h4 class="h6 mb-3">Suggested weekly structure</h4>
                                     <div class="recommendation-week-grid">

@@ -230,6 +230,7 @@ h6 {
         linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 249, 252, 0.84));
     box-shadow: var(--ft-shadow-sm);
     overflow: hidden;
+    text-align: left;
 }
 
 .stat-box::before {
@@ -243,6 +244,171 @@ h6 {
 .stat-box h2 {
     color: var(--ft-text);
     font-weight: 850;
+}
+
+.stat-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(99, 91, 255, 0.14), rgba(0, 168, 107, 0.14));
+    color: var(--ft-blue);
+    font-size: 0.78rem;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.stat-label {
+    color: var(--ft-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    text-align: right;
+}
+
+/* ---------- Progress charts ---------- */
+
+.progress-chart-section {
+    margin-top: 1.75rem;
+}
+
+.progress-chart-intro {
+    max-width: 760px;
+    margin-bottom: 1.25rem;
+}
+
+.progress-empty-card {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.progress-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1.25rem;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--ft-blue), var(--ft-green));
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    box-shadow: 0 16px 34px rgba(99, 91, 255, 0.22);
+}
+
+.progress-empty-steps {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+}
+
+.progress-empty-steps span {
+    border: 1px solid rgba(99, 91, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--ft-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.48rem 0.78rem;
+}
+
+.progress-animate {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: progressFadeUp 0.75s ease-out forwards;
+}
+
+.progress-delay-1 {
+    animation-delay: 0.08s;
+}
+
+.progress-delay-2 {
+    animation-delay: 0.18s;
+}
+
+.progress-delay-3 {
+    animation-delay: 0.28s;
+}
+
+.progress-delay-4 {
+    animation-delay: 0.38s;
+}
+
+.progress-delay-5 {
+    animation-delay: 0.52s;
+}
+
+.progress-delay-6 {
+    animation-delay: 0.66s;
+}
+
+.progress-delay-7 {
+    animation-delay: 0.80s;
+}
+
+.progress-chart-grid {
+    align-items: stretch;
+}
+
+.progress-chart-card {
+    min-height: 100%;
+    border-color: rgba(99, 91, 255, 0.14) !important;
+}
+
+.progress-chart-card:hover {
+    transform: translateY(-7px);
+    border-color: rgba(0, 168, 107, 0.36) !important;
+    box-shadow: 0 24px 54px rgba(50, 50, 93, 0.16) !important;
+}
+
+.progress-chart-card .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.progress-chart-container {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    height: clamp(300px, 34vw, 380px);
+}
+
+.progress-chart-container-wide {
+    min-height: 340px;
+    height: clamp(340px, 38vw, 440px);
+}
+
+.progress-chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+@keyframes progressFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ---------- Tables ---------- */
@@ -756,6 +922,16 @@ footer {
     .weekly-bar-track {
         width: 30px;
     }
+
+    .progress-chart-container {
+        min-height: 280px;
+        height: 320px;
+    }
+
+    .progress-chart-container-wide {
+        min-height: 300px;
+        height: 340px;
+    }
 }
 
 @media (max-width: 575.98px) {
@@ -769,6 +945,24 @@ footer {
 
     .muscle-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .progress-chart-section {
+        margin-top: 1.25rem;
+    }
+
+    .progress-chart-grid {
+        --bs-gutter-y: 1rem;
+    }
+
+    .progress-chart-card .card-body {
+        gap: 0.5rem;
+    }
+
+    .progress-chart-container,
+    .progress-chart-container-wide {
+        min-height: 250px;
+        height: 280px;
     }
 }
 

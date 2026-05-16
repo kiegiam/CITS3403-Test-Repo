@@ -65,8 +65,43 @@ class User(db.Model):
         cascade="all, delete-orphan"
     )
 
+    plan_recommendations = db.relationship(
+        "PlanRecommendation",
+        backref="owner",
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self):
         return f"<User {self.email}>"
+
+
+class PlanRecommendation(db.Model):
+    __tablename__ = "plan_recommendations"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+    main_goal = db.Column(db.String(100), nullable=False)
+    fitness_level = db.Column(db.String(50), nullable=False)
+    training_days = db.Column(db.Integer, nullable=False)
+    session_length = db.Column(db.Integer, nullable=False)
+    limitation = db.Column(db.String(200), nullable=True)
+
+    recommended_plan = db.Column(db.String(100), nullable=False)
+    recommendation_reason = db.Column(db.Text, nullable=False)
+    weekly_structure_json = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+    def __repr__(self):
+        return f"<PlanRecommendation user={self.user_id} plan={self.recommended_plan}>"
 
 
 class Workout(db.Model):

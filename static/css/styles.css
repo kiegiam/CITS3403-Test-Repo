@@ -623,6 +623,82 @@ body.dashboard-page {
     border-color: rgba(99, 91, 255, 0.14) !important;
 }
 
+.personal-plan-card {
+    border-color: rgba(99, 91, 255, 0.14) !important;
+}
+
+.personal-plan-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.personal-plan-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.personal-plan-full {
+    grid-column: 1 / -1;
+}
+
+.recommendation-panel {
+    border: 1px solid rgba(10, 37, 64, 0.10);
+    border-radius: 18px;
+    background: rgba(246, 249, 252, 0.82);
+    padding: 1.25rem;
+}
+
+.recommendation-week-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.recommendation-day {
+    border: 1px solid rgba(10, 37, 64, 0.08);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.82);
+    padding: 0.8rem;
+}
+
+.recommendation-day span {
+    display: block;
+    color: var(--ft-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.recommendation-day strong {
+    display: block;
+    margin: 0.18rem 0;
+    color: var(--ft-text);
+}
+
+.recommendation-day p {
+    color: var(--ft-muted);
+    font-size: 0.84rem;
+}
+
+.recommendation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.safety-note {
+    border-radius: 14px;
+    background: rgba(99, 91, 255, 0.08);
+    color: var(--ft-muted);
+    font-size: 0.88rem;
+    padding: 0.85rem 1rem;
+}
+
 .weekly-schedule-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1089,6 +1165,15 @@ footer {
     }
 
     .plan-guidance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .personal-plan-layout,
+    .personal-plan-form {
+        grid-template-columns: 1fr;
+    }
+
+    .recommendation-week-grid {
         grid-template-columns: 1fr;
     }
 

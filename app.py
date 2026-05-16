@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import smtplib
@@ -65,8 +66,43 @@ class User(db.Model):
         cascade="all, delete-orphan"
     )
 
+    plan_recommendations = db.relationship(
+        "PlanRecommendation",
+        backref="owner",
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self):
         return f"<User {self.email}>"
+
+
+class PlanRecommendation(db.Model):
+    __tablename__ = "plan_recommendations"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+    main_goal = db.Column(db.String(100), nullable=False)
+    fitness_level = db.Column(db.String(50), nullable=False)
+    training_days = db.Column(db.Integer, nullable=False)
+    session_length = db.Column(db.Integer, nullable=False)
+    limitation = db.Column(db.String(200), nullable=True)
+
+    recommended_plan = db.Column(db.String(100), nullable=False)
+    recommendation_reason = db.Column(db.Text, nullable=False)
+    weekly_structure_json = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+    def __repr__(self):
+        return f"<PlanRecommendation user={self.user_id} plan={self.recommended_plan}>"
 
 
 class Workout(db.Model):
@@ -527,6 +563,186 @@ def current_user():
         return None
 
     return db.session.get(User, session["user_id"])
+
+
+def build_plan_recommendation(
+    main_goal,
+    fitness_level,
+    training_days,
+    session_length,
+    limitation
+):
+    goal = (main_goal or "").strip().lower()
+    level = (fitness_level or "").strip().lower()
+    limit = (limitation or "").strip().lower()
+
+    try:
+        days_per_week = int(training_days)
+    except (TypeError, ValueError):
+        days_per_week = 4
+
+    days_per_week = max(1, min(days_per_week, 6))
+
+    try:
+        minutes_per_session = int(session_length)
+    except (TypeError, ValueError):
+        minutes_per_session = 30
+
+    minutes_per_session = max(10, minutes_per_session)
+
+    day_names = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
+
+    if "strength" in goal:
+        recommended_plan = "Strength Builder"
+        reason = "This plan prioritises strength sessions with recovery between harder training days."
+        focus_pattern = [
+            "Strength",
+            "Recovery",
+            "Strength",
+            "Cardio",
+            "Strength",
+            "Flexibility",
+            "Rest",
+        ]
+    elif "cardio" in goal:
+        recommended_plan = "Cardio Endurance"
+        reason = "This plan increases cardio frequency while keeping some strength and mobility work."
+        focus_pattern = [
+            "Cardio",
+            "Strength",
+            "Cardio",
+            "Recovery",
+            "Cardio",
+            "Flexibility",
+            "Rest",
+        ]
+    elif "weight" in goal or "lose" in goal:
+        recommended_plan = "Balanced Fat Loss"
+        reason = "This plan mixes cardio, strength, and recovery to support consistent weekly activity."
+        focus_pattern = [
+            "Cardio",
+            "Strength",
+            "Recovery",
+            "Cardio",
+            "Strength",
+            "Flexibility",
+            "Rest",
+        ]
+    elif "flexibility" in goal:
+        recommended_plan = "Mobility and Recovery"
+        reason = "This plan emphasises flexibility, mobility, and recovery with light supporting activity."
+        focus_pattern = [
+            "Flexibility",
+            "Recovery",
+            "Flexibility",
+            "Core stability",
+            "Flexibility",
+            "Low-intensity cardio",
+            "Rest",
+        ]
+    else:
+        recommended_plan = "Consistency Starter"
+        reason = "This plan keeps training balanced and manageable so it is easier to build a habit."
+        focus_pattern = [
+            "Strength",
+            "Cardio",
+            "Recovery",
+            "Strength",
+            "Flexibility",
+            "Cardio",
+            "Rest",
+        ]
+
+    active_days = 0
+    weekly_structure = []
+
+    for index, day_name in enumerate(day_names):
+        focus = focus_pattern[index]
+
+        if focus != "Rest" and active_days >= days_per_week:
+            focus = "Recovery" if index < 6 else "Rest"
+
+        if focus not in ["Rest", "Recovery"]:
+            active_days += 1
+
+        note = f"Aim for about {minutes_per_session} minutes."
+
+        if focus == "Recovery":
+            note = "Keep this light with stretching, walking, or mobility work."
+        elif focus == "Rest":
+            note = "Take a full rest day or do gentle movement only."
+
+        weekly_structure.append({
+            "day_name": day_name,
+            "focus": focus,
+            "note": note,
+        })
+
+    if "beginner" in level:
+        reason += " Because you selected beginner level, the structure keeps intensity approachable."
+    elif "advanced" in level:
+        reason += " Because you selected advanced level, the structure allows more focused training days."
+
+    if "knee" in limit:
+        reason += " With knee discomfort, it favours lower-impact cardio and avoids heavy leg emphasis."
+
+        for day in weekly_structure:
+            if day["focus"] == "Cardio":
+                day["focus"] = "Low-impact cardio"
+                day["note"] = "Choose cycling, rowing, swimming, or another low-impact option."
+            elif day["focus"] == "Strength":
+                day["note"] = "Keep leg loading moderate and avoid heavy knee-dominant work."
+
+    if "back" in limit:
+        reason += " With back discomfort, it avoids heavy lifting focus and adds core stability language."
+
+        for day in weekly_structure:
+            if day["focus"] == "Strength":
+                day["focus"] = "Controlled strength"
+                day["note"] = "Use controlled movements and avoid heavy loading."
+            elif day["focus"] == "Recovery":
+                day["note"] = "Focus on gentle mobility and core stability."
+
+    if "shoulder" in limit:
+        reason += " With shoulder discomfort, it limits repeated upper-body strength focus."
+
+        strength_seen = 0
+        for day in weekly_structure:
+            if "strength" in day["focus"].lower():
+                strength_seen += 1
+
+                if strength_seen > 1:
+                    day["focus"] = "Lower-body or core strength"
+                    day["note"] = "Avoid too much upper-body pressing or shoulder-heavy work."
+
+    if "low energy" in limit or "energy" in limit:
+        reason += " With low energy, it recommends shorter sessions and extra recovery."
+        minutes_per_session = min(minutes_per_session, 25)
+        changed_day = False
+
+        for day in weekly_structure:
+            if day["focus"] not in ["Rest", "Recovery"] and not changed_day:
+                day["focus"] = "Recovery"
+                day["note"] = "Use this as an easier day to keep momentum without overdoing it."
+                changed_day = True
+            elif day["focus"] not in ["Rest", "Recovery"]:
+                day["note"] = f"Keep this short and manageable, around {minutes_per_session} minutes."
+
+    reason += " This is general fitness planning guidance, not medical advice."
+
+    return {
+        "recommended_plan": recommended_plan,
+        "recommendation_reason": reason,
+        "weekly_structure": weekly_structure,
+    }
 
 
 def allowed_image(filename):
@@ -1833,6 +2049,22 @@ def plans():
             "status": status,
         })
 
+    saved_recommendation = PlanRecommendation.query.filter_by(
+        user_id=user.id
+    ).first()
+    recommended_weekly_structure = []
+
+    if saved_recommendation and saved_recommendation.weekly_structure_json:
+        try:
+            parsed_structure = json.loads(
+                saved_recommendation.weekly_structure_json
+            )
+
+            if isinstance(parsed_structure, list):
+                recommended_weekly_structure = parsed_structure
+        except json.JSONDecodeError:
+            recommended_weekly_structure = []
+
     return render_template(
         "plans.html",
         email=session["user_email"],
@@ -1841,6 +2073,8 @@ def plans():
         today_minutes=today_minutes,
         today_goal_percent=today_goal_percent,
         weekly_schedule=weekly_schedule,
+        saved_recommendation=saved_recommendation,
+        recommended_weekly_structure=recommended_weekly_structure,
     )
 
 
@@ -1886,6 +2120,117 @@ def save_plan_goals():
     db.session.commit()
 
     flash("Plan goals saved successfully.", "success")
+    return redirect(url_for("plans"))
+
+
+@app.route("/plans/recommendation", methods=["POST"])
+def save_plan_recommendation():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    main_goal = request.form.get("main_goal", "").strip()
+    fitness_level = request.form.get("fitness_level", "").strip()
+    training_days = request.form.get("training_days", "").strip()
+    session_length = request.form.get("session_length", "").strip()
+    limitation = request.form.get("limitation", "").strip()
+
+    allowed_goals = [
+        "build_strength",
+        "improve_cardio",
+        "lose_weight",
+        "improve_flexibility",
+        "build_consistency",
+    ]
+    allowed_levels = ["beginner", "intermediate", "advanced"]
+    allowed_training_days = ["1", "2", "3", "4", "5", "6"]
+    allowed_session_lengths = ["15", "20", "30", "45", "60"]
+    allowed_limitations = [
+        "none",
+        "knee_discomfort",
+        "back_discomfort",
+        "shoulder_discomfort",
+        "low_energy",
+    ]
+
+    if main_goal not in allowed_goals:
+        flash("Please choose a valid main goal.", "danger")
+        return redirect(url_for("plans"))
+
+    if fitness_level not in allowed_levels:
+        flash("Please choose a valid fitness level.", "danger")
+        return redirect(url_for("plans"))
+
+    if training_days not in allowed_training_days:
+        flash("Please choose a valid number of training days.", "danger")
+        return redirect(url_for("plans"))
+
+    if session_length not in allowed_session_lengths:
+        flash("Please choose a valid session length.", "danger")
+        return redirect(url_for("plans"))
+
+    if limitation not in allowed_limitations:
+        flash("Please choose a valid limitation option.", "danger")
+        return redirect(url_for("plans"))
+
+    recommendation = build_plan_recommendation(
+        main_goal,
+        fitness_level,
+        training_days,
+        session_length,
+        limitation
+    )
+
+    saved_recommendation = PlanRecommendation.query.filter_by(
+        user_id=user.id
+    ).first()
+
+    if saved_recommendation is None:
+        saved_recommendation = PlanRecommendation(user_id=user.id)
+        db.session.add(saved_recommendation)
+
+    saved_recommendation.main_goal = main_goal
+    saved_recommendation.fitness_level = fitness_level
+    saved_recommendation.training_days = int(training_days)
+    saved_recommendation.session_length = int(session_length)
+    saved_recommendation.limitation = limitation
+    saved_recommendation.recommended_plan = recommendation["recommended_plan"]
+    saved_recommendation.recommendation_reason = recommendation["recommendation_reason"]
+    saved_recommendation.weekly_structure_json = json.dumps(
+        recommendation["weekly_structure"]
+    )
+
+    db.session.commit()
+
+    flash("Personalised plan recommendation saved.", "success")
+    return redirect(url_for("plans"))
+
+
+@app.route("/plans/recommendation/clear", methods=["POST"])
+def clear_plan_recommendation():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    saved_recommendation = PlanRecommendation.query.filter_by(
+        user_id=user.id
+    ).first()
+
+    if saved_recommendation is not None:
+        db.session.delete(saved_recommendation)
+        db.session.commit()
+        flash("Personalised plan recommendation cleared.", "success")
+
     return redirect(url_for("plans"))
 
 

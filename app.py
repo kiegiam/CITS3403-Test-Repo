@@ -564,6 +564,186 @@ def current_user():
     return db.session.get(User, session["user_id"])
 
 
+def build_plan_recommendation(
+    main_goal,
+    fitness_level,
+    training_days,
+    session_length,
+    limitation
+):
+    goal = (main_goal or "").strip().lower()
+    level = (fitness_level or "").strip().lower()
+    limit = (limitation or "").strip().lower()
+
+    try:
+        days_per_week = int(training_days)
+    except (TypeError, ValueError):
+        days_per_week = 4
+
+    days_per_week = max(1, min(days_per_week, 6))
+
+    try:
+        minutes_per_session = int(session_length)
+    except (TypeError, ValueError):
+        minutes_per_session = 30
+
+    minutes_per_session = max(10, minutes_per_session)
+
+    day_names = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
+
+    if "strength" in goal:
+        recommended_plan = "Strength Builder"
+        reason = "This plan prioritises strength sessions with recovery between harder training days."
+        focus_pattern = [
+            "Strength",
+            "Recovery",
+            "Strength",
+            "Cardio",
+            "Strength",
+            "Flexibility",
+            "Rest",
+        ]
+    elif "cardio" in goal:
+        recommended_plan = "Cardio Endurance"
+        reason = "This plan increases cardio frequency while keeping some strength and mobility work."
+        focus_pattern = [
+            "Cardio",
+            "Strength",
+            "Cardio",
+            "Recovery",
+            "Cardio",
+            "Flexibility",
+            "Rest",
+        ]
+    elif "weight" in goal or "lose" in goal:
+        recommended_plan = "Balanced Fat Loss"
+        reason = "This plan mixes cardio, strength, and recovery to support consistent weekly activity."
+        focus_pattern = [
+            "Cardio",
+            "Strength",
+            "Recovery",
+            "Cardio",
+            "Strength",
+            "Flexibility",
+            "Rest",
+        ]
+    elif "flexibility" in goal:
+        recommended_plan = "Mobility and Recovery"
+        reason = "This plan emphasises flexibility, mobility, and recovery with light supporting activity."
+        focus_pattern = [
+            "Flexibility",
+            "Recovery",
+            "Flexibility",
+            "Core stability",
+            "Flexibility",
+            "Low-intensity cardio",
+            "Rest",
+        ]
+    else:
+        recommended_plan = "Consistency Starter"
+        reason = "This plan keeps training balanced and manageable so it is easier to build a habit."
+        focus_pattern = [
+            "Strength",
+            "Cardio",
+            "Recovery",
+            "Strength",
+            "Flexibility",
+            "Cardio",
+            "Rest",
+        ]
+
+    active_days = 0
+    weekly_structure = []
+
+    for index, day_name in enumerate(day_names):
+        focus = focus_pattern[index]
+
+        if focus != "Rest" and active_days >= days_per_week:
+            focus = "Recovery" if index < 6 else "Rest"
+
+        if focus not in ["Rest", "Recovery"]:
+            active_days += 1
+
+        note = f"Aim for about {minutes_per_session} minutes."
+
+        if focus == "Recovery":
+            note = "Keep this light with stretching, walking, or mobility work."
+        elif focus == "Rest":
+            note = "Take a full rest day or do gentle movement only."
+
+        weekly_structure.append({
+            "day_name": day_name,
+            "focus": focus,
+            "note": note,
+        })
+
+    if "beginner" in level:
+        reason += " Because you selected beginner level, the structure keeps intensity approachable."
+    elif "advanced" in level:
+        reason += " Because you selected advanced level, the structure allows more focused training days."
+
+    if "knee" in limit:
+        reason += " With knee discomfort, it favours lower-impact cardio and avoids heavy leg emphasis."
+
+        for day in weekly_structure:
+            if day["focus"] == "Cardio":
+                day["focus"] = "Low-impact cardio"
+                day["note"] = "Choose cycling, rowing, swimming, or another low-impact option."
+            elif day["focus"] == "Strength":
+                day["note"] = "Keep leg loading moderate and avoid heavy knee-dominant work."
+
+    if "back" in limit:
+        reason += " With back discomfort, it avoids heavy lifting focus and adds core stability language."
+
+        for day in weekly_structure:
+            if day["focus"] == "Strength":
+                day["focus"] = "Controlled strength"
+                day["note"] = "Use controlled movements and avoid heavy loading."
+            elif day["focus"] == "Recovery":
+                day["note"] = "Focus on gentle mobility and core stability."
+
+    if "shoulder" in limit:
+        reason += " With shoulder discomfort, it limits repeated upper-body strength focus."
+
+        strength_seen = 0
+        for day in weekly_structure:
+            if "strength" in day["focus"].lower():
+                strength_seen += 1
+
+                if strength_seen > 1:
+                    day["focus"] = "Lower-body or core strength"
+                    day["note"] = "Avoid too much upper-body pressing or shoulder-heavy work."
+
+    if "low energy" in limit or "energy" in limit:
+        reason += " With low energy, it recommends shorter sessions and extra recovery."
+        minutes_per_session = min(minutes_per_session, 25)
+        changed_day = False
+
+        for day in weekly_structure:
+            if day["focus"] not in ["Rest", "Recovery"] and not changed_day:
+                day["focus"] = "Recovery"
+                day["note"] = "Use this as an easier day to keep momentum without overdoing it."
+                changed_day = True
+            elif day["focus"] not in ["Rest", "Recovery"]:
+                day["note"] = f"Keep this short and manageable, around {minutes_per_session} minutes."
+
+    reason += " This is general fitness planning guidance, not medical advice."
+
+    return {
+        "recommended_plan": recommended_plan,
+        "recommendation_reason": reason,
+        "weekly_structure": weekly_structure,
+    }
+
+
 def allowed_image(filename):
     return (
         "." in filename

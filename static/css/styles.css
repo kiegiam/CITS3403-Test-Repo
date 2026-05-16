@@ -251,12 +251,53 @@ h6 {
     margin-top: 1.75rem;
 }
 
+.progress-animate {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: progressFadeUp 0.75s ease-out forwards;
+}
+
+.progress-delay-1 {
+    animation-delay: 0.08s;
+}
+
+.progress-delay-2 {
+    animation-delay: 0.18s;
+}
+
+.progress-delay-3 {
+    animation-delay: 0.28s;
+}
+
+.progress-delay-4 {
+    animation-delay: 0.38s;
+}
+
+.progress-delay-5 {
+    animation-delay: 0.52s;
+}
+
+.progress-delay-6 {
+    animation-delay: 0.66s;
+}
+
+.progress-delay-7 {
+    animation-delay: 0.80s;
+}
+
 .progress-chart-grid {
     align-items: stretch;
 }
 
 .progress-chart-card {
     min-height: 100%;
+    border-color: rgba(99, 91, 255, 0.14) !important;
+}
+
+.progress-chart-card:hover {
+    transform: translateY(-7px);
+    border-color: rgba(0, 168, 107, 0.36) !important;
+    box-shadow: 0 24px 54px rgba(50, 50, 93, 0.16) !important;
 }
 
 .progress-chart-card .card-body {
@@ -281,6 +322,18 @@ h6 {
     display: block;
     width: 100% !important;
     height: 100% !important;
+}
+
+@keyframes progressFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ---------- Tables ---------- */

@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import smtplib
@@ -2101,6 +2102,117 @@ def save_plan_goals():
     db.session.commit()
 
     flash("Plan goals saved successfully.", "success")
+    return redirect(url_for("plans"))
+
+
+@app.route("/plans/recommendation", methods=["POST"])
+def save_plan_recommendation():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    main_goal = request.form.get("main_goal", "").strip()
+    fitness_level = request.form.get("fitness_level", "").strip()
+    training_days = request.form.get("training_days", "").strip()
+    session_length = request.form.get("session_length", "").strip()
+    limitation = request.form.get("limitation", "").strip()
+
+    allowed_goals = [
+        "build_strength",
+        "improve_cardio",
+        "lose_weight",
+        "improve_flexibility",
+        "build_consistency",
+    ]
+    allowed_levels = ["beginner", "intermediate", "advanced"]
+    allowed_training_days = ["1", "2", "3", "4", "5", "6"]
+    allowed_session_lengths = ["15", "20", "30", "45", "60"]
+    allowed_limitations = [
+        "none",
+        "knee_discomfort",
+        "back_discomfort",
+        "shoulder_discomfort",
+        "low_energy",
+    ]
+
+    if main_goal not in allowed_goals:
+        flash("Please choose a valid main goal.", "danger")
+        return redirect(url_for("plans"))
+
+    if fitness_level not in allowed_levels:
+        flash("Please choose a valid fitness level.", "danger")
+        return redirect(url_for("plans"))
+
+    if training_days not in allowed_training_days:
+        flash("Please choose a valid number of training days.", "danger")
+        return redirect(url_for("plans"))
+
+    if session_length not in allowed_session_lengths:
+        flash("Please choose a valid session length.", "danger")
+        return redirect(url_for("plans"))
+
+    if limitation not in allowed_limitations:
+        flash("Please choose a valid limitation option.", "danger")
+        return redirect(url_for("plans"))
+
+    recommendation = build_plan_recommendation(
+        main_goal,
+        fitness_level,
+        training_days,
+        session_length,
+        limitation
+    )
+
+    saved_recommendation = PlanRecommendation.query.filter_by(
+        user_id=user.id
+    ).first()
+
+    if saved_recommendation is None:
+        saved_recommendation = PlanRecommendation(user_id=user.id)
+        db.session.add(saved_recommendation)
+
+    saved_recommendation.main_goal = main_goal
+    saved_recommendation.fitness_level = fitness_level
+    saved_recommendation.training_days = int(training_days)
+    saved_recommendation.session_length = int(session_length)
+    saved_recommendation.limitation = limitation
+    saved_recommendation.recommended_plan = recommendation["recommended_plan"]
+    saved_recommendation.recommendation_reason = recommendation["recommendation_reason"]
+    saved_recommendation.weekly_structure_json = json.dumps(
+        recommendation["weekly_structure"]
+    )
+
+    db.session.commit()
+
+    flash("Personalised plan recommendation saved.", "success")
+    return redirect(url_for("plans"))
+
+
+@app.route("/plans/recommendation/clear", methods=["POST"])
+def clear_plan_recommendation():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    saved_recommendation = PlanRecommendation.query.filter_by(
+        user_id=user.id
+    ).first()
+
+    if saved_recommendation is not None:
+        db.session.delete(saved_recommendation)
+        db.session.commit()
+        flash("Personalised plan recommendation cleared.", "success")
+
     return redirect(url_for("plans"))
 
 

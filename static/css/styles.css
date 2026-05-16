@@ -992,6 +992,220 @@ footer {
     background-color: #635bff;
     border-color: #635bff;
 }
+
+/* ---------- Ranking leaderboard ---------- */
+
+.ranking-animate {
+    opacity: 0;
+    transform: translateY(22px);
+    animation: rankingFadeUp 0.72s ease-out forwards;
+}
+
+.ranking-delay-1 {
+    animation-delay: 0.08s;
+}
+
+.ranking-delay-2 {
+    animation-delay: 0.18s;
+}
+
+.ranking-delay-3 {
+    animation-delay: 0.28s;
+}
+
+.ranking-delay-4 {
+    animation-delay: 0.38s;
+}
+
+.ranking-delay-5 {
+    animation-delay: 0.52s;
+}
+
+.ranking-delay-6 {
+    animation-delay: 0.64s;
+}
+
+.ranking-delay-7 {
+    animation-delay: 0.76s;
+}
+
+.top-rank-card {
+    border-color: rgba(99, 91, 255, 0.16) !important;
+}
+
+.top-rank-card:hover {
+    transform: translateY(-7px);
+    border-color: rgba(0, 168, 107, 0.34) !important;
+    box-shadow: 0 24px 54px rgba(50, 50, 93, 0.16) !important;
+}
+
+.top-rank-card-first {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 249, 230, 0.86)) !important;
+    border-color: rgba(255, 209, 102, 0.55) !important;
+    box-shadow: 0 22px 52px rgba(255, 209, 102, 0.20) !important;
+}
+
+.top-rank-card-first:hover {
+    border-color: rgba(255, 209, 102, 0.82) !important;
+    box-shadow: 0 28px 62px rgba(255, 209, 102, 0.26) !important;
+}
+
+.ranking-medal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    background: rgba(99, 91, 255, 0.10);
+    box-shadow: inset 0 0 0 1px rgba(99, 91, 255, 0.12);
+    font-size: 1.45rem;
+}
+
+.top-rank-card-first .ranking-medal {
+    width: 3.35rem;
+    height: 3.35rem;
+    background: rgba(255, 209, 102, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(255, 209, 102, 0.34);
+}
+
+.ranking-position {
+    color: var(--ft-blue);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.top-rank-stats > div {
+    border-radius: 14px;
+    background: rgba(246, 249, 252, 0.78);
+    padding: 0.65rem 0.35rem;
+}
+
+.top-rank-stats strong {
+    color: var(--ft-text);
+    font-size: 1.05rem;
+}
+
+.ranking-minutes-cell {
+    min-width: 150px;
+}
+
+.ranking-minutes-text {
+    display: inline-block;
+    margin-bottom: 0.4rem;
+    color: var(--ft-text);
+    font-weight: 700;
+}
+
+.ranking-minute-bar {
+    width: 100%;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: rgba(10, 37, 64, 0.08);
+    overflow: hidden;
+}
+
+.ranking-minute-bar-fill {
+    width: var(--ranking-bar-width);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--ft-blue), var(--ft-cyan), var(--ft-green));
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation: rankingBarFill 1.1s ease-out forwards;
+}
+
+.ranking-insight-card {
+    border-color: rgba(99, 91, 255, 0.18) !important;
+}
+
+.ranking-insight-grid > div {
+    border-radius: 16px;
+    background: rgba(246, 249, 252, 0.82);
+    padding: 1rem;
+}
+
+.ranking-insight-message {
+    border-radius: 16px;
+    background: rgba(0, 168, 107, 0.08);
+    color: var(--ft-muted);
+    font-size: 0.92rem;
+    padding: 0.85rem 1rem;
+}
+
+.current-user-row {
+    background: rgba(99, 91, 255, 0.08);
+    box-shadow: inset 5px 0 0 var(--ft-blue);
+}
+
+.current-user-row td {
+    background: transparent;
+    border-bottom-color: rgba(99, 91, 255, 0.18);
+}
+
+.ranking-you-badge {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.55rem;
+}
+
+.ranking-empty-card {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.ranking-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1.25rem;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--ft-blue), var(--ft-green));
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 16px 34px rgba(99, 91, 255, 0.22);
+}
+
+.ranking-empty-note {
+    max-width: 520px;
+    margin: 0 auto 1.5rem;
+    border: 1px solid rgba(99, 91, 255, 0.16);
+    border-radius: 16px;
+    background: rgba(246, 249, 252, 0.82);
+    color: var(--ft-muted);
+    font-size: 0.92rem;
+    padding: 0.85rem 1rem;
+}
+
+@keyframes rankingFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes rankingBarFill {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
 .ranking-avatar {
     width: 42px;
     height: 42px;

@@ -221,6 +221,140 @@
             </section>
 
             <section class="mb-4">
+                <div class="card shadow-sm border-0 personal-plan-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <h2 class="h4 mb-2">Personalise Your Plan</h2>
+                                <p class="text-muted mb-0">
+                                    Answer a few questions to get a suggested plan based on your goal,
+                                    available time, and training needs.
+                                </p>
+                            </div>
+                            <span class="badge text-bg-success">Rule-based guide</span>
+                        </div>
+
+                        <div class="personal-plan-layout">
+                            <form action="{{ url_for('save_plan_recommendation') }}" method="post" class="personal-plan-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <div>
+                                    <label for="main_goal" class="form-label">Main goal</label>
+                                    <select id="main_goal" name="main_goal" class="form-select" required>
+                                        <option value="build_strength" {% if saved_recommendation and saved_recommendation.main_goal == "build_strength" %}selected{% endif %}>Build strength</option>
+                                        <option value="improve_cardio" {% if saved_recommendation and saved_recommendation.main_goal == "improve_cardio" %}selected{% endif %}>Improve cardio</option>
+                                        <option value="lose_weight" {% if saved_recommendation and saved_recommendation.main_goal == "lose_weight" %}selected{% endif %}>Lose weight</option>
+                                        <option value="improve_flexibility" {% if saved_recommendation and saved_recommendation.main_goal == "improve_flexibility" %}selected{% endif %}>Improve flexibility</option>
+                                        <option value="build_consistency" {% if saved_recommendation and saved_recommendation.main_goal == "build_consistency" %}selected{% endif %}>Build consistency</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="fitness_level" class="form-label">Fitness level</label>
+                                    <select id="fitness_level" name="fitness_level" class="form-select" required>
+                                        <option value="beginner" {% if saved_recommendation and saved_recommendation.fitness_level == "beginner" %}selected{% endif %}>Beginner</option>
+                                        <option value="intermediate" {% if saved_recommendation and saved_recommendation.fitness_level == "intermediate" %}selected{% endif %}>Intermediate</option>
+                                        <option value="advanced" {% if saved_recommendation and saved_recommendation.fitness_level == "advanced" %}selected{% endif %}>Advanced</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="training_days" class="form-label">Training days</label>
+                                    <select id="training_days" name="training_days" class="form-select" required>
+                                        {% for day_count in [1, 2, 3, 4, 5, 6] %}
+                                            <option value="{{ day_count }}" {% if saved_recommendation and saved_recommendation.training_days == day_count %}selected{% elif not saved_recommendation and day_count == 4 %}selected{% endif %}>
+                                                {{ day_count }} day{% if day_count != 1 %}s{% endif %} per week
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="session_length" class="form-label">Session length</label>
+                                    <select id="session_length" name="session_length" class="form-select" required>
+                                        {% for minutes in [15, 20, 30, 45, 60] %}
+                                            <option value="{{ minutes }}" {% if saved_recommendation and saved_recommendation.session_length == minutes %}selected{% elif not saved_recommendation and minutes == 30 %}selected{% endif %}>
+                                                {{ minutes }} minutes
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="personal-plan-full">
+                                    <label for="limitation" class="form-label">Training need or limitation</label>
+                                    <select id="limitation" name="limitation" class="form-select" required>
+                                        <option value="none" {% if not saved_recommendation or saved_recommendation.limitation == "none" %}selected{% endif %}>None</option>
+                                        <option value="knee_discomfort" {% if saved_recommendation and saved_recommendation.limitation == "knee_discomfort" %}selected{% endif %}>Knee discomfort</option>
+                                        <option value="back_discomfort" {% if saved_recommendation and saved_recommendation.limitation == "back_discomfort" %}selected{% endif %}>Back discomfort</option>
+                                        <option value="shoulder_discomfort" {% if saved_recommendation and saved_recommendation.limitation == "shoulder_discomfort" %}selected{% endif %}>Shoulder discomfort</option>
+                                        <option value="low_energy" {% if saved_recommendation and saved_recommendation.limitation == "low_energy" %}selected{% endif %}>Low energy</option>
+                                    </select>
+                                </div>
+
+                                <div class="personal-plan-full d-grid">
+                                    <button type="submit" class="btn btn-success">Get Recommendation</button>
+                                </div>
+                            </form>
+
+                            <div class="recommendation-panel">
+                                {% if saved_recommendation %}
+                                    {% set recommendation_name = saved_recommendation.recommended_plan|lower %}
+                                    {% if "strength" in recommendation_name %}
+                                        {% set recommended_start_plan = "strength" %}
+                                    {% elif "cardio" in recommendation_name or "loss" in recommendation_name or "fat" in recommendation_name %}
+                                        {% set recommended_start_plan = "cardio" %}
+                                    {% elif "flexibility" in recommendation_name or "recovery" in recommendation_name or "mobility" in recommendation_name %}
+                                        {% set recommended_start_plan = "flexibility" %}
+                                    {% else %}
+                                        {% set recommended_start_plan = "strength" %}
+                                    {% endif %}
+
+                                    <span class="badge text-bg-success mb-3">Saved recommendation</span>
+                                    <h3 class="h4 mb-2">{{ saved_recommendation.recommended_plan }}</h3>
+                                    <p class="text-muted">{{ saved_recommendation.recommendation_reason }}</p>
+
+                                    <h4 class="h6 mb-3">Suggested weekly structure</h4>
+                                    <div class="recommendation-week-grid">
+                                        {% for day in recommended_weekly_structure %}
+                                            <div class="recommendation-day">
+                                                <span>{{ day.day_name }}</span>
+                                                <strong>{{ day.focus }}</strong>
+                                                <p class="mb-0">{{ day.note }}</p>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div class="recommendation-actions">
+                                        <a href="{{ url_for('add_workout', plan=recommended_start_plan) }}" class="btn btn-success">
+                                            Start Recommended Workout
+                                        </a>
+                                        <form action="{{ url_for('clear_plan_recommendation') }}" method="post">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-outline-success">
+                                                Clear Recommendation
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="badge text-bg-primary mb-3">No saved recommendation</span>
+                                    <h3 class="h5 mb-2">Create a plan suggestion</h3>
+                                    <p class="text-muted mb-0">
+                                        Your saved recommendation will appear here after you complete the form.
+                                    </p>
+                                {% endif %}
+
+                                <p class="safety-note mb-0 mt-3">
+                                    This recommendation is general fitness guidance only. If you have pain,
+                                    injuries, or medical conditions, consider asking a qualified professional
+                                    before starting a new routine.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
                 <div class="card shadow-sm border-0 weekly-plan-card">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center gap-3 mb-3">

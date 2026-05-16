@@ -557,7 +557,47 @@
                     </div>
                 </div>
             </div>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <p class="step-label mb-1">Workout Intensity</p>
+                    <h2 class="h5 mb-3">How intense was this workout?</h2>
 
+                    <input type="hidden" id="workout-intensity" value="Medium">
+
+                    <div class="btn-group w-100" role="group" aria-label="Workout intensity">
+                        <button
+                            type="button"
+                            id="intensity-low"
+                            class="btn btn-outline-success"
+                            onclick="setWorkoutIntensity('Low')"
+                        >
+                            Low
+                        </button>
+
+                        <button
+                            type="button"
+                            id="intensity-medium"
+                            class="btn btn-warning"
+                            onclick="setWorkoutIntensity('Medium')"
+                        >
+                            Medium
+                        </button>
+
+                        <button
+                            type="button"
+                            id="intensity-high"
+                            class="btn btn-outline-danger"
+                            onclick="setWorkoutIntensity('High')"
+                        >
+                            High
+                        </button>
+                    </div>
+
+                    <p class="text-muted small mt-2 mb-0">
+                        Choose the intensity yourself instead of having FitTrack estimate it from weight lifted.
+                    </p>
+                </div>
+            </div>
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-4">
                     <label for="workout-notes" class="form-label fw-semibold">Notes</label>
@@ -714,6 +754,26 @@ function setDurationMode(mode) {
     }
 }
 
+function setWorkoutIntensity(level) {
+    document.getElementById('workout-intensity').value = level;
+
+    const low = document.getElementById('intensity-low');
+    const medium = document.getElementById('intensity-medium');
+    const high = document.getElementById('intensity-high');
+
+    low.className = 'btn btn-outline-success';
+    medium.className = 'btn btn-outline-warning';
+    high.className = 'btn btn-outline-danger';
+
+    if (level === 'Low') {
+        low.className = 'btn btn-success';
+    } else if (level === 'Medium') {
+        medium.className = 'btn btn-warning';
+    } else {
+        high.className = 'btn btn-danger';
+    }
+}
+
 function toggleMuscle(btn) {
     const group = btn.dataset.group;
     if (selectedGroups.has(group)) {
@@ -790,15 +850,28 @@ function renderExerciseList(group) {
 
     list.innerHTML = exercises.map(ex => {
         const isAdded = !!addedExercises[ex.id];
+
         return `
         <div class="exercise-item ${isAdded ? 'added' : ''}"
              id="ex-item-${ex.id}"
-             onclick="toggleExercise(${ex.id}, '${escapeAttr(ex.name)}', '${escapeAttr(ex.muscle_group)}', ${ex.is_custom})">
+             onclick="toggleExercise(${ex.id}, '${escapeAttr(ex.name)}', '${escapeAttr(ex.muscle_group)}', '${escapeAttr(ex.tracking_type || "strength")}', ${ex.is_custom})">
             <span>
                 ${escapeHtml(ex.name)}
                 ${ex.is_custom ? '<span class="badge-custom">custom</span>' : ''}
             </span>
-            <span style="font-size:1.2rem;">${isAdded ? '✅' : '➕'}</span>
+
+            <span class="d-flex align-items-center gap-2">
+                ${ex.is_custom ? `
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="deleteCustomExercise(event, ${ex.id}, '${escapeAttr(ex.name)}', '${escapeAttr(ex.muscle_group)}')"
+                    >
+                        Delete
+                    </button>
+                ` : ''}
+                <span style="font-size:1.2rem;">${isAdded ? '✅' : '➕'}</span>
+            </span>
         </div>`;
     }).join('');
 }
@@ -810,7 +883,7 @@ function escapeAttr(str) {
     return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-function toggleExercise(id, name, muscleGroup, isCustom) {
+function toggleExercise(id, name, muscleGroup, trackingType, isCustom) {
     if (addedExercises[id]) {
         const block = document.getElementById(`block-${id}`);
         if (block) block.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -818,7 +891,14 @@ function toggleExercise(id, name, muscleGroup, isCustom) {
         return;
     }
 
-    addedExercises[id] = { id, name, muscle_group: muscleGroup };
+    addedExercises[id] = {
+        id,
+        name,
+        muscle_group: muscleGroup,
+        tracking_type: trackingType || 'strength',
+        is_custom: isCustom
+    };
+
     workoutSets[id] = [];
 
     const item = document.getElementById(`ex-item-${id}`);
@@ -840,6 +920,67 @@ function renderExerciseBlock(exerciseId) {
     const ex = addedExercises[exerciseId];
     const container = document.getElementById('exercise-blocks');
 
+    let headers = '';
+    let addButtonText = '+ Add Entry';
+
+    if (ex.tracking_type === 'strength') {
+        headers = `
+            <tr>
+                <th>Set</th>
+                <th>Reps</th>
+                <th>Weight (kg)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Set';
+    } else if (ex.tracking_type === 'bodyweight_reps') {
+        headers = `
+            <tr>
+                <th>Set</th>
+                <th>Reps</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Set';
+    } else if (ex.tracking_type === 'cardio_distance') {
+        headers = `
+            <tr>
+                <th>Entry</th>
+                <th>Distance (km)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Distance';
+    } else if (ex.tracking_type === 'stair_climber') {
+        headers = `
+            <tr>
+                <th>Entry</th>
+                <th>Distance (km)</th>
+                <th>Incline Angle (°)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Stair Entry';
+    } else if (ex.tracking_type === 'timed_hold') {
+        headers = `
+            <tr>
+                <th>Set</th>
+                <th>Time (sec)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Hold';
+    } else {
+        headers = `
+            <tr>
+                <th>Entry</th>
+                <th>Duration (min)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Duration';
+    }
+
     const block = document.createElement('div');
     block.className = 'exercise-block';
     block.id = `block-${exerciseId}`;
@@ -852,69 +993,156 @@ function renderExerciseBlock(exerciseId) {
             <button class="btn-remove-exercise" onclick="removeExercise(${exerciseId})" title="Remove exercise">✕</button>
         </div>
         <table class="sets-table">
-            <thead>
-                <tr>
-                    <th>Set</th>
-                    <th>Reps</th>
-                    <th>Weight (kg)</th>
-                    <th></th>
-                </tr>
-            </thead>
+            <thead>${headers}</thead>
             <tbody id="sets-body-${exerciseId}"></tbody>
         </table>
-        <button class="btn-add-set" onclick="addSet(${exerciseId})">+ Add Set</button>
+        <button class="btn-add-set" onclick="addSet(${exerciseId})">${addButtonText}</button>
     `;
     container.appendChild(block);
 }
 
 function addSet(exerciseId) {
+    const ex = addedExercises[exerciseId];
     const sets = workoutSets[exerciseId];
     const setNum = sets.length + 1;
+    const prev = sets[sets.length - 1] || {};
 
-    const prev = sets[sets.length - 1];
-    const prevReps = prev ? prev.reps : '';
-    const prevWeight = prev ? prev.weight_kg : '';
+    let newSet = { set_number: setNum };
+    let rowHtml = '';
 
-    sets.push({ set_number: setNum, reps: prevReps, weight_kg: prevWeight });
+    if (ex.tracking_type === 'strength') {
+        newSet.reps = prev.reps || '';
+        newSet.weight_kg = prev.weight_kg || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="1" placeholder="10"
+                    value="${newSet.reps}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'reps', this.value)">
+            </td>
+            <td>
+                <input class="set-input" type="number" min="0" step="0.5" placeholder="0"
+                    value="${newSet.weight_kg}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'weight_kg', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    } else if (ex.tracking_type === 'bodyweight_reps') {
+        newSet.reps = prev.reps || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="1" placeholder="8"
+                    value="${newSet.reps}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'reps', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    } else if (ex.tracking_type === 'cardio_distance') {
+        newSet.distance_km = prev.distance_km || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="0.1" step="0.1" placeholder="5.0"
+                    value="${newSet.distance_km}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'distance_km', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    } else if (ex.tracking_type === 'timed_hold') {
+        newSet.duration_sec = prev.duration_sec || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="1" placeholder="60"
+                    value="${newSet.duration_sec}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'duration_sec', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    } else {
+        newSet.duration_min = prev.duration_min || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="1" placeholder="10"
+                    value="${newSet.duration_min}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'duration_min', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    }
+
+    sets.push(newSet);
 
     const tbody = document.getElementById(`sets-body-${exerciseId}`);
     const row = document.createElement('tr');
     row.id = `set-row-${exerciseId}-${setNum}`;
-    row.innerHTML = `
-        <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
-        <td>
-            <input
-                class="set-input"
-                type="number"
-                min="1"
-                placeholder="10"
-                value="${prevReps}"
-                oninput="updateSet(${exerciseId}, ${setNum}, 'reps', this.value)"
-            >
-        </td>
-        <td>
-            <input
-                class="set-input"
-                type="number"
-                min="0"
-                step="0.5"
-                placeholder="0"
-                value="${prevWeight}"
-                oninput="updateSet(${exerciseId}, ${setNum}, 'weight_kg', this.value)"
-            >
-        </td>
-        <td>
-            <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})" title="Remove set">✕</button>
-        </td>
-    `;
+    row.innerHTML = rowHtml;
     tbody.appendChild(row);
+
     updateSetCountLabel();
 }
 
 function updateSet(exerciseId, setNum, field, value) {
     const sets = workoutSets[exerciseId];
     const set = sets.find(s => s.set_number === setNum);
-    if (set) set[field] = field === 'reps' ? parseInt(value) : parseFloat(value);
+    if (!set) return;
+
+    if (value === '') {
+        set[field] = '';
+        return;
+    }
+
+    if (field === 'weight_kg' || field === 'distance_km') {
+        set[field] = parseFloat(value);
+    } else {
+        set[field] = parseInt(value, 10);
+    }
+}
+
+function clampIncline(input) {
+    if (input.value === '') return;
+
+    let value = parseFloat(input.value);
+
+    if (value < 0) value = 0;
+    if (value > 90) value = 90;
+
+    input.value = value;
+}
+
+
+function updateSet(exerciseId, setNum, field, value) {
+    const sets = workoutSets[exerciseId];
+    const set = sets.find(s => s.set_number === setNum);
+    if (!set) return;
+
+    if (value === '') {
+        set[field] = '';
+        return;
+    }
+
+    if (field === 'weight_kg' || field === 'distance_km' || field === 'incline_deg') {
+        set[field] = parseFloat(value);
+    } else {
+        set[field] = parseInt(value, 10);
+    }
 }
 
 function removeSet(exerciseId, setNum) {
@@ -994,7 +1222,39 @@ async function addCustomExercise() {
         toast('Network error — please try again');
     }
 }
+async function deleteCustomExercise(event, exerciseId, name, group) {
+    event.stopPropagation();
 
+
+    if (addedExercises[exerciseId]) {
+        removeExercise(exerciseId);
+    }
+
+    try {
+        const res = await fetch(`/api/exercises/${exerciseId}`, {
+            method: 'DELETE',
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            toast(data.error || 'Could not delete exercise');
+            return;
+        }
+
+        if (exerciseCache[group]) {
+            exerciseCache[group] = exerciseCache[group].filter(ex => ex.id !== exerciseId);
+        }
+
+        if (activeTab === group) {
+            renderExerciseList(group);
+        }
+
+        toast(`"${name}" deleted`);
+    } catch (e) {
+        toast('Network error — please try again');
+    }
+}
 function updateTimer() {
     if (!startedAt) return;
     const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
@@ -1010,25 +1270,65 @@ function updateTimer() {
 
 async function finishWorkout() {
     const allSets = [];
+
     for (const [exerciseId, sets] of Object.entries(workoutSets)) {
+        const ex = addedExercises[exerciseId];
+
         for (const s of sets) {
             allSets.push({
-                exercise_id: parseInt(exerciseId),
+                exercise_id: parseInt(exerciseId, 10),
                 set_number: s.set_number,
+                tracking_type: ex.tracking_type,
                 reps: s.reps || 0,
                 weight_kg: s.weight_kg || 0,
+                distance_km: s.distance_km || 0,
+                duration_sec: s.duration_sec || 0,
+                duration_min: s.duration_min || 0,
+                incline_deg: s.incline_deg || 0,
             });
         }
     }
 
     if (allSets.length === 0) {
-        toast('Log at least one set before finishing');
+        toast('Log at least one entry before finishing');
         return;
     }
 
-    const invalid = allSets.find(s => !s.reps || s.reps <= 0);
+    const invalid = allSets.find(entry => {
+        if (entry.tracking_type === 'strength') {
+            return !entry.reps || entry.reps <= 0 || entry.weight_kg < 0;
+        }
+
+        if (entry.tracking_type === 'bodyweight_reps') {
+            return !entry.reps || entry.reps <= 0;
+        }
+
+        if (entry.tracking_type === 'cardio_distance') {
+            return !entry.distance_km || entry.distance_km <= 0;
+        }
+
+        if (entry.tracking_type === 'stair_climber') {
+            return (
+                !entry.distance_km ||
+                entry.distance_km <= 0 ||
+                entry.incline_deg < 0 ||
+                entry.incline_deg > 90
+            );
+        }
+
+        if (entry.tracking_type === 'timed_hold') {
+            return !entry.duration_sec || entry.duration_sec <= 0;
+        }
+
+        if (entry.tracking_type === 'duration_only') {
+            return !entry.duration_min || entry.duration_min <= 0;
+        }
+
+        return false;
+    });
+
     if (invalid) {
-        toast('Fill in reps for every set before finishing');
+        toast('Please complete all required exercise fields before finishing');
         return;
     }
 
@@ -1045,6 +1345,7 @@ async function finishWorkout() {
         manual_duration_minutes: document.getElementById('manual-duration-minutes')?.value || "",
         manual_duration_seconds: document.getElementById('manual-duration-seconds')?.value || "",
         sets: allSets,
+        intensity: document.getElementById('workout-intensity')?.value || 'Medium',
     };
 
         if (payload.duration_mode === 'manual') {

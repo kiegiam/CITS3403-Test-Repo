@@ -134,6 +134,17 @@
                     </div>
 
                     <div class="col-lg-4">
+                        <div class="dashboard-pulse-panel mb-3">
+                            <div>
+                                <span class="dashboard-pulse-label">Training pulse</span>
+                                <strong>{{ statistics.total_minutes }}</strong>
+                                <span>minutes banked</span>
+                            </div>
+                            <div class="dashboard-pulse-ring" aria-hidden="true">
+                                <span>{{ statistics.current_streak }}</span>
+                            </div>
+                        </div>
+
                         <div class="d-grid gap-3">
                             <a href="{{ url_for('add_workout') }}" class="btn btn-success btn-lg">
                                 Add Workout
@@ -157,7 +168,7 @@
                         <h2 class="display-5 fw-bold mb-2">
                             {{ statistics.total_workouts }}
                         </h2>
-                        <p class="text-muted mb-0">Total workouts</p>
+                        <p class="text-muted mb-0">Lifetime training sessions</p>
                     </div>
                 </div>
             </div>
@@ -169,7 +180,7 @@
                         <h2 class="display-5 fw-bold mb-2">
                             {{ statistics.total_minutes }}
                         </h2>
-                        <p class="text-muted mb-0">Minutes completed</p>
+                        <p class="text-muted mb-0">Active time completed</p>
                     </div>
                 </div>
             </div>
@@ -181,7 +192,7 @@
                         <h2 class="display-5 fw-bold mb-2">
                             {{ statistics.current_streak }}
                         </h2>
-                        <p class="text-muted mb-0">Day streak</p>
+                        <p class="text-muted mb-0">Consistency signal</p>
                     </div>
                 </div>
             </div>
@@ -193,7 +204,7 @@
                         <h2 class="display-5 fw-bold mb-2">
                             {{ statistics.workouts_this_week|default(0) }}
                         </h2>
-                        <p class="text-muted mb-0">Workouts this week</p>
+                        <p class="text-muted mb-0">Weekly momentum</p>
                     </div>
                 </div>
             </div>
@@ -284,7 +295,7 @@
                         {% if recent_workouts %}
                             <div class="d-grid gap-3">
                                 {% for workout in recent_workouts %}
-                                    <div class="recent-workout-item p-3 rounded-4 border">
+                                    <div class="recent-workout-item dashboard-timeline-item p-3 rounded-4 border">
                                         <div class="d-flex justify-content-between align-items-start gap-3">
                                             <div>
                                                 <h3 class="h5 fw-bold mb-1">

@@ -794,6 +794,28 @@ function getMetricUnit() {
     return "min";
 }
 
+function animateNumber(elementId, value) {
+    const element = document.getElementById(elementId);
+    const numericValue = Number(value) || 0;
+    const startValue = Number(element.textContent) || 0;
+    const duration = 520;
+    const startTime = performance.now();
+
+    function tick(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(startValue + (numericValue - startValue) * eased);
+
+        element.textContent = current;
+
+        if (progress < 1) {
+            requestAnimationFrame(tick);
+        }
+    }
+
+    requestAnimationFrame(tick);
+}
+
 async function loadChartData() {
     setLoading(true);
 
@@ -828,9 +850,9 @@ async function loadChartData() {
 }
 
 function updateSummary(data) {
-    document.getElementById("summaryTotalWorkouts").textContent = data.summary.total_workouts;
-    document.getElementById("summaryTotalMinutes").textContent = data.summary.total_minutes;
-    document.getElementById("summaryAverageMinutes").textContent = data.summary.average_minutes;
+    animateNumber("summaryTotalWorkouts", data.summary.total_workouts);
+    animateNumber("summaryTotalMinutes", data.summary.total_minutes);
+    animateNumber("summaryAverageMinutes", data.summary.average_minutes);
 }
 
 function renderBarChart(data) {

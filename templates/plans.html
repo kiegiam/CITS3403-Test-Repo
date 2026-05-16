@@ -128,9 +128,10 @@
                 <div class="row g-4">
                     <div class="col-md-4">
                         <div class="card shadow-sm border-0 h-100 feature-card">
-                            <div class="card-body p-4">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-success align-self-start mb-3">Strength Focus</span>
                                 <h2 class="h4 mb-3">Strength Plan</h2>
-                                <p class="text-muted">
+                                <p class="text-muted mb-4">
                                     Build full-body strength with steady resistance training.
                                 </p>
                                 <ul class="list-group list-group-flush mb-4">
@@ -138,18 +139,19 @@
                                     <li class="list-group-item px-0">Focus on major muscle groups</li>
                                     <li class="list-group-item px-0">Track weight and duration</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout', plan='strength') }}" class="btn btn-success">
+                                <a href="{{ url_for('add_workout', plan='strength') }}" class="btn btn-success mt-auto">
                                     Log Strength Session
-                                    </a>
+                                </a>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="card shadow-sm border-0 h-100 feature-card">
-                            <div class="card-body p-4">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-primary align-self-start mb-3">Endurance Focus</span>
                                 <h2 class="h4 mb-3">Cardio Plan</h2>
-                                <p class="text-muted">
+                                <p class="text-muted mb-4">
                                     Improve endurance with regular running, cycling, or swimming.
                                 </p>
                                 <ul class="list-group list-group-flush mb-4">
@@ -157,7 +159,7 @@
                                     <li class="list-group-item px-0">Mix low and medium intensity</li>
                                     <li class="list-group-item px-0">Record distance or notes</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout', plan='cardio') }}" class="btn btn-primary">
+                                <a href="{{ url_for('add_workout', plan='cardio') }}" class="btn btn-primary mt-auto">
                                     Log Cardio Session
                                 </a>
                             </div>
@@ -166,9 +168,10 @@
 
                     <div class="col-md-4">
                         <div class="card shadow-sm border-0 h-100 feature-card">
-                            <div class="card-body p-4">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-warning align-self-start mb-3">Recovery Focus</span>
                                 <h2 class="h4 mb-3">Flexibility Plan</h2>
-                                <p class="text-muted">
+                                <p class="text-muted mb-4">
                                     Support recovery and mobility with stretching or yoga.
                                 </p>
                                 <ul class="list-group list-group-flush mb-4">
@@ -176,7 +179,7 @@
                                     <li class="list-group-item px-0">Focus on controlled movement</li>
                                     <li class="list-group-item px-0">Note tight or sore areas</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout', plan='flexibility') }}" class="btn btn-warning">
+                                <a href="{{ url_for('add_workout', plan='flexibility') }}" class="btn btn-warning mt-auto">
                                     Log Flexibility Session
                                 </a>
                             </div>

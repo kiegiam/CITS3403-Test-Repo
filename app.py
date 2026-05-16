@@ -1778,9 +1778,34 @@ def plans():
     if not is_logged_in():
         return redirect(url_for("login"))
 
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    daily_minutes_goal = user.daily_minutes_goal or 20
+    weight_goal_kg = user.weight_goal_kg
+    today_text = date.today().isoformat()
+
+    today_workouts = Workout.query.filter_by(
+        user_id=user.id,
+        date=today_text
+    ).all()
+
+    today_minutes = sum(workout.duration for workout in today_workouts)
+    today_goal_percent = min(
+        100,
+        round(today_minutes / daily_minutes_goal * 100)
+    )
+
     return render_template(
         "plans.html",
-        email=session["user_email"]
+        email=session["user_email"],
+        daily_minutes_goal=daily_minutes_goal,
+        weight_goal_kg=weight_goal_kg,
+        today_minutes=today_minutes,
+        today_goal_percent=today_goal_percent,
     )
 
 

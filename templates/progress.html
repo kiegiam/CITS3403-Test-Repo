@@ -363,6 +363,21 @@
                     const smoothAnimation = {
                         duration: 1650,
                         easing: "easeOutQuart",
+                        delay: function(context) {
+                            return context.dataIndex ? context.dataIndex * 90 : 0;
+                        },
+                    };
+
+                    const premiumGlowPlugin = {
+                        id: "premiumGlow",
+                        beforeDatasetDraw: function(chart, args, options) {
+                            chart.ctx.save();
+                            chart.ctx.shadowColor = options.colour || "rgba(57, 228, 255, 0.32)";
+                            chart.ctx.shadowBlur = options.blur || 24;
+                        },
+                        afterDatasetDraw: function(chart) {
+                            chart.ctx.restore();
+                        },
                     };
 
                     function makeVerticalGradient(chart, topColour, bottomColour) {
@@ -413,13 +428,19 @@
                                     borderWidth: 4,
                                     hoverBorderColor: "#ffffff",
                                     hoverOffset: 14,
+                                    spacing: 5,
                                 }],
                             },
+                            plugins: [premiumGlowPlugin],
                             options: {
                                 maintainAspectRatio: false,
                                 animation: smoothAnimation,
                                 cutout: "66%",
                                 plugins: {
+                                    premiumGlow: {
+                                        colour: "rgba(130, 249, 90, 0.22)",
+                                        blur: 26,
+                                    },
                                     legend: {
                                         position: "bottom",
                                         labels: {
@@ -463,6 +484,7 @@
                                     hoverBackgroundColor: "#82f95a",
                                 }],
                             },
+                            plugins: [premiumGlowPlugin],
                             options: {
                                 maintainAspectRatio: false,
                                 animation: smoothAnimation,
@@ -471,6 +493,10 @@
                                     intersect: false,
                                 },
                                 plugins: {
+                                    premiumGlow: {
+                                        colour: "rgba(57, 228, 255, 0.28)",
+                                        blur: 24,
+                                    },
                                     tooltip: {
                                         ...premiumTooltip,
                                         callbacks: {
@@ -525,6 +551,7 @@
                                     borderWidth: 4,
                                 }],
                             },
+                            plugins: [premiumGlowPlugin],
                             options: {
                                 maintainAspectRatio: false,
                                 animation: smoothAnimation,
@@ -533,6 +560,10 @@
                                     intersect: false,
                                 },
                                 plugins: {
+                                    premiumGlow: {
+                                        colour: "rgba(57, 228, 255, 0.36)",
+                                        blur: 30,
+                                    },
                                     tooltip: {
                                         ...premiumTooltip,
                                         callbacks: {

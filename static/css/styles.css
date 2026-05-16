@@ -2412,6 +2412,108 @@ body.premium-app-page::after {
     background: rgba(255, 107, 122, 0.12);
 }
 
+.plans-page .hero-card,
+.plans-page .stat-box,
+.plans-page .plan-goals-card,
+.plans-page .personal-plan-card,
+.plans-page .weekly-plan-card,
+.plans-page .feature-card,
+.plans-page .planning-tips-card {
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+    animation: planFloatIn 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.plans-page .hero-card {
+    animation-delay: 0.02s;
+}
+
+.plans-page .stat-box:nth-child(1),
+.plans-page .row > .col-md-6:nth-child(1) .stat-box {
+    animation-delay: 0.10s;
+}
+
+.plans-page .row > .col-md-6:nth-child(2) .stat-box {
+    animation-delay: 0.18s;
+}
+
+.plans-page .plan-goals-card {
+    animation-delay: 0.24s;
+}
+
+.plans-page .personal-plan-card {
+    animation-delay: 0.32s;
+}
+
+.plans-page .weekly-plan-card {
+    animation-delay: 0.40s;
+}
+
+.plans-page .feature-card {
+    animation-delay: 0.48s;
+}
+
+.plans-page .planning-tips-card {
+    animation-delay: 0.56s;
+}
+
+.plans-page .recommendation-day,
+.plans-page .weekly-schedule-day,
+.plans-page .weekly-plan-day,
+.plans-page .planning-tip {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: planFloatIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.plans-page .recommendation-day:nth-child(1),
+.plans-page .weekly-schedule-day:nth-child(1),
+.plans-page .weekly-plan-day:nth-child(1),
+.plans-page .planning-tip:nth-child(1) {
+    animation-delay: 0.50s;
+}
+
+.plans-page .recommendation-day:nth-child(2),
+.plans-page .weekly-schedule-day:nth-child(2),
+.plans-page .weekly-plan-day:nth-child(2),
+.plans-page .planning-tip:nth-child(2) {
+    animation-delay: 0.58s;
+}
+
+.plans-page .recommendation-day:nth-child(3),
+.plans-page .weekly-schedule-day:nth-child(3),
+.plans-page .weekly-plan-day:nth-child(3),
+.plans-page .planning-tip:nth-child(3) {
+    animation-delay: 0.66s;
+}
+
+.plans-page .recommendation-day:nth-child(4),
+.plans-page .weekly-schedule-day:nth-child(4) {
+    animation-delay: 0.74s;
+}
+
+.plans-page .recommendation-day:nth-child(5),
+.plans-page .weekly-schedule-day:nth-child(5) {
+    animation-delay: 0.82s;
+}
+
+.plans-page .recommendation-day:nth-child(6),
+.plans-page .weekly-schedule-day:nth-child(6) {
+    animation-delay: 0.90s;
+}
+
+.plans-page .recommendation-day:nth-child(7),
+.plans-page .weekly-schedule-day:nth-child(7) {
+    animation-delay: 0.98s;
+}
+
+@keyframes planFloatIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .premium-app-page .profile-page .hero-card .bg-success,
 .profile-page .hero-card .bg-success {
     color: var(--ft-ink) !important;

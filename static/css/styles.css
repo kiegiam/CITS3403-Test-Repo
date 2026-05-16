@@ -2523,12 +2523,29 @@ body.premium-app-page::after {
 
 .premium-landing-page {
     background:
-        linear-gradient(rgba(5, 8, 18, 0.22), rgba(5, 8, 18, 0.62)),
-        url("../background image/sports-sprinter-runner-man.jpg") center center / cover no-repeat fixed !important;
+        linear-gradient(90deg, rgba(5, 8, 18, 0.90) 0%, rgba(5, 8, 18, 0.58) 48%, rgba(5, 8, 18, 0.22) 100%),
+        url("../background image/sports-sprinter-runner-man.jpg") right center / auto 100vh no-repeat,
+        linear-gradient(135deg, #050711 0%, #0a1020 52%, #101827 100%) !important;
+    background-attachment: scroll;
 }
 
 .premium-landing-page .hero-section {
     min-height: 680px;
+    overflow: hidden;
+}
+
+.premium-landing-page .hero-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+.premium-landing-page .hero-section::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 44%;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent, rgba(5, 8, 18, 0.94));
 }
 
 .premium-landing-page .hero-section h1,

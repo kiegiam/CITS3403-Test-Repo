@@ -125,6 +125,130 @@
                 </div>
             </section>
 
+            <section class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="stat-box p-4 h-100">
+                            <div class="stat-box-header">
+                                <span class="stat-icon">min</span>
+                                <span class="stat-label">Daily Exercise Time</span>
+                            </div>
+                            <h2 class="h1 mb-1">{{ today_minutes }} / {{ daily_minutes_goal }}</h2>
+                            <p class="text-muted mb-3">minutes completed today</p>
+                            <div class="progress">
+                                <div
+                                    class="progress-bar bg-success"
+                                    role="progressbar"
+                                    style="width: {{ today_goal_percent }}%;"
+                                    aria-valuenow="{{ today_goal_percent }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="stat-box p-4 h-100">
+                            <div class="stat-box-header">
+                                <span class="stat-icon">kg</span>
+                                <span class="stat-label">Weight Goal</span>
+                            </div>
+                            <h2 class="h1 mb-1">
+                                {% if weight_goal_kg %}
+                                    {{ weight_goal_kg }} kg
+                                {% else %}
+                                    -- kg
+                                {% endif %}
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Reasonable planning helps build consistent exercise habits.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="card shadow-sm border-0 plan-goals-card">
+                    <div class="card-body p-4">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-lg-4">
+                                <h2 class="h4 mb-2">Goal Settings</h2>
+                                <p class="text-muted mb-lg-0">
+                                    Set simple targets for the plan page.
+                                </p>
+                            </div>
+                            <div class="col-lg-8">
+                                <form action="{{ url_for('save_plan_goals') }}" method="post" class="row g-3">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                    <div class="col-md-5">
+                                        <label for="daily_minutes_goal" class="form-label">Daily exercise minutes</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            id="daily_minutes_goal"
+                                            name="daily_minutes_goal"
+                                            class="form-control"
+                                            value="{{ daily_minutes_goal }}"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="col-md-5">
+                                        <label for="weight_goal_kg" class="form-label">Weight goal kg</label>
+                                        <input
+                                            type="number"
+                                            min="0.1"
+                                            step="0.1"
+                                            id="weight_goal_kg"
+                                            name="weight_goal_kg"
+                                            class="form-control"
+                                            value="{% if weight_goal_kg %}{{ weight_goal_kg }}{% endif %}"
+                                            placeholder="Optional"
+                                        >
+                                    </div>
+
+                                    <div class="col-md-2 d-grid">
+                                        <button type="submit" class="btn btn-success">Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="card shadow-sm border-0 weekly-plan-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                            <div>
+                                <h2 class="h4 mb-2">This Week</h2>
+                                <p class="text-muted mb-0">
+                                    Completed minutes come from workouts you have already logged.
+                                </p>
+                            </div>
+                            <span class="badge text-bg-success">Live schedule</span>
+                        </div>
+
+                        <div class="weekly-schedule-grid">
+                            {% for day in weekly_schedule %}
+                                <div class="weekly-schedule-day {% if day.is_today %}is-today{% endif %} {% if day.status == 'Completed' %}is-completed{% endif %}">
+                                    <span class="weekly-plan-day-name">{{ day.day_name }}</span>
+                                    <strong>{{ day.date_number }}</strong>
+                                    <span class="text-muted small">{{ day.minutes }} min</span>
+                                    <span class="badge {% if day.status == 'Completed' %}text-bg-success{% elif day.status == 'Today' %}text-bg-primary{% elif day.status == 'Rest' %}text-bg-secondary{% else %}text-bg-warning{% endif %}">
+                                        {{ day.status }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section>
                 <div class="row g-4">
                     <div class="col-md-4">
@@ -194,58 +318,34 @@
                     <div class="card-body p-4">
                         <div class="row align-items-center g-3 mb-3">
                             <div class="col-lg-8">
-                                <h2 class="h4 mb-2">Suggested Weekly Structure</h2>
+                                <h2 class="h4 mb-2">Suggested Training Mix</h2>
                                 <p class="text-muted mb-0">
-                                    Use this as a simple planning guide for the week. It is not a saved workout
-                                    record until you log a session.
+                                    A lightweight reference for balancing the week. Your live schedule above
+                                    shows completed workout minutes.
                                 </p>
                             </div>
                             <div class="col-lg-4 text-lg-end">
-                                <span class="badge text-bg-success">Frontend guide</span>
+                                <span class="badge text-bg-success">Guide</span>
                             </div>
                         </div>
 
                         <div class="weekly-plan-grid">
                             <div class="weekly-plan-day">
-                                <span class="weekly-plan-day-name">Monday</span>
+                                <span class="weekly-plan-day-name">Strength</span>
                                 <strong>Strength</strong>
                                 <span class="badge text-bg-success">Planned</span>
                             </div>
 
                             <div class="weekly-plan-day">
-                                <span class="weekly-plan-day-name">Tuesday</span>
+                                <span class="weekly-plan-day-name">Cardio</span>
                                 <strong>Cardio</strong>
                                 <span class="badge text-bg-success">Planned</span>
                             </div>
 
                             <div class="weekly-plan-day">
-                                <span class="weekly-plan-day-name">Wednesday</span>
+                                <span class="weekly-plan-day-name">Recovery</span>
                                 <strong>Recovery</strong>
                                 <span class="badge text-bg-primary">Recovery</span>
-                            </div>
-
-                            <div class="weekly-plan-day">
-                                <span class="weekly-plan-day-name">Thursday</span>
-                                <strong>Strength</strong>
-                                <span class="badge text-bg-success">Planned</span>
-                            </div>
-
-                            <div class="weekly-plan-day">
-                                <span class="weekly-plan-day-name">Friday</span>
-                                <strong>Flexibility</strong>
-                                <span class="badge text-bg-primary">Recovery</span>
-                            </div>
-
-                            <div class="weekly-plan-day">
-                                <span class="weekly-plan-day-name">Saturday</span>
-                                <strong>Cardio</strong>
-                                <span class="badge text-bg-success">Planned</span>
-                            </div>
-
-                            <div class="weekly-plan-day weekly-plan-day-rest">
-                                <span class="weekly-plan-day-name">Sunday</span>
-                                <strong>Rest</strong>
-                                <span class="badge text-bg-secondary">Rest</span>
                             </div>
                         </div>
                     </div>

@@ -2049,6 +2049,22 @@ def plans():
             "status": status,
         })
 
+    saved_recommendation = PlanRecommendation.query.filter_by(
+        user_id=user.id
+    ).first()
+    recommended_weekly_structure = []
+
+    if saved_recommendation and saved_recommendation.weekly_structure_json:
+        try:
+            parsed_structure = json.loads(
+                saved_recommendation.weekly_structure_json
+            )
+
+            if isinstance(parsed_structure, list):
+                recommended_weekly_structure = parsed_structure
+        except json.JSONDecodeError:
+            recommended_weekly_structure = []
+
     return render_template(
         "plans.html",
         email=session["user_email"],
@@ -2057,6 +2073,8 @@ def plans():
         today_minutes=today_minutes,
         today_goal_percent=today_goal_percent,
         weekly_schedule=weekly_schedule,
+        saved_recommendation=saved_recommendation,
+        recommended_weekly_structure=recommended_weekly_structure,
     )
 
 

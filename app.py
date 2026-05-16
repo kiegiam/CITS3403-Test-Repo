@@ -88,10 +88,15 @@ class PlanRecommendation(db.Model):
     training_days = db.Column(db.Integer, nullable=False)
     session_length = db.Column(db.Integer, nullable=False)
     limitation = db.Column(db.String(200), nullable=True)
+    equipment_access = db.Column(db.String(50), nullable=False, default="gym")
+    training_preference = db.Column(db.String(50), nullable=False, default="balanced")
 
     recommended_plan = db.Column(db.String(100), nullable=False)
     recommendation_reason = db.Column(db.Text, nullable=False)
     weekly_structure_json = db.Column(db.Text, nullable=True)
+    plan_focus = db.Column(db.String(200), nullable=True)
+    suggested_intensity = db.Column(db.String(50), nullable=True)
+    plan_badges_json = db.Column(db.Text, nullable=True)
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
@@ -384,6 +389,41 @@ def ensure_database_ready():
             )
             db.session.commit()
 
+        plan_recommendation_columns = [
+            col[1] for col in
+            db.session.execute(text("PRAGMA table_info(plan_recommendations)")).fetchall()
+        ]
+
+        if "equipment_access" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN equipment_access VARCHAR(50) DEFAULT 'gym' NOT NULL")
+            )
+            db.session.commit()
+
+        if "training_preference" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN training_preference VARCHAR(50) DEFAULT 'balanced' NOT NULL")
+            )
+            db.session.commit()
+
+        if "plan_focus" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN plan_focus VARCHAR(200)")
+            )
+            db.session.commit()
+
+        if "suggested_intensity" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN suggested_intensity VARCHAR(50)")
+            )
+            db.session.commit()
+
+        if "plan_badges_json" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN plan_badges_json TEXT")
+            )
+            db.session.commit()
+
         workout_columns = [
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(workouts)")).fetchall()
@@ -570,11 +610,15 @@ def build_plan_recommendation(
     fitness_level,
     training_days,
     session_length,
-    limitation
+    limitation,
+    equipment_access="gym",
+    training_preference="balanced"
 ):
     goal = (main_goal or "").strip().lower()
     level = (fitness_level or "").strip().lower()
     limit = (limitation or "").strip().lower()
+    equipment = (equipment_access or "").strip().lower()
+    preference = (training_preference or "").strip().lower()
 
     try:
         days_per_week = int(training_days)
@@ -600,8 +644,26 @@ def build_plan_recommendation(
         "Sunday",
     ]
 
+    recommended_plan = "Consistency Starter Plan"
+    plan_focus = "Build a repeatable weekly exercise habit."
+    suggested_intensity = "Low to Medium"
+    plan_badges = ["Balanced", f"{minutes_per_session} min"]
+    reason = "This plan keeps training balanced and manageable so it is easier to build a habit."
+    focus_pattern = [
+        "Strength",
+        "Cardio",
+        "Recovery",
+        "Strength",
+        "Flexibility",
+        "Cardio",
+        "Rest",
+    ]
+
     if "strength" in goal:
-        recommended_plan = "Strength Builder"
+        recommended_plan = "Strength Builder Plan"
+        plan_focus = "Build strength with repeated full-body training."
+        suggested_intensity = "Medium to High"
+        plan_badges = ["Strength", f"{minutes_per_session} min"]
         reason = "This plan prioritises strength sessions with recovery between harder training days."
         focus_pattern = [
             "Strength",
@@ -612,8 +674,36 @@ def build_plan_recommendation(
             "Flexibility",
             "Rest",
         ]
+
+        if level == "beginner":
+            recommended_plan = "Beginner Strength Starter"
+            suggested_intensity = "Low to Medium"
+            plan_badges.append("Beginner friendly")
+
+        if level == "intermediate" and days_per_week >= 4:
+            recommended_plan = "Full Body Strength Plan"
+            plan_badges.append("Full body")
+
+        if equipment in ["home", "bodyweight_only"]:
+            recommended_plan = "Bodyweight Home Plan"
+            plan_focus = "Build strength using home-friendly or bodyweight sessions."
+            suggested_intensity = "Low to Medium"
+            plan_badges.extend(["Home friendly", "No gym needed"])
+            focus_pattern = [
+                "Bodyweight strength",
+                "Recovery",
+                "Bodyweight strength",
+                "Cardio",
+                "Core strength",
+                "Flexibility",
+                "Rest",
+            ]
+
     elif "cardio" in goal:
-        recommended_plan = "Cardio Endurance"
+        recommended_plan = "Cardio Endurance Plan"
+        plan_focus = "Improve endurance with regular cardio and supporting strength."
+        suggested_intensity = "Medium"
+        plan_badges = ["Cardio", f"{minutes_per_session} min"]
         reason = "This plan increases cardio frequency while keeping some strength and mobility work."
         focus_pattern = [
             "Cardio",
@@ -624,8 +714,18 @@ def build_plan_recommendation(
             "Flexibility",
             "Rest",
         ]
+
+        if "knee" in limit or preference == "low_impact":
+            recommended_plan = "Low Impact Cardio Plan"
+            plan_focus = "Build cardio fitness with joint-friendly exercise choices."
+            suggested_intensity = "Low to Medium"
+            plan_badges.extend(["Low impact", "Joint friendly"])
+
     elif "weight" in goal or "lose" in goal:
-        recommended_plan = "Balanced Fat Loss"
+        recommended_plan = "Balanced Fat Loss Plan"
+        plan_focus = "Combine cardio, strength, and recovery for consistent activity."
+        suggested_intensity = "Medium"
+        plan_badges = ["Balanced", "Cardio + strength", f"{minutes_per_session} min"]
         reason = "This plan mixes cardio, strength, and recovery to support consistent weekly activity."
         focus_pattern = [
             "Cardio",
@@ -636,8 +736,18 @@ def build_plan_recommendation(
             "Flexibility",
             "Rest",
         ]
+
+        if preference == "challenge" and level == "advanced":
+            recommended_plan = "Conditioning Challenge Plan"
+            plan_focus = "Use a more demanding mix of conditioning and strength."
+            suggested_intensity = "Medium to High"
+            plan_badges.extend(["Challenge", "Advanced"])
+
     elif "flexibility" in goal:
-        recommended_plan = "Mobility and Recovery"
+        recommended_plan = "Flexibility Foundation Plan"
+        plan_focus = "Improve mobility and recovery with regular flexibility work."
+        suggested_intensity = "Low"
+        plan_badges = ["Flexibility", "Recovery", f"{minutes_per_session} min"]
         reason = "This plan emphasises flexibility, mobility, and recovery with light supporting activity."
         focus_pattern = [
             "Flexibility",
@@ -645,12 +755,31 @@ def build_plan_recommendation(
             "Flexibility",
             "Core stability",
             "Flexibility",
-            "Low-intensity cardio",
+            "Low-impact cardio",
             "Rest",
         ]
-    else:
-        recommended_plan = "Consistency Starter"
+
+        if "back" in limit or preference == "low_impact":
+            recommended_plan = "Mobility and Recovery Plan"
+            plan_focus = "Prioritise gentle mobility, recovery, and core stability."
+            plan_badges.extend(["Low impact", "Core stability"])
+
+    if "consistency" in goal:
+        recommended_plan = "Consistency Starter Plan"
+        plan_focus = "Build a low-pressure routine that is easy to repeat."
+        suggested_intensity = "Low to Medium"
+        plan_badges = ["Beginner friendly", "Habit building", f"{minutes_per_session} min"]
         reason = "This plan keeps training balanced and manageable so it is easier to build a habit."
+
+        if level == "beginner":
+            plan_badges.append("Beginner friendly")
+
+    if minutes_per_session <= 20 or preference == "short_simple":
+        recommended_plan = "Short Session Habit Plan"
+        plan_focus = "Keep sessions short, simple, and easy to complete."
+        suggested_intensity = "Low to Medium"
+        plan_badges = ["Short sessions", f"{minutes_per_session} min", "Simple"]
+        reason = "This plan uses shorter sessions to make training feel realistic and repeatable."
         focus_pattern = [
             "Strength",
             "Cardio",
@@ -658,6 +787,22 @@ def build_plan_recommendation(
             "Strength",
             "Flexibility",
             "Cardio",
+            "Rest",
+        ]
+
+    if level == "advanced" and preference == "challenge":
+        recommended_plan = "Conditioning Challenge Plan"
+        plan_focus = "Push conditioning with a more challenging weekly structure."
+        suggested_intensity = "Medium to High"
+        plan_badges = ["Challenge", "Advanced", f"{minutes_per_session} min"]
+        reason = "This plan suits an advanced user who wants a more challenging conditioning focus."
+        focus_pattern = [
+            "Conditioning",
+            "Strength",
+            "Cardio intervals",
+            "Recovery",
+            "Conditioning",
+            "Flexibility",
             "Rest",
         ]
 
@@ -691,21 +836,37 @@ def build_plan_recommendation(
     elif "advanced" in level:
         reason += " Because you selected advanced level, the structure allows more focused training days."
 
+    if equipment == "gym":
+        reason += " Gym access gives you more equipment options."
+        plan_badges.append("Gym access")
+    elif equipment == "home":
+        reason += " Home access means the plan keeps exercises practical outside a gym."
+        plan_badges.append("Home friendly")
+    elif equipment == "outdoor":
+        reason += " Outdoor access works well for walking, running, cycling, and simple conditioning."
+        plan_badges.append("Outdoor")
+    elif equipment == "bodyweight_only":
+        reason += " Bodyweight-only access keeps the plan simple and equipment-free."
+        plan_badges.append("Bodyweight")
+
     if "knee" in limit:
         reason += " With knee discomfort, it favours lower-impact cardio and avoids heavy leg emphasis."
+        suggested_intensity = "Low to Medium"
+        plan_badges.append("Low impact")
 
         for day in weekly_structure:
-            if day["focus"] == "Cardio":
+            if day["focus"] in ["Cardio", "Cardio intervals", "Conditioning"]:
                 day["focus"] = "Low-impact cardio"
                 day["note"] = "Choose cycling, rowing, swimming, or another low-impact option."
-            elif day["focus"] == "Strength":
+            elif "strength" in day["focus"].lower():
                 day["note"] = "Keep leg loading moderate and avoid heavy knee-dominant work."
 
     if "back" in limit:
         reason += " With back discomfort, it avoids heavy lifting focus and adds core stability language."
+        plan_badges.append("Core stability")
 
         for day in weekly_structure:
-            if day["focus"] == "Strength":
+            if "strength" in day["focus"].lower():
                 day["focus"] = "Controlled strength"
                 day["note"] = "Use controlled movements and avoid heavy loading."
             elif day["focus"] == "Recovery":
@@ -713,6 +874,7 @@ def build_plan_recommendation(
 
     if "shoulder" in limit:
         reason += " With shoulder discomfort, it limits repeated upper-body strength focus."
+        plan_badges.append("Shoulder mindful")
 
         strength_seen = 0
         for day in weekly_structure:
@@ -725,6 +887,8 @@ def build_plan_recommendation(
 
     if "low energy" in limit or "energy" in limit:
         reason += " With low energy, it recommends shorter sessions and extra recovery."
+        suggested_intensity = "Low"
+        plan_badges.append("Extra recovery")
         minutes_per_session = min(minutes_per_session, 25)
         changed_day = False
 
@@ -736,12 +900,27 @@ def build_plan_recommendation(
             elif day["focus"] not in ["Rest", "Recovery"]:
                 day["note"] = f"Keep this short and manageable, around {minutes_per_session} minutes."
 
+    if preference == "structured":
+        reason += " Your structured preference is reflected in a clear day-by-day schedule."
+        plan_badges.append("Structured")
+    elif preference == "low_impact":
+        reason += " Your low-impact preference keeps the plan gentler on joints."
+        suggested_intensity = "Low to Medium"
+        plan_badges.append("Low impact")
+    elif preference == "balanced":
+        reason += " Your balanced preference keeps the plan varied across training types."
+        plan_badges.append("Balanced")
+
+    plan_badges = list(dict.fromkeys(plan_badges))
     reason += " This is general fitness planning guidance, not medical advice."
 
     return {
         "recommended_plan": recommended_plan,
         "recommendation_reason": reason,
         "weekly_structure": weekly_structure,
+        "plan_focus": plan_focus,
+        "suggested_intensity": suggested_intensity,
+        "plan_badges": plan_badges,
     }
 
 
@@ -2053,6 +2232,7 @@ def plans():
         user_id=user.id
     ).first()
     recommended_weekly_structure = []
+    recommendation_badges = []
 
     if saved_recommendation and saved_recommendation.weekly_structure_json:
         try:
@@ -2065,6 +2245,15 @@ def plans():
         except json.JSONDecodeError:
             recommended_weekly_structure = []
 
+    if saved_recommendation and saved_recommendation.plan_badges_json:
+        try:
+            parsed_badges = json.loads(saved_recommendation.plan_badges_json)
+
+            if isinstance(parsed_badges, list):
+                recommendation_badges = parsed_badges
+        except json.JSONDecodeError:
+            recommendation_badges = []
+
     return render_template(
         "plans.html",
         email=session["user_email"],
@@ -2075,6 +2264,7 @@ def plans():
         weekly_schedule=weekly_schedule,
         saved_recommendation=saved_recommendation,
         recommended_weekly_structure=recommended_weekly_structure,
+        recommendation_badges=recommendation_badges,
     )
 
 
@@ -2139,6 +2329,8 @@ def save_plan_recommendation():
     training_days = request.form.get("training_days", "").strip()
     session_length = request.form.get("session_length", "").strip()
     limitation = request.form.get("limitation", "").strip()
+    equipment_access = request.form.get("equipment_access", "").strip()
+    training_preference = request.form.get("training_preference", "").strip()
 
     allowed_goals = [
         "build_strength",
@@ -2156,6 +2348,19 @@ def save_plan_recommendation():
         "back_discomfort",
         "shoulder_discomfort",
         "low_energy",
+    ]
+    allowed_equipment = [
+        "gym",
+        "home",
+        "outdoor",
+        "bodyweight_only",
+    ]
+    allowed_preferences = [
+        "structured",
+        "short_simple",
+        "low_impact",
+        "challenge",
+        "balanced",
     ]
 
     if main_goal not in allowed_goals:
@@ -2178,12 +2383,22 @@ def save_plan_recommendation():
         flash("Please choose a valid limitation option.", "danger")
         return redirect(url_for("plans"))
 
+    if equipment_access not in allowed_equipment:
+        flash("Please choose a valid equipment access option.", "danger")
+        return redirect(url_for("plans"))
+
+    if training_preference not in allowed_preferences:
+        flash("Please choose a valid training preference.", "danger")
+        return redirect(url_for("plans"))
+
     recommendation = build_plan_recommendation(
         main_goal,
         fitness_level,
         training_days,
         session_length,
-        limitation
+        limitation,
+        equipment_access,
+        training_preference
     )
 
     saved_recommendation = PlanRecommendation.query.filter_by(
@@ -2199,10 +2414,17 @@ def save_plan_recommendation():
     saved_recommendation.training_days = int(training_days)
     saved_recommendation.session_length = int(session_length)
     saved_recommendation.limitation = limitation
+    saved_recommendation.equipment_access = equipment_access
+    saved_recommendation.training_preference = training_preference
     saved_recommendation.recommended_plan = recommendation["recommended_plan"]
     saved_recommendation.recommendation_reason = recommendation["recommendation_reason"]
     saved_recommendation.weekly_structure_json = json.dumps(
         recommendation["weekly_structure"]
+    )
+    saved_recommendation.plan_focus = recommendation.get("plan_focus")
+    saved_recommendation.suggested_intensity = recommendation.get("suggested_intensity")
+    saved_recommendation.plan_badges_json = json.dumps(
+        recommendation.get("plan_badges", [])
     )
 
     db.session.commit()

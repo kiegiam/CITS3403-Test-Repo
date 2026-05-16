@@ -651,6 +651,46 @@ body.dashboard-page {
     padding: 1.25rem;
 }
 
+.recommendation-highlight {
+    border: 1px solid rgba(99, 91, 255, 0.16);
+    border-radius: 18px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 249, 252, 0.88));
+    padding: 1rem;
+}
+
+.recommendation-highlight p {
+    color: var(--ft-muted);
+}
+
+.recommendation-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.recommendation-meta > div {
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.78);
+    padding: 0.75rem;
+}
+
+.recommendation-meta span {
+    display: block;
+    color: var(--ft-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.recommendation-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+}
+
 .recommendation-week-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1174,6 +1214,10 @@ footer {
     }
 
     .recommendation-week-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .recommendation-meta {
         grid-template-columns: 1fr;
     }
 

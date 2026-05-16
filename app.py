@@ -292,6 +292,10 @@ class Exercise(db.Model):
     # Set to a user id = custom exercise visible only to that user.
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     is_archived = db.Column(db.Boolean, nullable=False, default=False)
+    difficulty_level = db.Column(db.String(50), nullable=True)
+    intensity_level = db.Column(db.String(50), nullable=True)
+    equipment_type = db.Column(db.String(50), nullable=True)
+    plan_tags = db.Column(db.Text, nullable=True)
 
     sets = db.relationship(
         "WorkoutSet",
@@ -452,6 +456,30 @@ def ensure_database_ready():
             )
             db.session.commit()
 
+        if "difficulty_level" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN difficulty_level VARCHAR(50)")
+            )
+            db.session.commit()
+
+        if "intensity_level" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN intensity_level VARCHAR(50)")
+            )
+            db.session.commit()
+
+        if "equipment_type" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN equipment_type VARCHAR(50)")
+            )
+            db.session.commit()
+
+        if "plan_tags" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN plan_tags TEXT")
+            )
+            db.session.commit()
+
         workout_set_columns = [
             col[1] for col in
             db.session.execute(text("PRAGMA table_info(workout_sets)")).fetchall()
@@ -476,61 +504,98 @@ def ensure_database_ready():
         if "incline_deg" not in workout_set_columns:
             db.session.execute(text("ALTER TABLE workout_sets ADD COLUMN incline_deg FLOAT"))
             db.session.commit()
-        if Exercise.query.filter_by(user_id=None).count() == 0:
-            builtin_exercises = [
-                Exercise(name="Bench Press", muscle_group="Chest"),
-                Exercise(name="Incline Bench Press", muscle_group="Chest"),
-                Exercise(name="Dumbbell Fly", muscle_group="Chest"),
-                Exercise(name="Push-Up", muscle_group="Chest"),
-                Exercise(name="Cable Crossover", muscle_group="Chest"),
+        builtin_exercise_catalog = [
+            ("Bench Press", "Chest", "intermediate", "medium", "gym", "strength"),
+            ("Incline Bench Press", "Chest", "intermediate", "medium", "gym", "strength"),
+            ("Dumbbell Fly", "Chest", "intermediate", "medium", "gym", "strength"),
+            ("Push-Up", "Chest", "beginner", "medium", "bodyweight", "strength,consistency"),
+            ("Wall Push-Up", "Chest", "beginner", "low", "bodyweight", "strength,recovery,consistency"),
+            ("Incline Push-Up", "Chest", "beginner", "low", "home", "strength,consistency"),
+            ("Cable Crossover", "Chest", "intermediate", "medium", "gym", "strength"),
 
-                Exercise(name="Deadlift", muscle_group="Back"),
-                Exercise(name="Pull-Up", muscle_group="Back"),
-                Exercise(name="Barbell Row", muscle_group="Back"),
-                Exercise(name="Lat Pulldown", muscle_group="Back"),
-                Exercise(name="Seated Cable Row", muscle_group="Back"),
+            ("Deadlift", "Back", "advanced", "high", "gym", "strength"),
+            ("Pull-Up", "Back", "advanced", "high", "bodyweight", "strength"),
+            ("Barbell Row", "Back", "intermediate", "medium", "gym", "strength"),
+            ("Lat Pulldown", "Back", "beginner", "medium", "gym", "strength"),
+            ("Seated Cable Row", "Back", "beginner", "medium", "gym", "strength"),
+            ("Bird Dog", "Back", "beginner", "low", "bodyweight", "recovery,flexibility,consistency"),
+            ("Cat Cow Stretch", "Back", "beginner", "low", "bodyweight", "recovery,flexibility,consistency"),
 
-                Exercise(name="Overhead Press", muscle_group="Shoulders"),
-                Exercise(name="Lateral Raise", muscle_group="Shoulders"),
-                Exercise(name="Front Raise", muscle_group="Shoulders"),
-                Exercise(name="Arnold Press", muscle_group="Shoulders"),
-                Exercise(name="Rear Delt Fly", muscle_group="Shoulders"),
+            ("Overhead Press", "Shoulders", "intermediate", "medium", "gym", "strength"),
+            ("Lateral Raise", "Shoulders", "beginner", "low", "gym", "strength"),
+            ("Front Raise", "Shoulders", "beginner", "low", "gym", "strength"),
+            ("Arnold Press", "Shoulders", "intermediate", "medium", "gym", "strength"),
+            ("Rear Delt Fly", "Shoulders", "beginner", "low", "gym", "strength"),
+            ("Shoulder Mobility", "Shoulders", "beginner", "low", "bodyweight", "recovery,flexibility,consistency"),
 
-                Exercise(name="Barbell Curl", muscle_group="Biceps"),
-                Exercise(name="Dumbbell Curl", muscle_group="Biceps"),
-                Exercise(name="Hammer Curl", muscle_group="Biceps"),
-                Exercise(name="Preacher Curl", muscle_group="Biceps"),
-                Exercise(name="Cable Curl", muscle_group="Biceps"),
+            ("Barbell Curl", "Biceps", "beginner", "medium", "gym", "strength"),
+            ("Dumbbell Curl", "Biceps", "beginner", "medium", "gym", "strength"),
+            ("Hammer Curl", "Biceps", "beginner", "medium", "gym", "strength"),
+            ("Preacher Curl", "Biceps", "intermediate", "medium", "gym", "strength"),
+            ("Cable Curl", "Biceps", "beginner", "medium", "gym", "strength"),
 
-                Exercise(name="Tricep Pushdown", muscle_group="Triceps"),
-                Exercise(name="Skull Crusher", muscle_group="Triceps"),
-                Exercise(name="Overhead Tricep Extension", muscle_group="Triceps"),
-                Exercise(name="Close-Grip Bench Press", muscle_group="Triceps"),
-                Exercise(name="Dips", muscle_group="Triceps"),
+            ("Tricep Pushdown", "Triceps", "beginner", "medium", "gym", "strength"),
+            ("Skull Crusher", "Triceps", "intermediate", "medium", "gym", "strength"),
+            ("Overhead Tricep Extension", "Triceps", "beginner", "medium", "gym", "strength"),
+            ("Close-Grip Bench Press", "Triceps", "intermediate", "medium", "gym", "strength"),
+            ("Dips", "Triceps", "advanced", "high", "bodyweight", "strength"),
 
-                Exercise(name="Squat", muscle_group="Legs"),
-                Exercise(name="Leg Press", muscle_group="Legs"),
-                Exercise(name="Romanian Deadlift", muscle_group="Legs"),
-                Exercise(name="Leg Curl", muscle_group="Legs"),
-                Exercise(name="Leg Extension", muscle_group="Legs"),
-                Exercise(name="Calf Raise", muscle_group="Legs"),
-                Exercise(name="Lunges", muscle_group="Legs"),
+            ("Squat", "Legs", "intermediate", "medium", "gym", "strength"),
+            ("Bodyweight Squat", "Legs", "beginner", "low", "bodyweight", "strength,consistency"),
+            ("Glute Bridge", "Legs", "beginner", "low", "bodyweight", "strength,recovery,consistency"),
+            ("Leg Press", "Legs", "beginner", "medium", "gym", "strength"),
+            ("Romanian Deadlift", "Legs", "intermediate", "medium", "gym", "strength"),
+            ("Leg Curl", "Legs", "beginner", "medium", "gym", "strength"),
+            ("Leg Extension", "Legs", "beginner", "medium", "gym", "strength"),
+            ("Calf Raise", "Legs", "beginner", "low", "gym", "strength"),
+            ("Lunges", "Legs", "intermediate", "medium", "bodyweight", "strength"),
+            ("Hip Mobility", "Legs", "beginner", "low", "bodyweight", "recovery,flexibility,consistency"),
 
-                Exercise(name="Plank", muscle_group="Core"),
-                Exercise(name="Crunch", muscle_group="Core"),
-                Exercise(name="Hanging Leg Raise", muscle_group="Core"),
-                Exercise(name="Russian Twist", muscle_group="Core"),
-                Exercise(name="Ab Wheel Rollout", muscle_group="Core"),
+            ("Plank", "Core", "beginner", "low", "bodyweight", "strength,consistency"),
+            ("Crunch", "Core", "beginner", "medium", "bodyweight", "strength"),
+            ("Hanging Leg Raise", "Core", "advanced", "high", "gym", "strength"),
+            ("Russian Twist", "Core", "beginner", "medium", "bodyweight", "strength"),
+            ("Ab Wheel Rollout", "Core", "advanced", "high", "gym", "strength"),
 
-                Exercise(name="Treadmill Run", muscle_group="Cardio"),
-                Exercise(name="Cycling", muscle_group="Cardio"),
-                Exercise(name="Rowing Machine", muscle_group="Cardio"),
-                Exercise(name="Jump Rope", muscle_group="Cardio"),
-                Exercise(name="Stair Climber", muscle_group="Cardio"),
-            ]
+            ("Treadmill Run", "Cardio", "intermediate", "high", "gym", "cardio,fat_loss"),
+            ("Cycling", "Cardio", "beginner", "medium", "outdoor", "cardio,fat_loss,consistency"),
+            ("Walking", "Cardio", "beginner", "low", "outdoor", "cardio,recovery,fat_loss,consistency"),
+            ("Elliptical", "Cardio", "beginner", "low", "gym", "cardio,recovery,fat_loss,consistency"),
+            ("Rowing Machine", "Cardio", "intermediate", "medium", "gym", "cardio,fat_loss"),
+            ("Jump Rope", "Cardio", "intermediate", "high", "bodyweight", "cardio,fat_loss"),
+            ("Stair Climber", "Cardio", "intermediate", "high", "gym", "cardio,fat_loss"),
+            ("Yoga Flow", "Core", "beginner", "low", "bodyweight", "flexibility,recovery,consistency"),
+            ("Stretching Routine", "Core", "beginner", "low", "bodyweight", "flexibility,recovery,consistency"),
+        ]
 
-            db.session.add_all(builtin_exercises)
-            db.session.commit()
+        for (
+            name,
+            muscle_group,
+            difficulty_level,
+            intensity_level,
+            equipment_type,
+            plan_tags,
+        ) in builtin_exercise_catalog:
+            exercise = Exercise.query.filter_by(
+                name=name,
+                muscle_group=muscle_group,
+                user_id=None
+            ).first()
+
+            if exercise is None:
+                exercise = Exercise(
+                    name=name,
+                    muscle_group=muscle_group,
+                    user_id=None,
+                )
+                db.session.add(exercise)
+
+            exercise.difficulty_level = difficulty_level
+            exercise.intensity_level = intensity_level
+            exercise.equipment_type = equipment_type
+            exercise.plan_tags = plan_tags
+
+        db.session.commit()
 
         existing_demo = User.query.filter_by(email="demo@fittrack.com").first()
 
@@ -922,6 +987,153 @@ def build_plan_recommendation(
         "suggested_intensity": suggested_intensity,
         "plan_badges": plan_badges,
     }
+
+
+def get_plan_exercise_recommendations(user, selected_plan):
+    if not selected_plan:
+        return [], []
+
+    saved_recommendation = PlanRecommendation.query.filter_by(
+        user_id=user.id
+    ).first()
+
+    fitness_level = "beginner"
+    equipment_access = "gym"
+    training_preference = "balanced"
+    limitation = "none"
+    suggested_intensity = None
+
+    if saved_recommendation:
+        fitness_level = saved_recommendation.fitness_level or fitness_level
+        equipment_access = saved_recommendation.equipment_access or equipment_access
+        training_preference = saved_recommendation.training_preference or training_preference
+        limitation = saved_recommendation.limitation or limitation
+        suggested_intensity = saved_recommendation.suggested_intensity
+
+    plan_tag_by_plan = {
+        "strength": "strength",
+        "cardio": "cardio",
+        "flexibility": "flexibility",
+    }
+    target_tag = plan_tag_by_plan.get(selected_plan)
+
+    exercises = Exercise.query.filter_by(
+        user_id=None,
+        is_archived=False
+    ).all()
+    scored_exercises = []
+
+    for exercise in exercises:
+        tags = [
+            tag.strip()
+            for tag in (exercise.plan_tags or "").split(",")
+            if tag.strip()
+        ]
+        score = 0
+
+        if target_tag and target_tag in tags:
+            score += 5
+
+        if selected_plan == "cardio" and "fat_loss" in tags:
+            score += 1
+
+        if selected_plan == "flexibility" and "recovery" in tags:
+            score += 2
+
+        if exercise.difficulty_level == fitness_level:
+            score += 2
+        elif fitness_level == "beginner" and exercise.difficulty_level == "intermediate":
+            score -= 1
+
+        if suggested_intensity:
+            suggested = suggested_intensity.lower()
+
+            if exercise.intensity_level and exercise.intensity_level in suggested:
+                score += 2
+
+        if equipment_access == "bodyweight_only":
+            if exercise.equipment_type == "bodyweight":
+                score += 3
+            elif exercise.equipment_type == "gym":
+                score -= 4
+        elif equipment_access == "home":
+            if exercise.equipment_type in ["home", "bodyweight"]:
+                score += 3
+            elif exercise.equipment_type == "gym":
+                score -= 2
+        elif equipment_access == "outdoor":
+            if exercise.equipment_type == "outdoor":
+                score += 3
+            elif exercise.equipment_type == "gym":
+                score -= 2
+        elif equipment_access == "gym" and exercise.equipment_type == "gym":
+            score += 1
+
+        if training_preference == "short_simple":
+            if exercise.difficulty_level == "beginner":
+                score += 2
+            if exercise.intensity_level == "high":
+                score -= 2
+
+        if training_preference == "low_impact":
+            if exercise.intensity_level == "low":
+                score += 2
+            if exercise.name in ["Jump Rope", "Stair Climber", "Lunges"]:
+                score -= 3
+
+        if training_preference == "challenge":
+            if exercise.intensity_level in ["medium", "high"]:
+                score += 2
+
+        if limitation == "knee_discomfort":
+            if exercise.name in ["Walking", "Cycling", "Elliptical", "Yoga Flow"]:
+                score += 3
+            if exercise.muscle_group == "Legs" and exercise.intensity_level == "high":
+                score -= 5
+            if exercise.name in ["Jump Rope", "Stair Climber", "Lunges"]:
+                score -= 4
+
+        if limitation == "back_discomfort":
+            if "recovery" in tags or exercise.name in ["Bird Dog", "Cat Cow Stretch", "Yoga Flow"]:
+                score += 3
+            if exercise.name in ["Deadlift", "Barbell Row", "Romanian Deadlift"]:
+                score -= 5
+
+        if limitation == "shoulder_discomfort":
+            if exercise.muscle_group in ["Chest", "Shoulders", "Triceps"] and exercise.intensity_level != "low":
+                score -= 4
+            if exercise.name in ["Shoulder Mobility", "Cat Cow Stretch"]:
+                score += 2
+
+        if limitation == "low_energy":
+            if exercise.intensity_level == "low":
+                score += 3
+            if exercise.intensity_level == "high":
+                score -= 4
+
+        if score > 0:
+            scored_exercises.append((score, exercise.name, exercise))
+
+    scored_exercises.sort(key=lambda item: (-item[0], item[1]))
+    selected_exercises = [item[2] for item in scored_exercises[:6]]
+
+    recommended_exercise_details = [
+        {
+            "name": exercise.name,
+            "muscle_group": exercise.muscle_group,
+            "difficulty_level": exercise.difficulty_level,
+            "intensity_level": exercise.intensity_level,
+            "equipment_type": exercise.equipment_type,
+            "plan_tags": exercise.plan_tags,
+        }
+        for exercise in selected_exercises
+    ]
+    recommended_exercise_names = [
+        exercise["name"]
+        for exercise in recommended_exercise_details
+    ]
+
+    return recommended_exercise_names, recommended_exercise_details
 
 
 def allowed_image(filename):
@@ -1616,10 +1828,16 @@ def add_workout():
     if selected_plan not in ["strength", "cardio", "flexibility"]:
         selected_plan = ""
 
+    recommended_exercise_names, recommended_exercise_details = (
+        get_plan_exercise_recommendations(user, selected_plan)
+    )
+
     return render_template(
         "add_workout.html",
         muscle_groups=MUSCLE_GROUPS,
         selected_plan=selected_plan,
+        recommended_exercise_names=recommended_exercise_names,
+        recommended_exercise_details=recommended_exercise_details,
     )
 
 

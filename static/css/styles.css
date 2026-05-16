@@ -884,6 +884,54 @@ body.dashboard-page {
     padding: 0.75rem 0.9rem;
 }
 
+.recommended-exercises-panel {
+    border: 1px solid rgba(99, 91, 255, 0.16);
+    border-radius: 18px;
+    background: rgba(246, 249, 252, 0.82);
+    padding: 0.85rem;
+}
+
+.recommended-exercise-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.recommended-exercise-chip {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    border: 1px solid rgba(0, 168, 107, 0.22);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.86);
+    color: var(--ft-text);
+    padding: 0.5rem 0.65rem;
+}
+
+.recommended-exercise-chip strong {
+    font-size: 0.9rem;
+}
+
+.recommended-exercise-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.recommended-exercise-meta small {
+    border-radius: 999px;
+    background: rgba(99, 91, 255, 0.08);
+    color: var(--ft-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.18rem 0.42rem;
+}
+
+.exercise-item-recommended {
+    border-color: rgba(0, 168, 107, 0.34);
+    background: rgba(0, 168, 107, 0.07);
+}
+
 .weekly-rec-tags {
     display: flex;
     flex-direction: column;

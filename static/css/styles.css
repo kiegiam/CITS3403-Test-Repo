@@ -2104,6 +2104,72 @@ body.premium-app-page::after {
     box-shadow: var(--ft-glow-lime);
 }
 
+.progress-signal,
+.ranking-arena-signal {
+    display: inline-flex;
+    min-width: 190px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.12rem;
+    border: 1px solid rgba(57, 228, 255, 0.18);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 0.9rem 1rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), var(--ft-glow-aqua);
+}
+
+.progress-signal span,
+.ranking-arena-signal span {
+    color: var(--ft-ink-muted);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.progress-signal strong,
+.ranking-arena-signal strong {
+    color: var(--ft-ink);
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.premium-app-page .progress-chart-intro {
+    border-left: 3px solid var(--ft-aqua);
+    padding-left: 1rem;
+}
+
+.premium-app-page .progress-chart-card h2::after,
+.premium-app-page .ranking-insight-card h2::after {
+    content: "";
+    display: block;
+    width: 64px;
+    height: 3px;
+    margin-top: 0.65rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--ft-aqua), var(--ft-lime));
+    box-shadow: var(--ft-glow-aqua);
+}
+
+.premium-app-page .top-rank-card {
+    min-height: 100%;
+}
+
+.premium-app-page .top-rank-card .card-body {
+    display: flex;
+    min-height: 320px;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.premium-app-page .top-rank-card-first {
+    transform: translateY(-8px);
+}
+
+.premium-app-page .top-rank-card-first:hover {
+    transform: translateY(-13px);
+}
+
 .premium-app-page .top-rank-card-first {
     background:
         radial-gradient(circle at 50% 0%, rgba(255, 209, 102, 0.24), transparent 38%),

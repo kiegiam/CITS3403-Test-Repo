@@ -118,6 +118,13 @@
                                 </p>
                             </div>
                             <div class="col-lg-4 text-lg-end">
+                                {% if not community_disabled and leaderboard and leaderboard[0].minutes > 0 %}
+                                    <div class="ranking-arena-signal mb-3">
+                                        <span>Top pace</span>
+                                        <strong>{{ leaderboard[0].minutes }}</strong>
+                                        <span>minutes</span>
+                                    </div>
+                                {% endif %}
                                 <a href="{{ url_for('progress') }}" class="btn btn-outline-success">View My Progress</a>
                             </div>
                         </div>

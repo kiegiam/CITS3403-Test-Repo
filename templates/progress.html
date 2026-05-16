@@ -112,12 +112,16 @@
                     <div class="card-body p-4">
                         <div class="row align-items-center g-3">
                             <div class="col-lg-8">
-                            <h1 class="h3 mb-2">Progress Command Center</h1>
+                                <h1 class="h3 mb-2">Progress Command Center</h1>
                                 <p class="mb-0 text-muted">
                                     These statistics are calculated from your own saved workout history.
                                 </p>
                             </div>
                             <div class="col-lg-4 text-lg-end">
+                                <div class="progress-signal mb-3">
+                                    <span>Live training signal</span>
+                                    <strong>{{ progress_stats.total_minutes }}</strong>
+                                </div>
                                 <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
                             </div>
                         </div>
@@ -197,7 +201,7 @@
                 </section>
             {% else %}
                 <section class="mb-4 progress-chart-section">
-                    <div class="progress-chart-intro">
+                    <div class="progress-chart-intro premium-reveal">
                         <h2 class="h4 mb-2">Training Visualisations</h2>
                         <p class="text-muted mb-0">
                             These charts compare workout types, total training minutes, and how your logged

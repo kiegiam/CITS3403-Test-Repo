@@ -2299,6 +2299,428 @@ body.premium-app-page::after {
         min-height: auto;
     }
 }
+
+/* ---------- Premium global expansion ---------- */
+
+.premium-app-page .container > section,
+.premium-app-page main > section,
+.premium-app-page .row > [class*="col-"] > .card,
+.premium-app-page .login-card {
+    animation: premiumReveal 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.premium-app-page .container > section:nth-of-type(2) {
+    animation-delay: 0.08s;
+}
+
+.premium-app-page .container > section:nth-of-type(3) {
+    animation-delay: 0.16s;
+}
+
+.premium-app-page .container > section:nth-of-type(4) {
+    animation-delay: 0.24s;
+}
+
+.premium-app-page a:not(.btn):not(.nav-link):not(.navbar-brand):not(.dropdown-item) {
+    color: var(--ft-aqua);
+    font-weight: 700;
+}
+
+.premium-app-page .text-success,
+.premium-app-page .text-primary {
+    color: var(--ft-aqua) !important;
+}
+
+.premium-app-page .text-bg-primary,
+.premium-app-page .btn-primary {
+    color: #06101d !important;
+    border: none !important;
+    background: linear-gradient(135deg, var(--ft-violet), var(--ft-aqua)) !important;
+    box-shadow: 0 14px 34px rgba(143, 125, 255, 0.20) !important;
+}
+
+.premium-app-page .text-bg-warning,
+.premium-app-page .btn-warning {
+    color: #06101d !important;
+    border: none !important;
+    background: linear-gradient(135deg, var(--ft-gold), var(--ft-coral)) !important;
+    box-shadow: 0 14px 34px rgba(255, 209, 102, 0.18) !important;
+}
+
+.premium-app-page .text-bg-light,
+.premium-app-page .bg-light,
+.premium-app-page .bg-white {
+    color: var(--ft-ink) !important;
+    border-color: rgba(134, 220, 255, 0.16) !important;
+    background: rgba(255, 255, 255, 0.055) !important;
+}
+
+.premium-app-page .border,
+.premium-app-page hr {
+    border-color: rgba(134, 220, 255, 0.16) !important;
+}
+
+.premium-app-page .form-label {
+    color: var(--ft-ink);
+}
+
+.premium-app-page .form-text,
+.premium-app-page small,
+.premium-app-page .small {
+    color: var(--ft-ink-muted) !important;
+}
+
+.premium-app-page .alert {
+    color: var(--ft-ink);
+    border-color: rgba(255, 107, 122, 0.22);
+    background: rgba(255, 107, 122, 0.12);
+}
+
+.premium-app-page .profile-page .hero-card .bg-success,
+.profile-page .hero-card .bg-success {
+    color: var(--ft-ink) !important;
+    background:
+        linear-gradient(125deg, rgba(57, 228, 255, 0.20), rgba(143, 125, 255, 0.12) 52%, rgba(130, 249, 90, 0.10)),
+        rgba(255, 255, 255, 0.055) !important;
+}
+
+.premium-app-page .profile-page .hero-card .text-white-50,
+.profile-page .hero-card .text-white-50 {
+    color: var(--ft-ink-muted) !important;
+}
+
+.premium-app-page .avatar-preview-box,
+.premium-app-page .rounded-circle.bg-success {
+    border-color: rgba(57, 228, 255, 0.48) !important;
+    background: linear-gradient(135deg, var(--ft-aqua), var(--ft-lime)) !important;
+    box-shadow: 0 0 34px rgba(57, 228, 255, 0.22) !important;
+}
+
+.premium-app-page .privacy-option,
+.premium-app-page .recommendation-panel,
+.premium-app-page .recommendation-highlight,
+.premium-app-page .recommendation-meta > div,
+.premium-app-page .planning-tip,
+.premium-app-page .plan-guidance-grid > div,
+.premium-app-page .recommended-exercises-panel,
+.premium-app-page .weekly-schedule-day,
+.premium-app-page .weekly-plan-day,
+.premium-app-page .exercise-item,
+.premium-app-page .exercise-block,
+.premium-app-page .duration-card-display,
+.premium-app-page .sets-table th {
+    color: var(--ft-ink-soft);
+    border-color: rgba(134, 220, 255, 0.16) !important;
+    background: rgba(255, 255, 255, 0.055) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.premium-app-page .privacy-option:hover,
+.premium-app-page .weekly-plan-day:hover,
+.premium-app-page .exercise-item:hover,
+.premium-app-page .muscle-btn:hover {
+    transform: translateY(-3px);
+    border-color: rgba(57, 228, 255, 0.36) !important;
+    box-shadow: var(--ft-glow-aqua);
+}
+
+.premium-app-page .muscle-btn {
+    color: var(--ft-ink-soft);
+    border-color: rgba(134, 220, 255, 0.18);
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035)),
+        rgba(7, 11, 22, 0.58);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.premium-app-page .muscle-btn.selected,
+.premium-app-page .exercise-item.added,
+.premium-app-page .exercise-block-header {
+    color: #06101d;
+    border-color: transparent !important;
+    background: linear-gradient(135deg, var(--ft-aqua), var(--ft-lime)) !important;
+    box-shadow: var(--ft-glow-lime);
+}
+
+.premium-app-page .set-input {
+    color: var(--ft-ink);
+    border-color: rgba(134, 220, 255, 0.18);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.premium-app-page details > summary {
+    color: var(--ft-aqua) !important;
+}
+
+.premium-app-page .toast-msg {
+    color: var(--ft-ink);
+    border: 1px solid rgba(57, 228, 255, 0.24);
+    background: rgba(7, 11, 22, 0.94);
+    box-shadow: var(--ft-premium-shadow), var(--ft-glow-aqua);
+}
+
+.premium-app-page .progress-bar,
+.premium-app-page .ranking-minute-bar-fill {
+    animation: premiumMeterFill 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transform-origin: left center;
+}
+
+.premium-app-page .chart-box,
+.premium-app-page .line-chart-box,
+.premium-app-page .progress-chart-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.premium-app-page .chart-box::before,
+.premium-app-page .line-chart-box::before,
+.premium-app-page .progress-chart-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(115deg, transparent 0%, rgba(57, 228, 255, 0.14) 42%, rgba(130, 249, 90, 0.10) 50%, transparent 62%);
+    transform: translateX(-120%);
+    animation: premiumChartSweep 3.8s ease-in-out infinite;
+}
+
+.premium-app-page .chart-box::after,
+.premium-app-page .line-chart-box::after,
+.premium-app-page .progress-chart-container::after {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    pointer-events: none;
+    border: 1px solid rgba(57, 228, 255, 0.10);
+    border-radius: 14px;
+    box-shadow: inset 0 0 28px rgba(57, 228, 255, 0.06);
+}
+
+.auth-page main {
+    min-height: calc(100vh - 82px);
+    display: flex;
+    align-items: center;
+}
+
+.auth-page .login-card {
+    transform-style: preserve-3d;
+}
+
+.auth-page .login-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(120deg, rgba(57, 228, 255, 0.42), transparent 34%, rgba(130, 249, 90, 0.34));
+    opacity: 0.34;
+}
+
+.auth-page .login-card .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.premium-landing-page {
+    background:
+        linear-gradient(rgba(5, 8, 18, 0.22), rgba(5, 8, 18, 0.62)),
+        url("../background image/sports-sprinter-runner-man.jpg") center center / cover no-repeat fixed !important;
+}
+
+.premium-landing-page .hero-section {
+    min-height: 680px;
+}
+
+.premium-landing-page .hero-section h1,
+.premium-landing-page .hero-section .lead,
+.premium-landing-page h2,
+.premium-landing-page h3 {
+    color: var(--ft-ink);
+}
+
+.premium-landing-page .hero-section .lead,
+.premium-landing-page .text-muted,
+.premium-landing-page .card-text {
+    color: var(--ft-ink-muted) !important;
+}
+
+.premium-landing-page .bg-white {
+    background: rgba(5, 8, 18, 0.90) !important;
+}
+
+.landing-performance-panel {
+    position: relative;
+    border: 1px solid rgba(134, 220, 255, 0.24);
+    border-radius: 26px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+        rgba(7, 11, 22, 0.74);
+    padding: 1.35rem;
+    box-shadow: var(--ft-premium-shadow), var(--ft-glow-aqua);
+    backdrop-filter: blur(18px) saturate(140%);
+    animation: premiumFloat 5.4s ease-in-out infinite;
+}
+
+.landing-panel-header,
+.landing-metric-strip {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.landing-panel-header span,
+.landing-metric-strip span {
+    color: var(--ft-ink-muted);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.landing-panel-header strong,
+.landing-metric-strip strong {
+    color: var(--ft-ink);
+}
+
+.landing-gauge {
+    display: grid;
+    place-items: center;
+    width: min(280px, 72vw);
+    aspect-ratio: 1;
+    margin: 1.45rem auto;
+    border-radius: 999px;
+    background:
+        radial-gradient(circle, rgba(7, 11, 22, 0.98) 48%, transparent 50%),
+        conic-gradient(from 220deg, var(--ft-aqua), var(--ft-lime), var(--ft-coral), var(--ft-violet), var(--ft-aqua));
+    box-shadow: inset 0 0 34px rgba(57, 228, 255, 0.18), var(--ft-glow-aqua);
+    animation: premiumSpin 12s linear infinite;
+}
+
+.landing-gauge-core {
+    display: grid;
+    place-items: center;
+    width: 58%;
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background: rgba(7, 11, 22, 0.94);
+    box-shadow: inset 0 0 28px rgba(57, 228, 255, 0.12);
+    animation: premiumCounterSpin 12s linear infinite;
+}
+
+.landing-gauge-core span {
+    color: var(--ft-ink);
+    font-size: clamp(3.1rem, 6vw, 4.8rem);
+    font-weight: 900;
+    line-height: 0.92;
+}
+
+.landing-gauge-core small {
+    color: var(--ft-ink-muted);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.landing-metric-strip > div {
+    flex: 1;
+    border: 1px solid rgba(134, 220, 255, 0.14);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.055);
+    padding: 0.85rem;
+}
+
+.landing-signal-bars {
+    display: flex;
+    height: 76px;
+    align-items: end;
+    gap: 0.6rem;
+    margin-top: 1.15rem;
+}
+
+.landing-signal-bars span {
+    flex: 1;
+    height: var(--bar-height);
+    min-height: 16px;
+    border-radius: 999px 999px 5px 5px;
+    background: linear-gradient(180deg, var(--ft-aqua), var(--ft-lime));
+    box-shadow: 0 0 18px rgba(57, 228, 255, 0.28);
+    animation: landingBarPulse 1.9s ease-in-out infinite alternate;
+}
+
+.landing-signal-bars span:nth-child(2n) {
+    animation-delay: 0.18s;
+}
+
+.landing-signal-bars span:nth-child(3n) {
+    animation-delay: 0.34s;
+}
+
+@keyframes premiumChartSweep {
+    0% {
+        transform: translateX(-120%);
+        opacity: 0;
+    }
+
+    18% {
+        opacity: 0.78;
+    }
+
+    48% {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+}
+
+@keyframes premiumMeterFill {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes premiumFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes premiumSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes premiumCounterSpin {
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes landingBarPulse {
+    to {
+        filter: brightness(1.25);
+        transform: scaleY(1.08);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .premium-landing-page .hero-section {
+        min-height: auto;
+    }
+}
 .duration-card-display {
     background: rgba(25, 135, 84, 0.06);
     border: 1px solid rgba(25, 135, 84, 0.15);

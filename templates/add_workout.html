@@ -497,6 +497,29 @@
 
                     <div id="group-tabs" class="d-flex flex-wrap gap-2 mb-3"></div>
 
+                    {% if recommended_exercise_names %}
+                        <div class="recommended-exercises-panel mb-3">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div>
+                                    <h3 class="h6 mb-1">Recommended for your plan</h3>
+                                    <p class="text-muted small mb-0">
+                                        These are suggestions based on your selected plan. You can still choose any exercise.
+                                    </p>
+                                </div>
+                                <span class="badge text-bg-success">Suggestions</span>
+                            </div>
+
+                            <div class="recommended-exercise-chips">
+                                {% for exercise in recommended_exercise_details %}
+                                    <span class="recommended-exercise-chip">
+                                        {{ exercise.name }}
+                                        <small>{{ exercise.muscle_group }}</small>
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
                     <div id="exercise-list" class="mb-3">
                         <div class="empty-state">
                             <div class="icon">🔄</div>
@@ -775,6 +798,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 let selectedGroups   = new Set({{ recommended_groups | tojson }});
+let recommendedExerciseNames = new Set({{ recommended_exercise_names | default([], true) | tojson }});
 let activeTab        = null;
 let exerciseCache    = {};
 let addedExercises   = {};
@@ -936,7 +960,16 @@ async function switchTab(group) {
 
 function renderExerciseList(group) {
     const list = document.getElementById('exercise-list');
-    const exercises = exerciseCache[group] || [];
+    const exercises = [...(exerciseCache[group] || [])].sort((a, b) => {
+        const aRecommended = !a.is_custom && recommendedExerciseNames.has(a.name);
+        const bRecommended = !b.is_custom && recommendedExerciseNames.has(b.name);
+
+        if (aRecommended !== bRecommended) {
+            return aRecommended ? -1 : 1;
+        }
+
+        return a.name.localeCompare(b.name);
+    });
 
     if (exercises.length === 0) {
         list.innerHTML = '<div class="empty-state"><p>No exercises found for this group.</p></div>';
@@ -945,14 +978,16 @@ function renderExerciseList(group) {
 
     list.innerHTML = exercises.map(ex => {
         const isAdded = !!addedExercises[ex.id];
+        const isRecommended = !ex.is_custom && recommendedExerciseNames.has(ex.name);
 
         return `
-        <div class="exercise-item ${isAdded ? 'added' : ''}"
+        <div class="exercise-item ${isAdded ? 'added' : ''} ${isRecommended ? 'exercise-item-recommended' : ''}"
              id="ex-item-${ex.id}"
              onclick="toggleExercise(${ex.id}, '${escapeAttr(ex.name)}', '${escapeAttr(ex.muscle_group)}', '${escapeAttr(ex.tracking_type || "strength")}', ${ex.is_custom})">
             <span>
                 ${escapeHtml(ex.name)}
                 ${ex.is_custom ? '<span class="badge-custom">custom</span>' : ''}
+                ${isRecommended ? '<span class="badge text-bg-success ms-2">Recommended</span>' : ''}
             </span>
 
             <span class="d-flex align-items-center gap-2">

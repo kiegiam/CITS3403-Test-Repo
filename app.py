@@ -989,6 +989,153 @@ def build_plan_recommendation(
     }
 
 
+def get_plan_exercise_recommendations(user, selected_plan):
+    if not selected_plan:
+        return [], []
+
+    saved_recommendation = PlanRecommendation.query.filter_by(
+        user_id=user.id
+    ).first()
+
+    fitness_level = "beginner"
+    equipment_access = "gym"
+    training_preference = "balanced"
+    limitation = "none"
+    suggested_intensity = None
+
+    if saved_recommendation:
+        fitness_level = saved_recommendation.fitness_level or fitness_level
+        equipment_access = saved_recommendation.equipment_access or equipment_access
+        training_preference = saved_recommendation.training_preference or training_preference
+        limitation = saved_recommendation.limitation or limitation
+        suggested_intensity = saved_recommendation.suggested_intensity
+
+    plan_tag_by_plan = {
+        "strength": "strength",
+        "cardio": "cardio",
+        "flexibility": "flexibility",
+    }
+    target_tag = plan_tag_by_plan.get(selected_plan)
+
+    exercises = Exercise.query.filter_by(
+        user_id=None,
+        is_archived=False
+    ).all()
+    scored_exercises = []
+
+    for exercise in exercises:
+        tags = [
+            tag.strip()
+            for tag in (exercise.plan_tags or "").split(",")
+            if tag.strip()
+        ]
+        score = 0
+
+        if target_tag and target_tag in tags:
+            score += 5
+
+        if selected_plan == "cardio" and "fat_loss" in tags:
+            score += 1
+
+        if selected_plan == "flexibility" and "recovery" in tags:
+            score += 2
+
+        if exercise.difficulty_level == fitness_level:
+            score += 2
+        elif fitness_level == "beginner" and exercise.difficulty_level == "intermediate":
+            score -= 1
+
+        if suggested_intensity:
+            suggested = suggested_intensity.lower()
+
+            if exercise.intensity_level and exercise.intensity_level in suggested:
+                score += 2
+
+        if equipment_access == "bodyweight_only":
+            if exercise.equipment_type == "bodyweight":
+                score += 3
+            elif exercise.equipment_type == "gym":
+                score -= 4
+        elif equipment_access == "home":
+            if exercise.equipment_type in ["home", "bodyweight"]:
+                score += 3
+            elif exercise.equipment_type == "gym":
+                score -= 2
+        elif equipment_access == "outdoor":
+            if exercise.equipment_type == "outdoor":
+                score += 3
+            elif exercise.equipment_type == "gym":
+                score -= 2
+        elif equipment_access == "gym" and exercise.equipment_type == "gym":
+            score += 1
+
+        if training_preference == "short_simple":
+            if exercise.difficulty_level == "beginner":
+                score += 2
+            if exercise.intensity_level == "high":
+                score -= 2
+
+        if training_preference == "low_impact":
+            if exercise.intensity_level == "low":
+                score += 2
+            if exercise.name in ["Jump Rope", "Stair Climber", "Lunges"]:
+                score -= 3
+
+        if training_preference == "challenge":
+            if exercise.intensity_level in ["medium", "high"]:
+                score += 2
+
+        if limitation == "knee_discomfort":
+            if exercise.name in ["Walking", "Cycling", "Elliptical", "Yoga Flow"]:
+                score += 3
+            if exercise.muscle_group == "Legs" and exercise.intensity_level == "high":
+                score -= 5
+            if exercise.name in ["Jump Rope", "Stair Climber", "Lunges"]:
+                score -= 4
+
+        if limitation == "back_discomfort":
+            if "recovery" in tags or exercise.name in ["Bird Dog", "Cat Cow Stretch", "Yoga Flow"]:
+                score += 3
+            if exercise.name in ["Deadlift", "Barbell Row", "Romanian Deadlift"]:
+                score -= 5
+
+        if limitation == "shoulder_discomfort":
+            if exercise.muscle_group in ["Chest", "Shoulders", "Triceps"] and exercise.intensity_level != "low":
+                score -= 4
+            if exercise.name in ["Shoulder Mobility", "Cat Cow Stretch"]:
+                score += 2
+
+        if limitation == "low_energy":
+            if exercise.intensity_level == "low":
+                score += 3
+            if exercise.intensity_level == "high":
+                score -= 4
+
+        if score > 0:
+            scored_exercises.append((score, exercise.name, exercise))
+
+    scored_exercises.sort(key=lambda item: (-item[0], item[1]))
+    selected_exercises = [item[2] for item in scored_exercises[:6]]
+
+    recommended_exercise_details = [
+        {
+            "name": exercise.name,
+            "muscle_group": exercise.muscle_group,
+            "difficulty_level": exercise.difficulty_level,
+            "intensity_level": exercise.intensity_level,
+            "equipment_type": exercise.equipment_type,
+            "plan_tags": exercise.plan_tags,
+        }
+        for exercise in selected_exercises
+    ]
+    recommended_exercise_names = [
+        exercise["name"]
+        for exercise in recommended_exercise_details
+    ]
+
+    return recommended_exercise_names, recommended_exercise_details
+
+
 def allowed_image(filename):
     return (
         "." in filename
@@ -1681,10 +1828,16 @@ def add_workout():
     if selected_plan not in ["strength", "cardio", "flexibility"]:
         selected_plan = ""
 
+    recommended_exercise_names, recommended_exercise_details = (
+        get_plan_exercise_recommendations(user, selected_plan)
+    )
+
     return render_template(
         "add_workout.html",
         muscle_groups=MUSCLE_GROUPS,
         selected_plan=selected_plan,
+        recommended_exercise_names=recommended_exercise_names,
+        recommended_exercise_details=recommended_exercise_details,
     )
 
 

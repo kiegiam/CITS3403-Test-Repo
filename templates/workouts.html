@@ -863,8 +863,12 @@ function renderBarChart(data) {
         state.metric === "count" ? "Workout count by day" : "Workout minutes by day";
 
     const option = {
-        animationDuration: 1050,
+        animationDuration: 1250,
+        animationDurationUpdate: 900,
         animationEasing: "quarticOut",
+        animationDelay: function(index) {
+            return index * 55;
+        },
         grid: {
             left: 50,
             right: 28,
@@ -929,6 +933,7 @@ function renderBarChart(data) {
                         shadowColor: "rgba(130, 249, 90, 0.42)",
                     },
                 },
+                universalTransition: true,
             },
         ],
     };
@@ -947,7 +952,8 @@ function renderLineChart(data) {
     const labels = data.labels.map(formatShortDate);
 
     const option = {
-        animationDuration: 1200,
+        animationDuration: 1450,
+        animationDurationUpdate: 900,
         animationEasing: "quarticOut",
         grid: {
             left: 50,
@@ -1011,6 +1017,14 @@ function renderLineChart(data) {
                         { offset: 1, color: "rgba(130, 249, 90, 0.02)" },
                     ]),
                 },
+                emphasis: {
+                    focus: "series",
+                    itemStyle: {
+                        shadowBlur: 28,
+                        shadowColor: "rgba(130, 249, 90, 0.44)",
+                    },
+                },
+                universalTransition: true,
             },
         ],
     };
@@ -1022,8 +1036,12 @@ function renderIntensityChart(data) {
     const counts = data.intensity_counts;
 
     const option = {
-        animationDuration: 1050,
+        animationDuration: 1250,
+        animationDurationUpdate: 900,
         animationEasing: "quarticOut",
+        animationDelay: function(index) {
+            return index * 120;
+        },
         tooltip: {
             ...premiumTooltip,
             trigger: "item",
@@ -1068,6 +1086,14 @@ function renderIntensityChart(data) {
                     borderWidth: 4,
                     shadowBlur: 20,
                     shadowColor: "rgba(57, 228, 255, 0.16)",
+                },
+                emphasis: {
+                    scale: true,
+                    scaleSize: 10,
+                    itemStyle: {
+                        shadowBlur: 32,
+                        shadowColor: "rgba(130, 249, 90, 0.36)",
+                    },
                 },
             },
         ],

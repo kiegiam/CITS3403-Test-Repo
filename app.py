@@ -292,6 +292,10 @@ class Exercise(db.Model):
     # Set to a user id = custom exercise visible only to that user.
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     is_archived = db.Column(db.Boolean, nullable=False, default=False)
+    difficulty_level = db.Column(db.String(50), nullable=True)
+    intensity_level = db.Column(db.String(50), nullable=True)
+    equipment_type = db.Column(db.String(50), nullable=True)
+    plan_tags = db.Column(db.Text, nullable=True)
 
     sets = db.relationship(
         "WorkoutSet",
@@ -449,6 +453,30 @@ def ensure_database_ready():
         if "is_archived" not in exercise_columns:
             db.session.execute(
                 text("ALTER TABLE exercises ADD COLUMN is_archived BOOLEAN DEFAULT 0 NOT NULL")
+            )
+            db.session.commit()
+
+        if "difficulty_level" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN difficulty_level VARCHAR(50)")
+            )
+            db.session.commit()
+
+        if "intensity_level" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN intensity_level VARCHAR(50)")
+            )
+            db.session.commit()
+
+        if "equipment_type" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN equipment_type VARCHAR(50)")
+            )
+            db.session.commit()
+
+        if "plan_tags" not in exercise_columns:
+            db.session.execute(
+                text("ALTER TABLE exercises ADD COLUMN plan_tags TEXT")
             )
             db.session.commit()
 

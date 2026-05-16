@@ -245,6 +245,44 @@ h6 {
     font-weight: 850;
 }
 
+/* ---------- Progress charts ---------- */
+
+.progress-chart-section {
+    margin-top: 1.75rem;
+}
+
+.progress-chart-grid {
+    align-items: stretch;
+}
+
+.progress-chart-card {
+    min-height: 100%;
+}
+
+.progress-chart-card .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.progress-chart-container {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    height: clamp(300px, 34vw, 380px);
+}
+
+.progress-chart-container-wide {
+    min-height: 340px;
+    height: clamp(340px, 38vw, 440px);
+}
+
+.progress-chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
 /* ---------- Tables ---------- */
 
 .table {
@@ -756,6 +794,16 @@ footer {
     .weekly-bar-track {
         width: 30px;
     }
+
+    .progress-chart-container {
+        min-height: 280px;
+        height: 320px;
+    }
+
+    .progress-chart-container-wide {
+        min-height: 300px;
+        height: 340px;
+    }
 }
 
 @media (max-width: 575.98px) {
@@ -769,6 +817,24 @@ footer {
 
     .muscle-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .progress-chart-section {
+        margin-top: 1.25rem;
+    }
+
+    .progress-chart-grid {
+        --bs-gutter-y: 1rem;
+    }
+
+    .progress-chart-card .card-body {
+        gap: 0.5rem;
+    }
+
+    .progress-chart-container,
+    .progress-chart-container-wide {
+        min-height: 250px;
+        height: 280px;
     }
 }
 

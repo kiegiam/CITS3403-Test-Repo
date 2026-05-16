@@ -51,6 +51,8 @@ class User(db.Model):
     member_since = db.Column(db.String(50), nullable=True)
     location = db.Column(db.String(100), nullable=True)
     avatar_filename = db.Column(db.String(255), nullable=True)
+    daily_minutes_goal = db.Column(db.Integer, nullable=False, default=20)
+    weight_goal_kg = db.Column(db.Float, nullable=True)
 
     # Privacy / visibility settings
     show_public_profile = db.Column(db.Boolean, nullable=False, default=True)
@@ -331,6 +333,18 @@ def ensure_database_ready():
         if "show_public_fitness" not in user_columns:
             db.session.execute(
                 text("ALTER TABLE users ADD COLUMN show_public_fitness BOOLEAN DEFAULT 1 NOT NULL")
+            )
+            db.session.commit()
+
+        if "daily_minutes_goal" not in user_columns:
+            db.session.execute(
+                text("ALTER TABLE users ADD COLUMN daily_minutes_goal INTEGER DEFAULT 20 NOT NULL")
+            )
+            db.session.commit()
+
+        if "weight_goal_kg" not in user_columns:
+            db.session.execute(
+                text("ALTER TABLE users ADD COLUMN weight_goal_kg FLOAT")
             )
             db.session.commit()
 
@@ -1768,6 +1782,51 @@ def plans():
         "plans.html",
         email=session["user_email"]
     )
+
+
+@app.route("/plans/goals", methods=["POST"])
+def save_plan_goals():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = current_user()
+
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    daily_minutes_text = request.form.get("daily_minutes_goal", "").strip()
+    weight_goal_text = request.form.get("weight_goal_kg", "").strip()
+
+    try:
+        daily_minutes_goal = int(daily_minutes_text)
+    except ValueError:
+        flash("Daily minutes goal must be a positive whole number.", "danger")
+        return redirect(url_for("plans"))
+
+    if daily_minutes_goal <= 0:
+        flash("Daily minutes goal must be a positive whole number.", "danger")
+        return redirect(url_for("plans"))
+
+    weight_goal_kg = None
+
+    if weight_goal_text:
+        try:
+            weight_goal_kg = float(weight_goal_text)
+        except ValueError:
+            flash("Weight goal must be a positive number.", "danger")
+            return redirect(url_for("plans"))
+
+        if weight_goal_kg <= 0:
+            flash("Weight goal must be a positive number.", "danger")
+            return redirect(url_for("plans"))
+
+    user.daily_minutes_goal = daily_minutes_goal
+    user.weight_goal_kg = weight_goal_kg
+    db.session.commit()
+
+    flash("Plan goals saved successfully.", "success")
+    return redirect(url_for("plans"))
 
 
 @app.route("/logout")

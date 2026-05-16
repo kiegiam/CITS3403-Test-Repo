@@ -127,12 +127,17 @@
 
             {% if community_disabled %}
                 <section>
-                    <div class="card shadow-sm border-0">
+                    <div class="card shadow-sm border-0 ranking-empty-card">
                         <div class="card-body p-5 text-center">
+                            <div class="ranking-empty-icon">off</div>
                             <h2 class="h4 mb-3">You have disabled community features</h2>
                             <p class="text-muted mb-4">
-                                Enable them in your privacy settings here.
+                                Your workout totals are private right now, so you will not appear on the
+                                community leaderboard until sharing is enabled.
                             </p>
+                            <div class="ranking-empty-note">
+                                You can keep your profile private while choosing whether fitness stats are shared.
+                            </div>
                             <a href="{{ url_for('edit_profile') }}" class="btn btn-success">
                                 Go to Privacy Settings
                             </a>
@@ -141,12 +146,16 @@
                 </section>
             {% elif not leaderboard or leaderboard[0].minutes == 0 %}
                 <section>
-                    <div class="card shadow-sm border-0">
+                    <div class="card shadow-sm border-0 ranking-empty-card">
                         <div class="card-body p-5 text-center">
+                            <div class="ranking-empty-icon">0</div>
                             <h2 class="h4 mb-3">No ranking data yet</h2>
                             <p class="text-muted mb-4">
                                 Community rankings will appear after users add workouts and build up training minutes.
                             </p>
+                            <div class="ranking-empty-note">
+                                Add a workout with minutes logged to help start the leaderboard.
+                            </div>
                             <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
                         </div>
                     </div>
@@ -155,28 +164,28 @@
             <section class="mb-4">
                 <div class="row text-center g-3">
                     <div class="col-md-3">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                        <div class="stat-box p-4 rounded shadow-sm h-100 ranking-animate ranking-delay-1">
                             <h2 class="h1 mb-1">{{ ranking_summary.total_ranked_users }}</h2>
                             <p class="mb-0 text-muted">Ranked Users</p>
                         </div>
                     </div>
 
                     <div class="col-md-3">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                        <div class="stat-box p-4 rounded shadow-sm h-100 ranking-animate ranking-delay-2">
                             <h2 class="h1 mb-1">{{ ranking_summary.community_total_minutes }}</h2>
                             <p class="mb-0 text-muted">Community Minutes</p>
                         </div>
                     </div>
 
                     <div class="col-md-3">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                        <div class="stat-box p-4 rounded shadow-sm h-100 ranking-animate ranking-delay-3">
                             <h2 class="h1 mb-1">{{ ranking_summary.top_streak }}</h2>
                             <p class="mb-0 text-muted">Top Day Streak</p>
                         </div>
                     </div>
 
                     <div class="col-md-3">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                        <div class="stat-box p-4 rounded shadow-sm h-100 ranking-animate ranking-delay-4">
                             <h2 class="h4 mb-1">{{ ranking_summary.top_user_name }}</h2>
                             <p class="mb-0 text-muted">Current Leader</p>
                         </div>
@@ -185,12 +194,17 @@
             </section>
 
             <section class="mb-4">
-                <div class="card shadow-sm border-0">
+                <div class="card shadow-sm border-0 ranking-insight-card">
                     <div class="card-body p-4">
-                        <h2 class="h4 mb-3">Your Ranking Insight</h2>
+                        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                            <h2 class="h4 mb-0">Your Ranking Insight</h2>
+                            {% if current_user_rank.rank %}
+                                <span class="badge text-bg-success">Rank #{{ current_user_rank.rank }}</span>
+                            {% endif %}
+                        </div>
 
                         {% if current_user_rank.rank %}
-                            <div class="row g-3 align-items-center">
+                            <div class="row g-3 align-items-center ranking-insight-grid">
                                 <div class="col-md-3">
                                     <p class="text-muted small mb-1">Current Rank</p>
                                     <p class="h3 mb-0">#{{ current_user_rank.rank }}</p>
@@ -213,11 +227,11 @@
                             </div>
 
                             {% if current_user_rank.rank == 1 %}
-                                <p class="small text-muted mt-3 mb-0">
+                                <p class="ranking-insight-message mt-3 mb-0">
                                     You are currently leading the leaderboard.
                                 </p>
                             {% else %}
-                                <p class="small text-muted mt-3 mb-0">
+                                <p class="ranking-insight-message mt-3 mb-0">
                                     Add {{ current_user_rank.minutes_to_next_rank }} more minute(s) to overtake the user directly above you.
                                 </p>
                             {% endif %}
@@ -234,7 +248,7 @@
                 <div class="row g-3">
                     {% for user in leaderboard[:3] %}
                         <div class="col-md-4">
-                            <div class="card shadow-sm border-0 h-100 leaderboard-card top-rank-card">
+                            <div class="card shadow-sm border-0 h-100 leaderboard-card top-rank-card {% if loop.index == 1 %}top-rank-card-first{% endif %} ranking-animate ranking-delay-{{ loop.index + 4 }}">
                                 <div class="card-body p-4 text-center">
                                     <div class="ranking-medal mb-2">
                                         {% if loop.index == 1 %}
@@ -267,9 +281,9 @@
                                     {% endif %}
 
                                     <h2 class="h5 mb-1">{{ user.name }}</h2>
-                                    <p class="text-muted small mb-3">Rank #{{ loop.index }}</p>
+                                    <p class="ranking-position mb-3">Rank #{{ loop.index }}</p>
 
-                                    <div class="row text-center">
+                                    <div class="row text-center g-2 top-rank-stats">
                                         <div class="col-4">
                                             <strong>{{ user.workouts }}</strong>
                                             <p class="small text-muted mb-0">Workouts</p>
@@ -312,7 +326,7 @@
                                 </thead>
                                 <tbody>
                                     {% for user in leaderboard %}
-                                        <tr>
+                                        <tr class="{% if user.user_id == session.get('user_id') %}current-user-row{% endif %}">
                                             <td>
                                                 {% if loop.index == 1 %}
                                                     🥇 #1
@@ -348,10 +362,23 @@
                                                     {% endif %}
 
                                                     <span class="fw-semibold">{{ user.name }}</span>
+                                                    {% if user.user_id == session.get('user_id') %}
+                                                        <span class="badge text-bg-success ranking-you-badge">You</span>
+                                                    {% endif %}
                                                 </div>
                                             </td>
                                             <td>{{ user.workouts }}</td>
-                                            <td>{{ user.minutes }} min</td>
+                                            <td>
+                                                <div class="ranking-minutes-cell">
+                                                    <span class="ranking-minutes-text">{{ user.minutes }} min</span>
+                                                    <div class="ranking-minute-bar" aria-hidden="true">
+                                                        <div
+                                                            class="ranking-minute-bar-fill"
+                                                            style="--ranking-bar-width: {{ (user.minutes / leaderboard[0].minutes * 100) | round }}%;"
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td>{{ user.streak }} days</td>
                                             <td>
                                                 <span class="badge text-bg-success">{{ user.last_workout }}</span>

@@ -126,32 +126,48 @@
             </section>
 
             <section class="mb-4">
-                <div class="row text-center g-3">
+                <div class="row g-3 progress-summary-grid">
                     <div class="col-md-3">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                        <div class="stat-box p-4 rounded shadow-sm h-100 progress-animate progress-delay-1">
+                            <div class="stat-box-header">
+                                <span class="stat-icon">#</span>
+                                <span class="stat-label">Total Workouts</span>
+                            </div>
                             <h2 class="h1 mb-1">{{ progress_stats.total_workouts }}</h2>
-                            <p class="mb-0 text-muted">Total Workouts</p>
+                            <p class="mb-0 text-muted">Logged sessions</p>
                         </div>
                     </div>
 
                     <div class="col-md-3">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                        <div class="stat-box p-4 rounded shadow-sm h-100 progress-animate progress-delay-2">
+                            <div class="stat-box-header">
+                                <span class="stat-icon">min</span>
+                                <span class="stat-label">Total Minutes</span>
+                            </div>
                             <h2 class="h1 mb-1">{{ progress_stats.total_minutes }}</h2>
-                            <p class="mb-0 text-muted">Total Minutes</p>
+                            <p class="mb-0 text-muted">Training time</p>
                         </div>
                     </div>
 
                     <div class="col-md-3">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                        <div class="stat-box p-4 rounded shadow-sm h-100 progress-animate progress-delay-3">
+                            <div class="stat-box-header">
+                                <span class="stat-icon">avg</span>
+                                <span class="stat-label">Average Minutes</span>
+                            </div>
                             <h2 class="h1 mb-1">{{ progress_stats.average_duration }}</h2>
-                            <p class="mb-0 text-muted">Average Minutes</p>
+                            <p class="mb-0 text-muted">Per workout</p>
                         </div>
                     </div>
 
                     <div class="col-md-3">
-                        <div class="stat-box p-4 rounded shadow-sm h-100">
+                        <div class="stat-box p-4 rounded shadow-sm h-100 progress-animate progress-delay-4">
+                            <div class="stat-box-header">
+                                <span class="stat-icon">stk</span>
+                                <span class="stat-label">Day Streak</span>
+                            </div>
                             <h2 class="h1 mb-1">{{ progress_stats.current_streak }}</h2>
-                            <p class="mb-0 text-muted">Day Streak</p>
+                            <p class="mb-0 text-muted">Current run</p>
                         </div>
                     </div>
                 </div>
@@ -162,21 +178,35 @@
 
             {% if progress_stats.total_workouts == 0 %}
                 <section>
-                    <div class="card shadow-sm border-0">
+                    <div class="card shadow-sm border-0 progress-empty-card">
                         <div class="card-body p-5 text-center">
+                            <div class="progress-empty-icon">+</div>
                             <h2 class="h4 mb-3">No workout data yet</h2>
                             <p class="text-muted mb-4">
-                                Add your first workout to unlock progress charts, training summaries, and workout history.
+                                Add your first workout to unlock progress charts, training summaries,
+                                and a recent history table for your training.
                             </p>
+                            <div class="progress-empty-steps">
+                                <span>Log a workout</span>
+                                <span>Track minutes</span>
+                                <span>Watch trends build</span>
+                            </div>
                             <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
                         </div>
                     </div>
                 </section>
             {% else %}
                 <section class="mb-4 progress-chart-section">
+                    <div class="progress-chart-intro">
+                        <h2 class="h4 mb-2">Training Visualisations</h2>
+                        <p class="text-muted mb-0">
+                            These charts compare workout types, total training minutes, and how your logged
+                            minutes change across recent workout dates.
+                        </p>
+                    </div>
                     <div class="row g-4 progress-chart-grid">
                         <div class="col-lg-6">
-                            <div class="card shadow-sm border-0 h-100 progress-chart-card">
+                            <div class="card shadow-sm border-0 h-100 progress-chart-card progress-animate progress-delay-5">
                                 <div class="card-body p-4">
                                     <h2 class="h4 mb-3">Workout Type Breakdown</h2>
                                     <div class="progress-chart-container">
@@ -187,7 +217,7 @@
                         </div>
 
                         <div class="col-lg-6">
-                            <div class="card shadow-sm border-0 h-100 progress-chart-card">
+                            <div class="card shadow-sm border-0 h-100 progress-chart-card progress-animate progress-delay-6">
                                 <div class="card-body p-4">
                                     <h2 class="h4 mb-3">Training Minutes by Type</h2>
                                     <div class="progress-chart-container">
@@ -198,7 +228,7 @@
                         </div>
 
                         <div class="col-12">
-                            <div class="card shadow-sm border-0 progress-chart-card">
+                            <div class="card shadow-sm border-0 progress-chart-card progress-animate progress-delay-7">
                                 <div class="card-body p-4">
                                     <h2 class="h4 mb-3">Recent Training Trend</h2>
                                     <div class="progress-chart-container progress-chart-container-wide">
@@ -323,6 +353,11 @@
                         "#8a94a6",
                     ];
 
+                    const smoothAnimation = {
+                        duration: 1400,
+                        easing: "easeOutQuart",
+                    };
+
                     if (typeChartLabels.length > 0 && typeChartCounts.length > 0) {
                         new Chart(document.getElementById("workoutTypeChart"), {
                             type: "doughnut",
@@ -335,6 +370,24 @@
                             },
                             options: {
                                 maintainAspectRatio: false,
+                                animation: smoothAnimation,
+                                cutout: "62%",
+                                plugins: {
+                                    legend: {
+                                        position: "bottom",
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                const label = context.label || "Workout";
+                                                const count = context.parsed || 0;
+                                                const word = count === 1 ? "workout" : "workouts";
+
+                                                return `${label}: ${count} ${word}`;
+                                            },
+                                        },
+                                    },
+                                },
                             },
                         });
                     }
@@ -352,6 +405,25 @@
                             },
                             options: {
                                 maintainAspectRatio: false,
+                                animation: smoothAnimation,
+                                interaction: {
+                                    mode: "index",
+                                    intersect: false,
+                                },
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            title: function(context) {
+                                                return context[0].label;
+                                            },
+                                            label: function(context) {
+                                                const minutes = context.parsed.y || 0;
+
+                                                return `Total minutes: ${minutes}`;
+                                            },
+                                        },
+                                    },
+                                },
                                 scales: {
                                     y: {
                                         beginAtZero: true,
@@ -371,12 +443,37 @@
                                     data: trendChartMinutes,
                                     borderColor: "#00a86b",
                                     backgroundColor: "rgba(0, 168, 107, 0.16)",
+                                    pointBackgroundColor: "#00a86b",
+                                    pointBorderColor: "#ffffff",
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 8,
+                                    pointHoverBorderWidth: 3,
                                     fill: true,
-                                    tension: 0.3,
+                                    tension: 0.42,
                                 }],
                             },
                             options: {
                                 maintainAspectRatio: false,
+                                animation: smoothAnimation,
+                                interaction: {
+                                    mode: "index",
+                                    intersect: false,
+                                },
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            title: function(context) {
+                                                return `Date: ${context[0].label}`;
+                                            },
+                                            label: function(context) {
+                                                const minutes = context.parsed.y || 0;
+
+                                                return `Total training time: ${minutes} minutes`;
+                                            },
+                                        },
+                                    },
+                                },
                                 scales: {
                                     y: {
                                         beginAtZero: true,

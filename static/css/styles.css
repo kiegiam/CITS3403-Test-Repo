@@ -41,6 +41,8 @@ body {
 /* ---------- Navbar ---------- */
 
 .navbar {
+    position: relative;
+    z-index: 3000;
     background:
         linear-gradient(90deg, rgba(10, 37, 64, 0.96), rgba(45, 55, 144, 0.94)) !important;
     box-shadow: 0 10px 30px rgba(10, 37, 64, 0.18);
@@ -491,6 +493,7 @@ h6 {
 }
 
 .profile-dropdown-menu {
+    z-index: 3200;
     border-radius: 18px;
     padding: 0.45rem;
     box-shadow: var(--ft-shadow-md);
@@ -2264,8 +2267,15 @@ body.premium-app-page::after {
 }
 
 .premium-app-page .dropdown-menu {
+    z-index: 3200;
     background: rgba(7, 11, 22, 0.94);
     border: 1px solid rgba(57, 228, 255, 0.16);
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.44), var(--ft-glow-aqua);
+}
+
+.premium-app-page .profile-dropdown-menu {
+    min-width: 12rem;
+    overflow: visible;
 }
 
 .premium-app-page .dropdown-item {

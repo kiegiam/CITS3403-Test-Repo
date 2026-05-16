@@ -503,7 +503,8 @@
                                 <div>
                                     <h3 class="h6 mb-1">Recommended for your plan</h3>
                                     <p class="text-muted small mb-0">
-                                        These are suggestions based on your selected plan. You can still choose any exercise.
+                                        These suggestions are based on your selected plan and saved preferences.
+                                        You can still choose any exercise.
                                     </p>
                                 </div>
                                 <span class="badge text-bg-success">Suggestions</span>
@@ -512,8 +513,18 @@
                             <div class="recommended-exercise-chips">
                                 {% for exercise in recommended_exercise_details %}
                                     <span class="recommended-exercise-chip">
-                                        {{ exercise.name }}
-                                        <small>{{ exercise.muscle_group }}</small>
+                                        <strong>{{ exercise.name }}</strong>
+                                        <span class="recommended-exercise-meta">
+                                            {% if exercise.difficulty_level %}
+                                                <small>{{ exercise.difficulty_level|replace("_", " ")|title }}</small>
+                                            {% endif %}
+                                            {% if exercise.intensity_level %}
+                                                <small>{{ exercise.intensity_level|replace("_", " ")|title }} intensity</small>
+                                            {% endif %}
+                                            {% if exercise.equipment_type %}
+                                                <small>{{ exercise.equipment_type|replace("_", " ")|title }}</small>
+                                            {% endif %}
+                                        </span>
                                     </span>
                                 {% endfor %}
                             </div>

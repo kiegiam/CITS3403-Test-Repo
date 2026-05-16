@@ -351,7 +351,17 @@
                                                 </div>
                                             </td>
                                             <td>{{ user.workouts }}</td>
-                                            <td>{{ user.minutes }} min</td>
+                                            <td>
+                                                <div class="ranking-minutes-cell">
+                                                    <span class="ranking-minutes-text">{{ user.minutes }} min</span>
+                                                    <div class="ranking-minute-bar" aria-hidden="true">
+                                                        <div
+                                                            class="ranking-minute-bar-fill"
+                                                            style="--ranking-bar-width: {{ (user.minutes / leaderboard[0].minutes * 100) | round }}%;"
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td>{{ user.streak }} days</td>
                                             <td>
                                                 <span class="badge text-bg-success">{{ user.last_workout }}</span>

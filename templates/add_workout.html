@@ -363,14 +363,95 @@
 <main class="py-5">
     <div class="container" style="max-width: 760px;">
 
+        {% if selected_plan %}
+            <section class="plan-guidance-card card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <span class="badge text-bg-success">Plan guided mode</span>
+                        <a href="{{ url_for('plans') }}" class="btn btn-outline-success btn-sm">
+                            Back to Plans
+                        </a>
+                    </div>
+
+                    {% if selected_plan == "strength" %}
+                        <span class="badge text-bg-success mb-3">Strength Plan</span>
+                        <h1 class="h4 mb-2">Strength Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Build a steady resistance session around controlled sets and major muscle groups.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Chest, back, shoulders, legs, or core</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Medium to High</p>
+                            </div>
+                        </div>
+                    {% elif selected_plan == "cardio" %}
+                        <span class="badge text-bg-primary mb-3">Cardio Plan</span>
+                        <h1 class="h4 mb-2">Cardio Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Keep the session focused on endurance, breathing rhythm, and consistent movement.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Cardio exercises or leg-focused movement</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Low to Medium</p>
+                            </div>
+                        </div>
+                    {% elif selected_plan == "flexibility" %}
+                        <span class="badge text-bg-warning mb-3">Flexibility Plan</span>
+                        <h1 class="h4 mb-2">Flexibility Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Use this session for mobility, recovery, and gentle controlled movement.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Core, legs, shoulders, or recovery work</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Low</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <p class="plan-guidance-note mb-0 mt-3">
+                        This is only a guide. You can still change the selected muscle groups below.
+                    </p>
+                </div>
+            </section>
+        {% endif %}
+
         <div id="screen-muscles" class="screen active">
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-4">
                     <p class="step-label">Step 1 of 2</p>
                     <h1 class="h3 mb-1">What are you training today?</h1>
                     <p class="text-muted mb-4">Pick one or more muscle groups. You can add exercises from each.</p>
+                    {% if selected_plan %}
+                        <p class="plan-guidance-note mb-4">
+                            Recommended muscle groups are already selected for this plan. You can add or remove
+                            groups before starting.
+                        </p>
+                    {% endif %}
 
                     <div class="muscle-grid mb-4">
+                        {% set recommended_groups = [] %}
+                        {% if selected_plan == "strength" %}
+                            {% set recommended_groups = ["Chest", "Back", "Shoulders", "Legs"] %}
+                        {% elif selected_plan == "cardio" %}
+                            {% set recommended_groups = ["Cardio", "Legs", "Core"] %}
+                        {% elif selected_plan == "flexibility" %}
+                            {% set recommended_groups = ["Back", "Shoulders", "Legs", "Core"] %}
+                        {% endif %}
                         {% set icons = {
                             'Chest':     '🫁',
                             'Back':      '🔙',
@@ -383,7 +464,7 @@
                         } %}
                         {% for group in muscle_groups %}
                         <button
-                            class="muscle-btn"
+                            class="muscle-btn {% if group in recommended_groups %}selected{% endif %}"
                             data-group="{{ group }}"
                             onclick="toggleMuscle(this)"
                             type="button"
@@ -396,6 +477,7 @@
 
                     <button
                         class="btn btn-success w-100"
+                        id="start-workout-button"
                         onclick="goToExercises()"
                         type="button"
                     >
@@ -692,7 +774,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-let selectedGroups   = new Set();
+let selectedGroups   = new Set({{ recommended_groups | tojson }});
 let activeTab        = null;
 let exerciseCache    = {};
 let addedExercises   = {};
@@ -701,6 +783,19 @@ let workoutSets      = {};
 let timerInterval    = null;
 let startedAt        = null;
 let durationMode     = 'stopwatch';
+const selectedPlan   = "{{ selected_plan }}";
+
+const startButtonText = {
+    strength: "Start Strength Workout →",
+    cardio: "Start Cardio Workout →",
+    flexibility: "Start Recovery Workout →",
+};
+
+const startButton = document.getElementById('start-workout-button');
+
+if (startButton) {
+    startButton.textContent = startButtonText[selectedPlan] || "Choose Exercises →";
+}
 
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));

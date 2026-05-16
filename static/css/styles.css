@@ -1798,6 +1798,11 @@ body.premium-app-page::after {
     box-shadow: 0 14px 34px rgba(57, 228, 255, 0.20), 0 0 20px rgba(130, 249, 90, 0.14) !important;
 }
 
+.premium-app-page .navbar.bg-success {
+    background: rgba(5, 8, 18, 0.82) !important;
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.30) !important;
+}
+
 .premium-app-page .btn-outline-success {
     color: var(--ft-ink);
     border-color: rgba(57, 228, 255, 0.30);

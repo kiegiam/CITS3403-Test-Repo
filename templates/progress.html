@@ -15,7 +15,7 @@
         href="{{ url_for('static', filename='css/styles.css') }}"
     >
 </head>
-<body class="bg-light">
+<body class="premium-app-page progress-page">
 
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-success">
@@ -108,16 +108,20 @@
         <div class="container">
 
             <section class="mb-4">
-                <div class="card shadow-sm border-0 hero-card">
+                <div class="card shadow-sm border-0 hero-card premium-reveal">
                     <div class="card-body p-4">
                         <div class="row align-items-center g-3">
                             <div class="col-lg-8">
-                                <h1 class="h3 mb-2">Progress and Statistics</h1>
+                                <h1 class="h3 mb-2">Progress Command Center</h1>
                                 <p class="mb-0 text-muted">
                                     These statistics are calculated from your own saved workout history.
                                 </p>
                             </div>
                             <div class="col-lg-4 text-lg-end">
+                                <div class="progress-signal mb-3">
+                                    <span>Live training signal</span>
+                                    <strong>{{ progress_stats.total_minutes }}</strong>
+                                </div>
                                 <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
                             </div>
                         </div>
@@ -197,7 +201,7 @@
                 </section>
             {% else %}
                 <section class="mb-4 progress-chart-section">
-                    <div class="progress-chart-intro">
+                    <div class="progress-chart-intro premium-reveal">
                         <h2 class="h4 mb-2">Training Visualisations</h2>
                         <p class="text-muted mb-0">
                             These charts compare workout types, total training minutes, and how your logged
@@ -344,18 +348,72 @@
                     const trendChartLabels = {{ trend_chart_labels | tojson }};
                     const trendChartMinutes = {{ trend_chart_minutes | tojson }};
 
+                    Chart.defaults.color = "rgba(247, 251, 255, 0.72)";
+                    Chart.defaults.font.family = "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
                     const chartColours = [
-                        "#00a86b",
-                        "#635bff",
-                        "#00d4ff",
-                        "#ff80bf",
+                        "#39e4ff",
+                        "#82f95a",
+                        "#8f7dff",
+                        "#ff6b7a",
                         "#ffd166",
-                        "#8a94a6",
+                        "#6f7f9a",
                     ];
 
                     const smoothAnimation = {
-                        duration: 1400,
+                        duration: 1650,
                         easing: "easeOutQuart",
+                        delay: function(context) {
+                            return context.dataIndex ? context.dataIndex * 90 : 0;
+                        },
+                    };
+
+                    const premiumGlowPlugin = {
+                        id: "premiumGlow",
+                        beforeDatasetDraw: function(chart, args, options) {
+                            chart.ctx.save();
+                            chart.ctx.shadowColor = options.colour || "rgba(57, 228, 255, 0.32)";
+                            chart.ctx.shadowBlur = options.blur || 24;
+                        },
+                        afterDatasetDraw: function(chart) {
+                            chart.ctx.restore();
+                        },
+                    };
+
+                    function makeVerticalGradient(chart, topColour, bottomColour) {
+                        const area = chart.chartArea;
+
+                        if (!area) {
+                            return topColour;
+                        }
+
+                        const gradient = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+                        gradient.addColorStop(0, topColour);
+                        gradient.addColorStop(1, bottomColour);
+
+                        return gradient;
+                    }
+
+                    const premiumGrid = {
+                        color: "rgba(134, 220, 255, 0.10)",
+                        drawBorder: false,
+                    };
+
+                    const premiumTicks = {
+                        color: "rgba(210, 226, 244, 0.68)",
+                        font: {
+                            weight: "600",
+                        },
+                    };
+
+                    const premiumTooltip = {
+                        backgroundColor: "rgba(7, 11, 22, 0.94)",
+                        borderColor: "rgba(57, 228, 255, 0.34)",
+                        borderWidth: 1,
+                        titleColor: "#ffffff",
+                        bodyColor: "rgba(247, 251, 255, 0.80)",
+                        padding: 14,
+                        displayColors: true,
                     };
 
                     if (typeChartLabels.length > 0 && typeChartCounts.length > 0) {
@@ -366,17 +424,34 @@
                                 datasets: [{
                                     data: typeChartCounts,
                                     backgroundColor: chartColours,
+                                    borderColor: "rgba(7, 11, 22, 0.88)",
+                                    borderWidth: 4,
+                                    hoverBorderColor: "#ffffff",
+                                    hoverOffset: 14,
+                                    spacing: 5,
                                 }],
                             },
+                            plugins: [premiumGlowPlugin],
                             options: {
                                 maintainAspectRatio: false,
                                 animation: smoothAnimation,
-                                cutout: "62%",
+                                cutout: "66%",
                                 plugins: {
+                                    premiumGlow: {
+                                        colour: "rgba(130, 249, 90, 0.22)",
+                                        blur: 26,
+                                    },
                                     legend: {
                                         position: "bottom",
+                                        labels: {
+                                            color: "rgba(247, 251, 255, 0.74)",
+                                            padding: 18,
+                                            usePointStyle: true,
+                                            pointStyle: "circle",
+                                        },
                                     },
                                     tooltip: {
+                                        ...premiumTooltip,
                                         callbacks: {
                                             label: function(context) {
                                                 const label = context.label || "Workout";
@@ -400,9 +475,16 @@
                                 datasets: [{
                                     label: "Minutes",
                                     data: minutesChartValues,
-                                    backgroundColor: "#00a86b",
+                                    backgroundColor: function(context) {
+                                        return makeVerticalGradient(context.chart, "rgba(57, 228, 255, 0.95)", "rgba(130, 249, 90, 0.70)");
+                                    },
+                                    borderColor: "rgba(255, 255, 255, 0.22)",
+                                    borderWidth: 1,
+                                    borderRadius: 14,
+                                    hoverBackgroundColor: "#82f95a",
                                 }],
                             },
+                            plugins: [premiumGlowPlugin],
                             options: {
                                 maintainAspectRatio: false,
                                 animation: smoothAnimation,
@@ -411,7 +493,12 @@
                                     intersect: false,
                                 },
                                 plugins: {
+                                    premiumGlow: {
+                                        colour: "rgba(57, 228, 255, 0.28)",
+                                        blur: 24,
+                                    },
                                     tooltip: {
+                                        ...premiumTooltip,
                                         callbacks: {
                                             title: function(context) {
                                                 return context[0].label;
@@ -425,8 +512,16 @@
                                     },
                                 },
                                 scales: {
+                                    x: {
+                                        grid: {
+                                            display: false,
+                                        },
+                                        ticks: premiumTicks,
+                                    },
                                     y: {
                                         beginAtZero: true,
+                                        grid: premiumGrid,
+                                        ticks: premiumTicks,
                                     },
                                 },
                             },
@@ -441,18 +536,22 @@
                                 datasets: [{
                                     label: "Minutes",
                                     data: trendChartMinutes,
-                                    borderColor: "#00a86b",
-                                    backgroundColor: "rgba(0, 168, 107, 0.16)",
-                                    pointBackgroundColor: "#00a86b",
+                                    borderColor: "#39e4ff",
+                                    backgroundColor: function(context) {
+                                        return makeVerticalGradient(context.chart, "rgba(57, 228, 255, 0.30)", "rgba(130, 249, 90, 0.02)");
+                                    },
+                                    pointBackgroundColor: "#82f95a",
                                     pointBorderColor: "#ffffff",
                                     pointBorderWidth: 2,
-                                    pointRadius: 4,
-                                    pointHoverRadius: 8,
+                                    pointRadius: 5,
+                                    pointHoverRadius: 10,
                                     pointHoverBorderWidth: 3,
                                     fill: true,
                                     tension: 0.42,
+                                    borderWidth: 4,
                                 }],
                             },
+                            plugins: [premiumGlowPlugin],
                             options: {
                                 maintainAspectRatio: false,
                                 animation: smoothAnimation,
@@ -461,7 +560,12 @@
                                     intersect: false,
                                 },
                                 plugins: {
+                                    premiumGlow: {
+                                        colour: "rgba(57, 228, 255, 0.36)",
+                                        blur: 30,
+                                    },
                                     tooltip: {
+                                        ...premiumTooltip,
                                         callbacks: {
                                             title: function(context) {
                                                 return `Date: ${context[0].label}`;
@@ -475,8 +579,16 @@
                                     },
                                 },
                                 scales: {
+                                    x: {
+                                        grid: {
+                                            display: false,
+                                        },
+                                        ticks: premiumTicks,
+                                    },
                                     y: {
                                         beginAtZero: true,
+                                        grid: premiumGrid,
+                                        ticks: premiumTicks,
                                     },
                                 },
                             },

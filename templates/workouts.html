@@ -340,7 +340,7 @@
     </style>
 </head>
 
-<body>
+<body class="premium-app-page workouts-page">
 
 <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
@@ -437,11 +437,11 @@
 <main class="py-5">
     <div class="container workouts-shell">
 
-        <section class="glass-card mb-4">
+        <section class="glass-card mb-4 premium-reveal">
             <div class="p-4 p-lg-5">
                 <div class="row align-items-center g-4">
                     <div class="col-lg-8">
-                        <p class="section-kicker">Training Analytics</p>
+                        <p class="section-kicker premium-kicker">Training Analytics</p>
 
                         <h1 class="display-5 page-title mb-3">
                             My Workouts
@@ -462,7 +462,7 @@
             </div>
         </section>
 
-        <section class="glass-card mb-4">
+        <section class="glass-card mb-4 premium-reveal premium-delay-1">
             <div class="p-4 p-lg-5">
                 <div class="row g-4 align-items-start">
                     <div class="col-lg-4">
@@ -509,7 +509,7 @@
 
         <section class="row g-4 mb-4">
             <div class="col-md-4">
-                <div class="metric-card">
+                <div class="metric-card premium-reveal premium-delay-1">
                     <div class="label">Total Workouts</div>
                     <div class="value" id="summaryTotalWorkouts">0</div>
                     <div class="hint">Based on current filters</div>
@@ -517,7 +517,7 @@
             </div>
 
             <div class="col-md-4">
-                <div class="metric-card">
+                <div class="metric-card premium-reveal premium-delay-2">
                     <div class="label">Total Minutes</div>
                     <div class="value" id="summaryTotalMinutes">0</div>
                     <div class="hint">Training time in selected range</div>
@@ -525,7 +525,7 @@
             </div>
 
             <div class="col-md-4">
-                <div class="metric-card">
+                <div class="metric-card premium-reveal premium-delay-3">
                     <div class="label">Average Minutes</div>
                     <div class="value" id="summaryAverageMinutes">0</div>
                     <div class="hint">Average per workout</div>
@@ -535,7 +535,7 @@
 
         <section class="row g-4 mb-4">
             <div class="col-xl-8">
-                <div class="chart-card" id="barChartCard">
+                <div class="chart-card premium-reveal premium-delay-2" id="barChartCard">
                     <div class="chart-card-header">
                         <h2 class="h3 chart-title" id="barChartTitle">
                             Workout volume by day
@@ -550,7 +550,7 @@
             </div>
 
             <div class="col-xl-4">
-                <div class="chart-card h-100" id="intensityCard">
+                <div class="chart-card h-100 premium-reveal premium-delay-3" id="intensityCard">
                     <div class="chart-card-header">
                         <h2 class="h3 chart-title">Intensity mix</h2>
                         <p class="chart-subtitle">
@@ -563,7 +563,7 @@
             </div>
         </section>
 
-        <section class="chart-card mb-4" id="lineChartCard">
+        <section class="chart-card mb-4 premium-reveal premium-delay-4" id="lineChartCard">
             <div class="chart-card-header">
                 <h2 class="h3 chart-title">Training trend</h2>
                 <p class="chart-subtitle">
@@ -574,7 +574,7 @@
             <div id="workoutLineChart" class="line-chart-box"></div>
         </section>
 
-        <section class="glass-card mb-4">
+        <section class="glass-card mb-4 premium-reveal premium-delay-2">
             <div class="p-4 p-lg-5">
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
                     <div>
@@ -728,6 +728,33 @@ const chartCards = [
     document.getElementById("intensityCard"),
 ];
 
+const premiumAxisLabel = {
+    color: "rgba(210, 226, 244, 0.68)",
+    fontWeight: 700,
+};
+
+const premiumAxisLine = {
+    lineStyle: {
+        color: "rgba(134, 220, 255, 0.18)",
+    },
+};
+
+const premiumSplitLine = {
+    lineStyle: {
+        color: "rgba(134, 220, 255, 0.10)",
+    },
+};
+
+const premiumTooltip = {
+    backgroundColor: "rgba(7, 11, 22, 0.94)",
+    borderColor: "rgba(57, 228, 255, 0.34)",
+    borderWidth: 1,
+    textStyle: {
+        color: "rgba(247, 251, 255, 0.86)",
+    },
+    extraCssText: "box-shadow: 0 18px 42px rgba(0,0,0,.34); border-radius: 14px; padding: 10px 12px;",
+};
+
 function setLoading(isLoading) {
     chartCards.forEach(card => {
         card.classList.toggle("is-loading", isLoading);
@@ -814,8 +841,8 @@ function renderBarChart(data) {
         state.metric === "count" ? "Workout count by day" : "Workout minutes by day";
 
     const option = {
-        animationDuration: 700,
-        animationEasing: "cubicOut",
+        animationDuration: 1050,
+        animationEasing: "quarticOut",
         grid: {
             left: 50,
             right: 28,
@@ -823,9 +850,13 @@ function renderBarChart(data) {
             bottom: 70,
         },
         tooltip: {
+            ...premiumTooltip,
             trigger: "axis",
             axisPointer: {
                 type: "shadow",
+                shadowStyle: {
+                    color: "rgba(57, 228, 255, 0.10)",
+                },
             },
             formatter: function(params) {
                 const item = params[0];
@@ -841,28 +872,18 @@ function renderBarChart(data) {
             type: "category",
             data: labels,
             axisLabel: {
-                color: "#53657d",
+                ...premiumAxisLabel,
                 rotate: data.labels.length > 14 ? 45 : 0,
             },
-            axisLine: {
-                lineStyle: {
-                    color: "rgba(10, 37, 64, 0.12)",
-                },
-            },
+            axisLine: premiumAxisLine,
             axisTick: {
                 show: false,
             },
         },
         yAxis: {
             type: "value",
-            axisLabel: {
-                color: "#53657d",
-            },
-            splitLine: {
-                lineStyle: {
-                    color: "rgba(10, 37, 64, 0.08)",
-                },
-            },
+            axisLabel: premiumAxisLabel,
+            splitLine: premiumSplitLine,
         },
         series: [
             {
@@ -871,17 +892,19 @@ function renderBarChart(data) {
                 data: values,
                 barWidth: data.labels.length > 30 ? "45%" : "58%",
                 itemStyle: {
-                    borderRadius: [12, 12, 0, 0],
+                    borderRadius: [14, 14, 4, 4],
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: "#635bff" },
-                        { offset: 0.55, color: "#19b5d1" },
-                        { offset: 1, color: "#00a86b" },
+                        { offset: 0, color: "#39e4ff" },
+                        { offset: 0.58, color: "#82f95a" },
+                        { offset: 1, color: "rgba(130, 249, 90, 0.42)" },
                     ]),
+                    shadowBlur: 16,
+                    shadowColor: "rgba(57, 228, 255, 0.22)",
                 },
                 emphasis: {
                     itemStyle: {
-                        shadowBlur: 18,
-                        shadowColor: "rgba(99, 91, 255, 0.32)",
+                        shadowBlur: 28,
+                        shadowColor: "rgba(130, 249, 90, 0.42)",
                     },
                 },
             },
@@ -902,8 +925,8 @@ function renderLineChart(data) {
     const labels = data.labels.map(formatShortDate);
 
     const option = {
-        animationDuration: 800,
-        animationEasing: "cubicOut",
+        animationDuration: 1200,
+        animationEasing: "quarticOut",
         grid: {
             left: 50,
             right: 28,
@@ -911,6 +934,7 @@ function renderLineChart(data) {
             bottom: 58,
         },
         tooltip: {
+            ...premiumTooltip,
             trigger: "axis",
             formatter: function(params) {
                 const item = params[0];
@@ -927,49 +951,42 @@ function renderLineChart(data) {
             data: labels,
             boundaryGap: false,
             axisLabel: {
-                color: "#53657d",
+                ...premiumAxisLabel,
                 rotate: data.labels.length > 20 ? 45 : 0,
             },
-            axisLine: {
-                lineStyle: {
-                    color: "rgba(10, 37, 64, 0.12)",
-                },
-            },
+            axisLine: premiumAxisLine,
             axisTick: {
                 show: false,
             },
         },
         yAxis: {
             type: "value",
-            axisLabel: {
-                color: "#53657d",
-            },
-            splitLine: {
-                lineStyle: {
-                    color: "rgba(10, 37, 64, 0.08)",
-                },
-            },
+            axisLabel: premiumAxisLabel,
+            splitLine: premiumSplitLine,
         },
         series: [
             {
                 name: getMetricName(),
                 type: "line",
                 smooth: true,
-                symbolSize: 8,
+                symbolSize: 10,
                 data: values,
                 lineStyle: {
-                    width: 4,
-                    color: "#635bff",
+                    width: 5,
+                    color: "#39e4ff",
+                    shadowBlur: 18,
+                    shadowColor: "rgba(57, 228, 255, 0.36)",
                 },
                 itemStyle: {
-                    color: "#00a86b",
+                    color: "#82f95a",
                     borderColor: "#ffffff",
                     borderWidth: 2,
                 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: "rgba(99, 91, 255, 0.24)" },
-                        { offset: 1, color: "rgba(0, 168, 107, 0.02)" },
+                        { offset: 0, color: "rgba(57, 228, 255, 0.32)" },
+                        { offset: 0.48, color: "rgba(130, 249, 90, 0.16)" },
+                        { offset: 1, color: "rgba(130, 249, 90, 0.02)" },
                     ]),
                 },
             },
@@ -983,43 +1000,52 @@ function renderIntensityChart(data) {
     const counts = data.intensity_counts;
 
     const option = {
-        animationDuration: 700,
+        animationDuration: 1050,
+        animationEasing: "quarticOut",
         tooltip: {
+            ...premiumTooltip,
             trigger: "item",
         },
         legend: {
             bottom: 8,
             textStyle: {
-                color: "#53657d",
+                color: "rgba(210, 226, 244, 0.72)",
+                fontWeight: 700,
             },
         },
         series: [
             {
                 name: "Intensity",
                 type: "pie",
-                radius: ["48%", "72%"],
+                radius: ["50%", "74%"],
                 center: ["50%", "44%"],
                 avoidLabelOverlap: true,
                 data: [
                     {
                         value: counts.Low,
                         name: "Low",
-                        itemStyle: { color: "#00a86b" },
+                        itemStyle: { color: "#82f95a" },
                     },
                     {
                         value: counts.Medium,
                         name: "Medium",
-                        itemStyle: { color: "#635bff" },
+                        itemStyle: { color: "#39e4ff" },
                     },
                     {
                         value: counts.High,
                         name: "High",
-                        itemStyle: { color: "#ef4444" },
+                        itemStyle: { color: "#ff6b7a" },
                     },
                 ],
                 label: {
-                    color: "#0a2540",
+                    color: "rgba(247, 251, 255, 0.82)",
                     fontWeight: 700,
+                },
+                itemStyle: {
+                    borderColor: "rgba(7, 11, 22, 0.88)",
+                    borderWidth: 4,
+                    shadowBlur: 20,
+                    shadowColor: "rgba(57, 228, 255, 0.16)",
                 },
             },
         ],

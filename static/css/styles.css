@@ -2565,6 +2565,53 @@ body.premium-app-page::after {
     background: rgba(5, 8, 18, 0.90) !important;
 }
 
+.premium-landing-page .feature-card,
+.premium-landing-page .dashboard-info-card,
+.premium-landing-page .hero-card,
+.premium-landing-page .stat-box {
+    color: var(--ft-ink);
+    border-color: rgba(134, 220, 255, 0.22) !important;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.045)),
+        rgba(8, 14, 28, 0.82) !important;
+    box-shadow: 0 24px 68px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+}
+
+.premium-landing-page .feature-card h3,
+.premium-landing-page .dashboard-info-card h2,
+.premium-landing-page .dashboard-info-card h3,
+.premium-landing-page .hero-card h2,
+.premium-landing-page .stat-box h3 {
+    color: #ffffff;
+}
+
+.premium-landing-page .feature-card .card-text,
+.premium-landing-page .dashboard-info-card p,
+.premium-landing-page .stat-box p,
+.premium-landing-page .list-group-item,
+.premium-landing-page .hero-card .lead {
+    color: rgba(226, 241, 255, 0.74) !important;
+}
+
+.premium-landing-page .feature-card .badge,
+.premium-landing-page .dashboard-info-card .badge {
+    color: #06101d !important;
+}
+
+.premium-landing-page .stat-box {
+    min-height: 132px;
+}
+
+.premium-landing-page .stat-box::before {
+    width: 4px;
+    height: auto;
+    inset: 0 auto 0 0;
+}
+
+.premium-landing-page .list-group-item {
+    border-bottom-color: rgba(134, 220, 255, 0.14);
+}
+
 .landing-performance-panel {
     position: relative;
     border: 1px solid rgba(134, 220, 255, 0.24);

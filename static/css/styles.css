@@ -619,6 +619,45 @@ body.dashboard-page {
     border-color: rgba(99, 91, 255, 0.14) !important;
 }
 
+.plan-goals-card {
+    border-color: rgba(99, 91, 255, 0.14) !important;
+}
+
+.weekly-schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.weekly-schedule-day {
+    display: flex;
+    min-height: 140px;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.55rem;
+    border: 1px solid rgba(10, 37, 64, 0.10);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.78);
+    padding: 1rem;
+    box-shadow: 0 8px 18px rgba(50, 50, 93, 0.06);
+}
+
+.weekly-schedule-day.is-today {
+    border-color: rgba(99, 91, 255, 0.42);
+    box-shadow: 0 16px 32px rgba(99, 91, 255, 0.14);
+}
+
+.weekly-schedule-day.is-completed {
+    background: rgba(0, 168, 107, 0.08);
+    border-color: rgba(0, 168, 107, 0.28);
+}
+
+.weekly-schedule-day strong {
+    color: var(--ft-text);
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
 .weekly-plan-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1041,6 +1080,10 @@ footer {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .weekly-schedule-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .planning-tips-grid {
         grid-template-columns: 1fr;
     }
@@ -1077,7 +1120,15 @@ footer {
         grid-template-columns: 1fr;
     }
 
+    .weekly-schedule-grid {
+        grid-template-columns: 1fr;
+    }
+
     .weekly-plan-day {
+        min-height: auto;
+    }
+
+    .weekly-schedule-day {
         min-height: auto;
     }
 

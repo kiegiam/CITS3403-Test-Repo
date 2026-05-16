@@ -94,6 +94,9 @@ class PlanRecommendation(db.Model):
     recommended_plan = db.Column(db.String(100), nullable=False)
     recommendation_reason = db.Column(db.Text, nullable=False)
     weekly_structure_json = db.Column(db.Text, nullable=True)
+    plan_focus = db.Column(db.String(200), nullable=True)
+    suggested_intensity = db.Column(db.String(50), nullable=True)
+    plan_badges_json = db.Column(db.Text, nullable=True)
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
@@ -400,6 +403,24 @@ def ensure_database_ready():
         if "training_preference" not in plan_recommendation_columns:
             db.session.execute(
                 text("ALTER TABLE plan_recommendations ADD COLUMN training_preference VARCHAR(50) DEFAULT 'balanced' NOT NULL")
+            )
+            db.session.commit()
+
+        if "plan_focus" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN plan_focus VARCHAR(200)")
+            )
+            db.session.commit()
+
+        if "suggested_intensity" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN suggested_intensity VARCHAR(50)")
+            )
+            db.session.commit()
+
+        if "plan_badges_json" not in plan_recommendation_columns:
+            db.session.execute(
+                text("ALTER TABLE plan_recommendations ADD COLUMN plan_badges_json TEXT")
             )
             db.session.commit()
 
@@ -2211,6 +2232,7 @@ def plans():
         user_id=user.id
     ).first()
     recommended_weekly_structure = []
+    recommendation_badges = []
 
     if saved_recommendation and saved_recommendation.weekly_structure_json:
         try:
@@ -2223,6 +2245,15 @@ def plans():
         except json.JSONDecodeError:
             recommended_weekly_structure = []
 
+    if saved_recommendation and saved_recommendation.plan_badges_json:
+        try:
+            parsed_badges = json.loads(saved_recommendation.plan_badges_json)
+
+            if isinstance(parsed_badges, list):
+                recommendation_badges = parsed_badges
+        except json.JSONDecodeError:
+            recommendation_badges = []
+
     return render_template(
         "plans.html",
         email=session["user_email"],
@@ -2233,6 +2264,7 @@ def plans():
         weekly_schedule=weekly_schedule,
         saved_recommendation=saved_recommendation,
         recommended_weekly_structure=recommended_weekly_structure,
+        recommendation_badges=recommendation_badges,
     )
 
 
@@ -2388,6 +2420,11 @@ def save_plan_recommendation():
     saved_recommendation.recommendation_reason = recommendation["recommendation_reason"]
     saved_recommendation.weekly_structure_json = json.dumps(
         recommendation["weekly_structure"]
+    )
+    saved_recommendation.plan_focus = recommendation.get("plan_focus")
+    saved_recommendation.suggested_intensity = recommendation.get("suggested_intensity")
+    saved_recommendation.plan_badges_json = json.dumps(
+        recommendation.get("plan_badges", [])
     )
 
     db.session.commit()

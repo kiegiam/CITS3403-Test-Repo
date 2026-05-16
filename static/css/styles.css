@@ -2565,6 +2565,21 @@ body.premium-app-page::after {
     background: rgba(5, 8, 18, 0.90) !important;
 }
 
+.premium-landing-page main > section {
+    position: relative;
+}
+
+.premium-landing-page main > section:not(.hero-section) {
+    background: rgba(5, 8, 18, 0.92);
+}
+
+.premium-landing-page main > section:nth-of-type(3),
+.premium-landing-page main > section:nth-of-type(4) {
+    background:
+        linear-gradient(180deg, rgba(5, 8, 18, 0.94), rgba(8, 14, 28, 0.90)),
+        radial-gradient(circle at 78% 20%, rgba(57, 228, 255, 0.11), transparent 36%);
+}
+
 .premium-landing-page .feature-card,
 .premium-landing-page .dashboard-info-card,
 .premium-landing-page .hero-card,
@@ -2781,8 +2796,34 @@ body.premium-app-page::after {
 }
 
 @media (max-width: 991.98px) {
+    .premium-landing-page {
+        background:
+            linear-gradient(rgba(5, 8, 18, 0.74), rgba(5, 8, 18, 0.88)),
+            url("../background image/sports-sprinter-runner-man.jpg") center top / cover no-repeat,
+            #050711 !important;
+    }
+
     .premium-landing-page .hero-section {
         min-height: auto;
+    }
+
+    .landing-performance-panel {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .premium-landing-page .hero-section {
+        padding-top: 3rem !important;
+    }
+
+    .landing-metric-strip {
+        flex-direction: column;
+    }
+
+    .landing-gauge {
+        width: min(220px, 72vw);
     }
 }
 .duration-card-display {

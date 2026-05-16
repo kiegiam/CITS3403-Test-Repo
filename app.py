@@ -1202,9 +1202,15 @@ def add_workout():
         session.clear()
         return redirect(url_for("login"))
 
+    selected_plan = request.args.get("plan", "").strip().lower()
+
+    if selected_plan not in ["strength", "cardio", "flexibility"]:
+        selected_plan = ""
+
     return render_template(
         "add_workout.html",
         muscle_groups=MUSCLE_GROUPS,
+        selected_plan=selected_plan,
     )
 
 

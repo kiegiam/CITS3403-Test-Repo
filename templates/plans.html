@@ -113,7 +113,8 @@
                             <div class="col-lg-8">
                                 <h1 class="h3 mb-2">Workout Plans</h1>
                                 <p class="mb-0 text-muted">
-                                    Choose a simple training focus to guide your next workouts.
+                                    Choose a simple training focus to guide your next workouts,
+                                    then log completed sessions through Add Workout.
                                 </p>
                             </div>
                             <div class="col-lg-4 text-lg-end">
@@ -128,9 +129,10 @@
                 <div class="row g-4">
                     <div class="col-md-4">
                         <div class="card shadow-sm border-0 h-100 feature-card">
-                            <div class="card-body p-4">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-success align-self-start mb-3">Strength Focus</span>
                                 <h2 class="h4 mb-3">Strength Plan</h2>
-                                <p class="text-muted">
+                                <p class="text-muted mb-4">
                                     Build full-body strength with steady resistance training.
                                 </p>
                                 <ul class="list-group list-group-flush mb-4">
@@ -138,18 +140,19 @@
                                     <li class="list-group-item px-0">Focus on major muscle groups</li>
                                     <li class="list-group-item px-0">Track weight and duration</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout', plan='strength') }}" class="btn btn-success">
+                                <a href="{{ url_for('add_workout', plan='strength') }}" class="btn btn-success mt-auto">
                                     Log Strength Session
-                                    </a>
+                                </a>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="card shadow-sm border-0 h-100 feature-card">
-                            <div class="card-body p-4">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-primary align-self-start mb-3">Endurance Focus</span>
                                 <h2 class="h4 mb-3">Cardio Plan</h2>
-                                <p class="text-muted">
+                                <p class="text-muted mb-4">
                                     Improve endurance with regular running, cycling, or swimming.
                                 </p>
                                 <ul class="list-group list-group-flush mb-4">
@@ -157,7 +160,7 @@
                                     <li class="list-group-item px-0">Mix low and medium intensity</li>
                                     <li class="list-group-item px-0">Record distance or notes</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout', plan='cardio') }}" class="btn btn-primary">
+                                <a href="{{ url_for('add_workout', plan='cardio') }}" class="btn btn-primary mt-auto">
                                     Log Cardio Session
                                 </a>
                             </div>
@@ -166,9 +169,10 @@
 
                     <div class="col-md-4">
                         <div class="card shadow-sm border-0 h-100 feature-card">
-                            <div class="card-body p-4">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-warning align-self-start mb-3">Recovery Focus</span>
                                 <h2 class="h4 mb-3">Flexibility Plan</h2>
-                                <p class="text-muted">
+                                <p class="text-muted mb-4">
                                     Support recovery and mobility with stretching or yoga.
                                 </p>
                                 <ul class="list-group list-group-flush mb-4">
@@ -176,9 +180,101 @@
                                     <li class="list-group-item px-0">Focus on controlled movement</li>
                                     <li class="list-group-item px-0">Note tight or sore areas</li>
                                 </ul>
-                                <a href="{{ url_for('add_workout', plan='flexibility') }}" class="btn btn-warning">
+                                <a href="{{ url_for('add_workout', plan='flexibility') }}" class="btn btn-warning mt-auto">
                                     Log Flexibility Session
                                 </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-4">
+                <div class="card shadow-sm border-0 weekly-plan-card">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center g-3 mb-3">
+                            <div class="col-lg-8">
+                                <h2 class="h4 mb-2">Suggested Weekly Structure</h2>
+                                <p class="text-muted mb-0">
+                                    Use this as a simple planning guide for the week. It is not a saved workout
+                                    record until you log a session.
+                                </p>
+                            </div>
+                            <div class="col-lg-4 text-lg-end">
+                                <span class="badge text-bg-success">Frontend guide</span>
+                            </div>
+                        </div>
+
+                        <div class="weekly-plan-grid">
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Monday</span>
+                                <strong>Strength</strong>
+                                <span class="badge text-bg-success">Planned</span>
+                            </div>
+
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Tuesday</span>
+                                <strong>Cardio</strong>
+                                <span class="badge text-bg-success">Planned</span>
+                            </div>
+
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Wednesday</span>
+                                <strong>Recovery</strong>
+                                <span class="badge text-bg-primary">Recovery</span>
+                            </div>
+
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Thursday</span>
+                                <strong>Strength</strong>
+                                <span class="badge text-bg-success">Planned</span>
+                            </div>
+
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Friday</span>
+                                <strong>Flexibility</strong>
+                                <span class="badge text-bg-primary">Recovery</span>
+                            </div>
+
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Saturday</span>
+                                <strong>Cardio</strong>
+                                <span class="badge text-bg-success">Planned</span>
+                            </div>
+
+                            <div class="weekly-plan-day weekly-plan-day-rest">
+                                <span class="weekly-plan-day-name">Sunday</span>
+                                <strong>Rest</strong>
+                                <span class="badge text-bg-secondary">Rest</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-4">
+                <div class="card shadow-sm border-0 planning-tips-card">
+                    <div class="card-body p-4">
+                        <h2 class="h4 mb-2">Planning Tips</h2>
+                        <p class="text-muted mb-3">
+                            Use the plan page as a guide for deciding what to train next. Your actual
+                            workout history updates only after you log a completed session.
+                        </p>
+
+                        <div class="planning-tips-grid">
+                            <div class="planning-tip">
+                                <span class="planning-tip-number">1</span>
+                                <p class="mb-0">Balance strength, cardio, and recovery across the week.</p>
+                            </div>
+
+                            <div class="planning-tip">
+                                <span class="planning-tip-number">2</span>
+                                <p class="mb-0">Avoid training the same muscle group too hard every day.</p>
+                            </div>
+
+                            <div class="planning-tip">
+                                <span class="planning-tip-number">3</span>
+                                <p class="mb-0">Log completed sessions through Add Workout.</p>
                             </div>
                         </div>
                     </div>

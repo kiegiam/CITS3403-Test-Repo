@@ -2696,11 +2696,17 @@ body.premium-app-page::after {
 
 .premium-landing-page .hero-section {
     position: relative;
-    min-height: 680px;
+    min-height: calc(100vh - 72px);
     overflow: hidden;
     background:
-        linear-gradient(90deg, rgba(5, 8, 18, 0.96) 0%, rgba(5, 8, 18, 0.76) 47%, rgba(5, 8, 18, 0.30) 100%),
-        url("../background image/sports-sprinter-runner-man.jpg") right -40px top -54px / auto 760px no-repeat,
+        linear-gradient(
+            90deg,
+            rgba(5, 8, 18, 0.96) 0%,
+            rgba(5, 8, 18, 0.82) 38%,
+            rgba(5, 8, 18, 0.45) 68%,
+            rgba(5, 8, 18, 0.35) 100%
+        ),
+        url("../background image/sports-sprinter-runner-man.jpg") center center / cover no-repeat,
         #050711 !important;
 }
 

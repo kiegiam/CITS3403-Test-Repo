@@ -3016,14 +3016,18 @@ body.premium-app-page::after {
 
 .login-page .form-control::placeholder,
 .register-page .form-control::placeholder,
-.forgot-password-page .form-control::placeholder {
+.forgot-password-page .form-control::placeholder,
+.reset-password-page .form-control::placeholder,
+.verify-password-page .form-control::placeholder {
     color: #ffffff !important;
     opacity: 0.85;
 }
 
 .login-page .form-control,
 .register-page .form-control,
-.forgot-password-page .form-control {
+.forgot-password-page .form-control,
+.reset-password-page .form-control ,
+.verify-password-page .form-control::placeholder{
     color: #ffffff !important;
 }
 /* Plans page form readability */

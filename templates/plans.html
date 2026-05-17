@@ -240,7 +240,7 @@
 
                                 <div>
                                     <label for="main_goal" class="form-label">Main goal</label>
-                                    <select id="main_goal" name="main_goal" class="form-select" required>
+                                    <select id="main_goal" name="main_goal" class="form-select plan-select" required>
                                         <option value="build_strength" {% if saved_recommendation and saved_recommendation.main_goal == "build_strength" %}selected{% endif %}>Build strength</option>
                                         <option value="improve_cardio" {% if saved_recommendation and saved_recommendation.main_goal == "improve_cardio" %}selected{% endif %}>Improve cardio</option>
                                         <option value="lose_weight" {% if saved_recommendation and saved_recommendation.main_goal == "lose_weight" %}selected{% endif %}>Lose weight</option>
@@ -251,7 +251,7 @@
 
                                 <div>
                                     <label for="fitness_level" class="form-label">Fitness level</label>
-                                    <select id="fitness_level" name="fitness_level" class="form-select" required>
+                                    <select id="fitness_level" name="fitness_level" class="form-select plan-select" required>
                                         <option value="beginner" {% if saved_recommendation and saved_recommendation.fitness_level == "beginner" %}selected{% endif %}>Beginner</option>
                                         <option value="intermediate" {% if saved_recommendation and saved_recommendation.fitness_level == "intermediate" %}selected{% endif %}>Intermediate</option>
                                         <option value="advanced" {% if saved_recommendation and saved_recommendation.fitness_level == "advanced" %}selected{% endif %}>Advanced</option>
@@ -260,7 +260,7 @@
 
                                 <div>
                                     <label for="training_days" class="form-label">Training days</label>
-                                    <select id="training_days" name="training_days" class="form-select" required>
+                                    <select id="training_days" name="training_days" class="form-select plan-select" required>
                                         {% for day_count in [1, 2, 3, 4, 5, 6] %}
                                             <option value="{{ day_count }}" {% if saved_recommendation and saved_recommendation.training_days == day_count %}selected{% elif not saved_recommendation and day_count == 4 %}selected{% endif %}>
                                                 {{ day_count }} day{% if day_count != 1 %}s{% endif %} per week
@@ -271,7 +271,7 @@
 
                                 <div>
                                     <label for="session_length" class="form-label">Session length</label>
-                                    <select id="session_length" name="session_length" class="form-select" required>
+                                    <select id="session_length" name="session_length" class="form-select plan-select" required>
                                         {% for minutes in [15, 20, 30, 45, 60] %}
                                             <option value="{{ minutes }}" {% if saved_recommendation and saved_recommendation.session_length == minutes %}selected{% elif not saved_recommendation and minutes == 30 %}selected{% endif %}>
                                                 {{ minutes }} minutes
@@ -282,7 +282,7 @@
 
                                 <div class="personal-plan-full">
                                     <label for="limitation" class="form-label">Training need or limitation</label>
-                                    <select id="limitation" name="limitation" class="form-select" required>
+                                    <select id="limitation" name="limitation" class="form-select plan-select" required>
                                         <option value="none" {% if not saved_recommendation or saved_recommendation.limitation == "none" %}selected{% endif %}>None</option>
                                         <option value="knee_discomfort" {% if saved_recommendation and saved_recommendation.limitation == "knee_discomfort" %}selected{% endif %}>Knee discomfort</option>
                                         <option value="back_discomfort" {% if saved_recommendation and saved_recommendation.limitation == "back_discomfort" %}selected{% endif %}>Back discomfort</option>
@@ -293,7 +293,7 @@
 
                                 <div>
                                     <label for="equipment_access" class="form-label">Equipment access</label>
-                                    <select id="equipment_access" name="equipment_access" class="form-select" required>
+                                    <select id="equipment_access" name="equipment_access" class="form-select plan-select" required>
                                         <option value="gym" {% if not saved_recommendation or saved_recommendation.equipment_access == "gym" %}selected{% endif %}>Gym</option>
                                         <option value="home" {% if saved_recommendation and saved_recommendation.equipment_access == "home" %}selected{% endif %}>Home</option>
                                         <option value="outdoor" {% if saved_recommendation and saved_recommendation.equipment_access == "outdoor" %}selected{% endif %}>Outdoor</option>
@@ -304,7 +304,7 @@
 
                                 <div>
                                     <label for="training_preference" class="form-label">Training preference</label>
-                                    <select id="training_preference" name="training_preference" class="form-select" required>
+                                    <select id="training_preference" name="training_preference" class="form-select plan-select" required>
                                         <option value="structured" {% if saved_recommendation and saved_recommendation.training_preference == "structured" %}selected{% endif %}>Structured</option>
                                         <option value="short_simple" {% if saved_recommendation and saved_recommendation.training_preference == "short_simple" %}selected{% endif %}>Short and simple</option>
                                         <option value="low_impact" {% if saved_recommendation and saved_recommendation.training_preference == "low_impact" %}selected{% endif %}>Low impact</option>

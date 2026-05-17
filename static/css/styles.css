@@ -3013,32 +3013,16 @@ body.premium-app-page::after {
 .mono {
     font-variant-numeric: tabular-nums;
 }
-/* Auth page input visibility */
-.login-page .form-control,
-.register-page .form-control {
-    background-color: #ffffff !important;
-    color: #111827 !important;
-    border: 1px solid #d1d5db !important;
-    box-shadow: none;
-}
 
 .login-page .form-control::placeholder,
-.register-page .form-control::placeholder {
-    color: #6b7280 !important;
-    opacity: 1;
+.register-page .form-control::placeholder,
+.forgot-password-page .form-control::placeholder {
+    color: #ffffff !important;
+    opacity: 0.85;
 }
 
-.login-page .form-control:focus,
-.register-page .form-control:focus {
-    background-color: #ffffff !important;
-    color: #111827 !important;
-    border-color: #198754 !important;
-    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.18) !important;
-}
-
-/* Chrome autofill fix */
-.login-page input:-webkit-autofill,
-.register-page input:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
-    -webkit-text-fill-color: #111827 !important;
+.login-page .form-control,
+.register-page .form-control,
+.forgot-password-page .form-control {
+    color: #ffffff !important;
 }

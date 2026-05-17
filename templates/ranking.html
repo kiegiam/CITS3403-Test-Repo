@@ -272,7 +272,7 @@
                                             <img
                                                 src="{{ url_for('static', filename='uploads/' ~ user.avatar_filename) }}"
                                                 alt="{{ user.name }}"
-                                                class="ranking-avatar ranking-avatar-large mb-3"
+                                                class="ranking-avatar ranking-avatar-large mx-auto d-block mb-3"
                                             >
                                         {% else %}
                                             <div class="ranking-avatar ranking-avatar-large ranking-avatar-fallback mx-auto mb-3">
@@ -283,7 +283,7 @@
                                         <img
                                             src="{{ url_for('static', filename='background image/blank-profile-picture.png') }}"
                                             alt="Private user"
-                                            class="ranking-avatar ranking-avatar-large mb-3 private-user-avatar"
+                                            class="ranking-avatar ranking-avatar-large mx-auto d-block mb-3 private-user-avatar"
                                         >
                                     {% endif %}
 

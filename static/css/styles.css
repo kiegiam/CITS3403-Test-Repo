@@ -3016,14 +3016,18 @@ body.premium-app-page::after {
 
 .login-page .form-control::placeholder,
 .register-page .form-control::placeholder,
-.forgot-password-page .form-control::placeholder {
+.forgot-password-page .form-control::placeholder,
+.reset-password-page .form-control::placeholder,
+.verify-password-page .form-control::placeholder {
     color: #ffffff !important;
     opacity: 0.85;
 }
 
 .login-page .form-control,
 .register-page .form-control,
-.forgot-password-page .form-control {
+.forgot-password-page .form-control,
+.reset-password-page .form-control ,
+.verify-password-page .form-control::placeholder{
     color: #ffffff !important;
 }
 /* Plans page form readability */
@@ -3126,4 +3130,49 @@ body.premium-app-page::after {
 .plans-page select.form-select.plan-select option {
     color: #111827 !important;
     background-color: #ffffff !important;
+}
+/* Add workout notes placeholder contrast */
+#workout-notes::placeholder {
+    color: #ffffff !important;
+    opacity: 0.75;
+}
+
+#workout-notes {
+    color: #ffffff !important;
+}
+/* Workout complete summary cards */
+#screen-summary .stat-card {
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(72, 228, 255, 0.22);
+    border-radius: 1.25rem;
+    padding: 1.15rem 0.9rem;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+#screen-summary .stat-card .value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #5df2a8;
+    line-height: 1.1;
+    margin-bottom: 0.35rem;
+}
+
+#screen-summary .stat-card .label {
+    font-size: 0.78rem;
+    color: rgba(247, 251, 255, 0.66);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 0;
+}
+
+#screen-summary .row.g-3.mb-4 {
+    align-items: stretch;
 }

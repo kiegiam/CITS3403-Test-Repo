@@ -1199,6 +1199,26 @@ function addSet(exerciseId) {
                 <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
             </td>
         `;
+    } else if (ex.tracking_type === 'stair_climber') {
+        newSet.distance_km = prev.distance_km || '';
+        newSet.incline_deg = prev.incline_deg || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="0.1" step="0.1" placeholder="1.0"
+                    value="${newSet.distance_km}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'distance_km', this.value)">
+            </td>
+            <td>
+                <input class="set-input" type="number" min="0" max="90" step="1" placeholder="10"
+                    value="${newSet.incline_deg}"
+                    oninput="clampIncline(this); updateSet(${exerciseId}, ${setNum}, 'incline_deg', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
     } else if (ex.tracking_type === 'timed_hold') {
         newSet.duration_sec = prev.duration_sec || '';
 
@@ -1240,22 +1260,6 @@ function addSet(exerciseId) {
     updateSetCountLabel();
 }
 
-function updateSet(exerciseId, setNum, field, value) {
-    const sets = workoutSets[exerciseId];
-    const set = sets.find(s => s.set_number === setNum);
-    if (!set) return;
-
-    if (value === '') {
-        set[field] = '';
-        return;
-    }
-
-    if (field === 'weight_kg' || field === 'distance_km') {
-        set[field] = parseFloat(value);
-    } else {
-        set[field] = parseInt(value, 10);
-    }
-}
 
 function clampIncline(input) {
     if (input.value === '') return;

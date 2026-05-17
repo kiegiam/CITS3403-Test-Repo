@@ -312,7 +312,8 @@ class Exercise(db.Model):
             "name": self.name,
             "muscle_group": self.muscle_group,
             "is_custom": self.user_id is not None,
-            "is_archived": self.is_archived,
+            "is_archived": self.is_archived if hasattr(self, "is_archived") else False,
+            "tracking_type": infer_tracking_type(self.name, self.muscle_group),
         }
 
 
@@ -2025,6 +2026,7 @@ def finish_workout():
             distance_km = float(raw_set.get("distance_km", 0) or 0)
             duration_sec = int(raw_set.get("duration_sec", 0) or 0)
             duration_min = int(raw_set.get("duration_min", 0) or 0)
+            incline_deg = float(raw_set.get("incline_deg", 0) or 0)
         except (KeyError, ValueError, TypeError):
             return jsonify({"error": f"Set {index} is missing or has invalid fields"}), 400
 
@@ -2050,6 +2052,12 @@ def finish_workout():
             if distance_km <= 0:
                 return jsonify({"error": f"Set {index}: distance_km must be greater than 0"}), 400
 
+        elif tracking_type == "stair_climber":
+            if distance_km <= 0:
+                return jsonify({"error": f"Set {index}: distance_km must be greater than 0"}), 400
+            if incline_deg < 0 or incline_deg > 90:
+                return jsonify({"error": f"Set {index}: incline_deg must be between 0 and 90"}), 400
+
         elif tracking_type == "timed_hold":
             if duration_sec <= 0:
                 return jsonify({"error": f"Set {index}: duration_sec must be greater than 0"}), 400
@@ -2057,13 +2065,6 @@ def finish_workout():
         elif tracking_type == "duration_only":
             if duration_min <= 0:
                 return jsonify({"error": f"Set {index}: duration_min must be greater than 0"}), 400
-            
-        elif tracking_type == "stair_climber":
-            if distance_km <= 0:
-                return jsonify({"error": f"Set {index}: distance_km must be greater than 0"}), 400
-
-            if incline_deg < 0 or incline_deg > 90:
-                return jsonify({"error": f"Set {index}: incline_deg must be between 0 and 90"}), 400
 
         validated_sets.append({
             "exercise": exercise,
@@ -2074,6 +2075,7 @@ def finish_workout():
             "distance_km": distance_km,
             "duration_sec": duration_sec,
             "duration_min": duration_min,
+            "incline_deg": incline_deg,
         })
 
     muscle_groups_trained = list(dict.fromkeys(
@@ -2102,6 +2104,23 @@ def finish_workout():
     )
 
     db.session.add(new_workout)
+    db.session.commit()
+
+    for saved_set in validated_sets:
+        workout_set = WorkoutSet(
+            workout_id=new_workout.id,
+            exercise_id=saved_set["exercise"].id,
+            set_number=saved_set["set_number"],
+            reps=saved_set["reps"],
+            weight_kg=saved_set["weight_kg"],
+            tracking_type=saved_set["tracking_type"],
+            distance_km=saved_set["distance_km"],
+            duration_sec=saved_set["duration_sec"],
+            duration_min=saved_set["duration_min"],
+            incline_deg=saved_set["incline_deg"],
+        )
+        db.session.add(workout_set)
+
     db.session.commit()
 
     total_volume_kg = sum(saved_set["reps"] * saved_set["weight_kg"] for saved_set in validated_sets)

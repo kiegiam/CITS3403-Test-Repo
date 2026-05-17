@@ -2696,11 +2696,17 @@ body.premium-app-page::after {
 
 .premium-landing-page .hero-section {
     position: relative;
-    min-height: 680px;
+    min-height: calc(100vh - 72px);
     overflow: hidden;
     background:
-        linear-gradient(90deg, rgba(5, 8, 18, 0.96) 0%, rgba(5, 8, 18, 0.76) 47%, rgba(5, 8, 18, 0.30) 100%),
-        url("../background image/sports-sprinter-runner-man.jpg") right -40px top -54px / auto 760px no-repeat,
+        linear-gradient(
+            90deg,
+            rgba(5, 8, 18, 0.96) 0%,
+            rgba(5, 8, 18, 0.82) 38%,
+            rgba(5, 8, 18, 0.45) 68%,
+            rgba(5, 8, 18, 0.35) 100%
+        ),
+        url("../background image/sports-sprinter-runner-man.jpg") center center / cover no-repeat,
         #050711 !important;
 }
 
@@ -3006,4 +3012,40 @@ body.premium-app-page::after {
 
 .mono {
     font-variant-numeric: tabular-nums;
+}
+
+.login-page .form-control::placeholder,
+.register-page .form-control::placeholder,
+.forgot-password-page .form-control::placeholder {
+    color: #ffffff !important;
+    opacity: 0.85;
+}
+
+.login-page .form-control,
+.register-page .form-control,
+.forgot-password-page .form-control {
+    color: #ffffff !important;
+}
+/* Plans page form readability */
+.plans-page input.form-control::placeholder {
+    color: #ffffff !important;
+    opacity: 0.85;
+}
+
+.plans-page input.form-control {
+    color: #ffffff !important;
+}
+
+/* Closed dropdown text stays white inside the dark input box */
+.plans-page select.form-select {
+    color: #ffffff !important;
+
+    /* White dropdown arrow */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+
+/* Dropdown menu options should be readable when opened */
+.plans-page select.form-select option {
+    color: #111827 !important;
+    background-color: #ffffff !important;
 }

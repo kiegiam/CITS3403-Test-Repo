@@ -1,0 +1,1564 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack – Start Workout</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <style>
+        :root {
+            --green:      #16a34a;
+            --green-dark: #15803d;
+            --green-pale: #f0fdf4;
+            --border:     #e2e8f0;
+            --muted:      #64748b;
+            --danger:     #dc2626;
+            --radius:     0.75rem;
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background: #f8fafc; }
+        code, .mono { font-family: 'DM Mono', monospace; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        #timer-pill {
+            position: fixed;
+            top: 72px;
+            right: 1.25rem;
+            z-index: 1040;
+            background: transparent;
+            color: transparent;
+            padding: 0;
+            border-radius: 999px;
+            font-family: 'DM Mono', monospace;
+            font-size: 1.05rem;
+            letter-spacing: 0.05em;
+            box-shadow: none;
+            display: none;
+            pointer-events: none;
+        }
+        #timer-pill.visible { display: block; }
+        #timer-pill .dot {
+            display: none;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        .muscle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+        .muscle-btn {
+            border: 2px solid var(--border);
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 1.1rem 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: #1e293b;
+        }
+        .muscle-btn:hover { border-color: var(--green); background: var(--green-pale); }
+        .muscle-btn.selected {
+            border-color: var(--green);
+            background: var(--green);
+            color: #fff;
+        }
+        .muscle-btn .icon { font-size: 1.6rem; display: block; margin-bottom: 0.35rem; }
+
+        .exercise-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            background: #fff;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            user-select: none;
+        }
+        .exercise-item:hover { border-color: var(--green); background: var(--green-pale); }
+        .exercise-item.added {
+            border-color: var(--green);
+            background: var(--green-pale);
+        }
+        .exercise-item .badge-custom {
+            font-size: 0.7rem;
+            background: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fde047;
+            border-radius: 4px;
+            padding: 1px 6px;
+            margin-left: 0.5rem;
+        }
+
+        .exercise-block {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            background: #fff;
+        }
+        .exercise-block-header {
+            background: var(--green);
+            color: #fff;
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+        .exercise-block-header .muscle-tag {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            font-weight: 400;
+            margin-left: 0.5rem;
+        }
+        .sets-table { width: 100%; border-collapse: collapse; }
+        .sets-table th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            padding: 0.5rem 0.75rem;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        .sets-table td {
+            padding: 0.45rem 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .sets-table tr:last-child td { border-bottom: none; }
+        .set-input {
+            width: 80px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.9rem;
+            font-family: 'DM Mono', monospace;
+            text-align: center;
+        }
+        .set-input:focus { outline: none; border-color: var(--green); }
+        .btn-remove-set {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .btn-remove-set:hover { background: #fee2e2; color: var(--danger); }
+        .btn-add-set {
+            font-size: 0.82rem;
+            color: var(--green);
+            background: none;
+            border: none;
+            padding: 0.45rem 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-add-set:hover { text-decoration: underline; }
+        .btn-remove-exercise {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0;
+            line-height: 1;
+        }
+        .btn-remove-exercise:hover { color: #fff; }
+
+        .stat-card {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-family: 'DM Mono', monospace;
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--green);
+            line-height: 1.1;
+        }
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 0.25rem;
+        }
+        .exercise-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.92rem;
+        }
+        .exercise-summary-row:last-child { border-bottom: none; }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--green);
+            margin-bottom: 0.25rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--muted);
+        }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+        #toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .toast-msg {
+            background: #1e293b;
+            color: #fff;
+            padding: 0.55rem 1.2rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .toast-msg.show { opacity: 1; }
+
+        .duration-card-display {
+            background: rgba(25, 135, 84, 0.06);
+            border: 1px solid rgba(25, 135, 84, 0.15);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .mono {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="premium-app-page workout-entry-page">
+
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('home') }}{% endif %}">
+                FitTrack
+            </a>
+
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#appNav"
+                aria-controls="appNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="appNav">
+                <ul class="navbar-nav me-auto align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center mt-3 mt-lg-0">
+                    <div class="dropdown">
+                        <button
+                            class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Open profile menu"
+                        >
+                            {% if nav_profile and nav_profile.avatar_filename %}
+                                <img
+                                    src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                    alt="Profile"
+                                    class="profile-icon"
+                                >
+                            {% else %}
+                                <span class="profile-icon profile-icon-fallback">
+                                    {% if nav_profile and nav_profile.name %}
+                                        {% set name_parts = nav_profile.name.split() %}
+                                        {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                    {% elif nav_email %}
+                                        {{ nav_email[0]|upper }}
+                                    {% else %}
+                                        U
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                    My Profile
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<div id="timer-pill">
+    <span class="dot"></span>
+    <span id="timer-display">00:00:00</span>
+</div>
+
+<div id="toast-container"></div>
+
+<main class="py-5">
+    <div class="container" style="max-width: 760px;">
+
+        {% if selected_plan %}
+            <section class="plan-guidance-card card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <span class="badge text-bg-success">Plan guided mode</span>
+                        <a href="{{ url_for('plans') }}" class="btn btn-outline-success btn-sm">
+                            Back to Plans
+                        </a>
+                    </div>
+
+                    {% if selected_plan == "strength" %}
+                        <span class="badge text-bg-success mb-3">Strength Plan</span>
+                        <h1 class="h4 mb-2">Strength Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Build a steady resistance session around controlled sets and major muscle groups.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Chest, back, shoulders, legs, or core</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Medium to High</p>
+                            </div>
+                        </div>
+                    {% elif selected_plan == "cardio" %}
+                        <span class="badge text-bg-primary mb-3">Cardio Plan</span>
+                        <h1 class="h4 mb-2">Cardio Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Keep the session focused on endurance, breathing rhythm, and consistent movement.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Cardio exercises or leg-focused movement</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Low to Medium</p>
+                            </div>
+                        </div>
+                    {% elif selected_plan == "flexibility" %}
+                        <span class="badge text-bg-warning mb-3">Flexibility Plan</span>
+                        <h1 class="h4 mb-2">Flexibility Plan guidance</h1>
+                        <p class="text-muted mb-3">
+                            Use this session for mobility, recovery, and gentle controlled movement.
+                        </p>
+                        <div class="plan-guidance-grid">
+                            <div>
+                                <p class="plan-guidance-label mb-1">Recommended focus</p>
+                                <p class="mb-0 fw-semibold">Core, legs, shoulders, or recovery work</p>
+                            </div>
+                            <div>
+                                <p class="plan-guidance-label mb-1">Suggested intensity</p>
+                                <p class="mb-0 fw-semibold">Low</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <p class="plan-guidance-note mb-0 mt-3">
+                        This is only a guide. You can still change the selected muscle groups below.
+                    </p>
+                </div>
+            </section>
+        {% endif %}
+
+        <div id="screen-muscles" class="screen active">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <p class="step-label">Step 1 of 2</p>
+                    <h1 class="h3 mb-1">What are you training today?</h1>
+                    <p class="text-muted mb-4">Pick one or more muscle groups. You can add exercises from each.</p>
+                    {% if selected_plan %}
+                        <p class="plan-guidance-note mb-4">
+                            Recommended muscle groups are already selected for this plan. You can add or remove
+                            groups before starting.
+                        </p>
+                    {% endif %}
+
+                    <div class="muscle-grid mb-4">
+                        {% set recommended_groups = [] %}
+                        {% if selected_plan == "strength" %}
+                            {% set recommended_groups = ["Chest", "Back", "Shoulders", "Legs"] %}
+                        {% elif selected_plan == "cardio" %}
+                            {% set recommended_groups = ["Cardio", "Legs", "Core"] %}
+                        {% elif selected_plan == "flexibility" %}
+                            {% set recommended_groups = ["Back", "Shoulders", "Legs", "Core"] %}
+                        {% endif %}
+                        {% set icons = {
+                            'Chest':     '🙆‍♂️',
+                            'Back':      '🧎‍♂️',
+                            'Shoulders': '🏋️',
+                            'Biceps':    '💪',
+                            'Triceps':   '🦾',
+                            'Legs':      '🦵',
+                            'Core':      '🎯',
+                            'Cardio':    '🏃'
+                        } %}
+                        {% for group in muscle_groups %}
+                        <button
+                            class="muscle-btn {% if group in recommended_groups %}selected{% endif %}"
+                            data-group="{{ group }}"
+                            onclick="toggleMuscle(this)"
+                            type="button"
+                        >
+                            <span class="icon">{{ icons.get(group, '💪') }}</span>
+                            {{ group }}
+                        </button>
+                        {% endfor %}
+                    </div>
+
+                    <button
+                        class="btn btn-success w-100"
+                        id="start-workout-button"
+                        onclick="goToExercises()"
+                        type="button"
+                    >
+                        Choose Exercises →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-workout" class="screen">
+            <input type="hidden" id="plan-type" value="{{ selected_plan }}">
+
+            <div class="card shadow-sm border-0 mb-3" id="exercise-picker-card">
+                <div class="card-body p-4">
+                    <p class="step-label">Step 2 of 2 — Workout in progress</p>
+                    <h2 class="h5 mb-3">Add exercises to your workout</h2>
+
+                    <div id="group-tabs" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                    {% if recommended_exercise_names %}
+                        <div class="recommended-exercises-panel mb-3">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div>
+                                    <h3 class="h6 mb-1">Recommended for your plan</h3>
+                                    <p class="text-muted small mb-0">
+                                        These suggestions are based on your selected plan and saved preferences.
+                                        You can still choose any exercise.
+                                    </p>
+                                </div>
+                                <span class="badge text-bg-success">Suggestions</span>
+                            </div>
+
+                            <div class="recommended-exercise-chips">
+                                {% for exercise in recommended_exercise_details %}
+                                    <span class="recommended-exercise-chip">
+                                        <strong>{{ exercise.name }}</strong>
+                                        <span class="recommended-exercise-meta">
+                                            {% if exercise.difficulty_level %}
+                                                <small>{{ exercise.difficulty_level|replace("_", " ")|title }}</small>
+                                            {% endif %}
+                                            {% if exercise.intensity_level %}
+                                                <small>{{ exercise.intensity_level|replace("_", " ")|title }} intensity</small>
+                                            {% endif %}
+                                            {% if exercise.equipment_type %}
+                                                <small>{{ exercise.equipment_type|replace("_", " ")|title }}</small>
+                                            {% endif %}
+                                        </span>
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div id="exercise-list" class="mb-3">
+                        <div class="empty-state">
+                            <div class="icon">🔄</div>
+                            <p class="mb-0">Loading exercises…</p>
+                        </div>
+                    </div>
+
+                    <details class="mb-0">
+                        <summary class="text-success fw-semibold" style="cursor:pointer; font-size:0.9rem;">
+                            + Add a custom exercise
+                        </summary>
+                        <div class="mt-3 p-3 rounded bg-light border">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input
+                                        type="text"
+                                        id="custom-name"
+                                        class="form-control form-control-sm"
+                                        placeholder="Exercise name"
+                                    >
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="custom-group" class="form-select form-select-sm">
+                                        {% for group in muscle_groups %}
+                                        <option value="{{ group }}">{{ group }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button
+                                        class="btn btn-success btn-sm w-100"
+                                        onclick="addCustomExercise()"
+                                        type="button"
+                                    >Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">Your sets</h2>
+                        <span class="text-muted small" id="set-count-label">0 sets logged</span>
+                    </div>
+
+                    <div id="exercise-blocks">
+                        <div class="empty-state" id="no-sets-msg">
+                            <div class="icon">➕</div>
+                            <p class="mb-0 text-muted">Add an exercise above to start logging sets</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                        <div>
+                            <p class="step-label mb-1">Workout Duration</p>
+                            <h2 class="h5 mb-0">Choose how to set workout duration</h2>
+                        </div>
+                    </div>
+
+                    <div class="btn-group mb-3" role="group" aria-label="Duration mode">
+                        <button
+                            type="button"
+                            id="duration-tab-stopwatch"
+                            class="btn btn-success"
+                            onclick="setDurationMode('stopwatch')"
+                        >
+                            Stopwatch
+                        </button>
+                        <button
+                            type="button"
+                            id="duration-tab-manual"
+                            class="btn btn-outline-success"
+                            onclick="setDurationMode('manual')"
+                        >
+                            Manual Entry
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="duration-mode" value="stopwatch">
+
+                    <div id="duration-stopwatch-panel">
+                        <div class="duration-card-display">
+                            <div class="small text-muted mb-1">Live workout timer</div>
+                            <div id="timer-display-large" class="display-6 fw-bold mono">00:00:00</div>
+            
+                        
+                        </div>
+                    </div>
+
+                    <div id="duration-manual-panel" class="d-none">
+                        <div class="row g-3">
+                            <div class="col-sm-4">
+                                <label for="manual-duration-hours" class="form-label">Hours</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    class="form-control"
+                                    id="manual-duration-hours"
+                                    placeholder="0"
+                                >
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="manual-duration-minutes" class="form-label">Minutes</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    step="1"
+                                    class="form-control"
+                                    id="manual-duration-minutes"
+                                    placeholder="45"
+                                    oninput="if (this.value !== '') { if (parseInt(this.value, 10) > 59) this.value = 59; if (parseInt(this.value, 10) < 0) this.value = 0; }"
+                                >
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="manual-duration-seconds" class="form-label">Seconds</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    step="1"
+                                    class="form-control"
+                                    id="manual-duration-seconds"
+                                    placeholder="0"
+                                    oninput="if (this.value !== '') { if (parseInt(this.value, 10) > 59) this.value = 59; if (parseInt(this.value, 10) < 0) this.value = 0; }"
+                                >
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-2 mb-0">
+                            Use this if you want to enter the full workout duration manually instead of using the stopwatch.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <p class="step-label mb-1">Workout Intensity</p>
+                    <h2 class="h5 mb-3">How intense was this workout?</h2>
+
+                    <input type="hidden" id="workout-intensity" value="Medium">
+
+                    <div class="btn-group w-100" role="group" aria-label="Workout intensity">
+                        <button
+                            type="button"
+                            id="intensity-low"
+                            class="btn btn-outline-success"
+                            onclick="setWorkoutIntensity('Low')"
+                        >
+                            Low
+                        </button>
+
+                        <button
+                            type="button"
+                            id="intensity-medium"
+                            class="btn btn-warning"
+                            onclick="setWorkoutIntensity('Medium')"
+                        >
+                            Medium
+                        </button>
+
+                        <button
+                            type="button"
+                            id="intensity-high"
+                            class="btn btn-outline-danger"
+                            onclick="setWorkoutIntensity('High')"
+                        >
+                            High
+                        </button>
+                    </div>
+
+                    <p class="text-muted small mt-2 mb-0">
+                        Choose the intensity yourself instead of having FitTrack estimate it from weight lifted.
+                    </p>
+                </div>
+            </div>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <label for="workout-notes" class="form-label fw-semibold">Notes</label>
+                    <textarea
+                        id="workout-notes"
+                        class="form-control"
+                        rows="4"
+                        placeholder="How did the workout feel?"
+                    ></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap mb-4">
+                <button
+                    id="finish-workout-btn"
+                    class="btn btn-success flex-grow-1"
+                    onclick="finishWorkout()"
+                    type="button"
+                >
+                    🏁 Finish Workout
+                </button>
+                <button
+                    class="btn btn-outline-secondary"
+                    onclick="showScreen('screen-muscles')"
+                    type="button"
+                >
+                    Back
+                </button>
+            </div>
+        </div>
+
+        <div id="screen-summary" class="screen">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="display-3">✅</div>
+                        <h1 class="h3 mt-2 mb-1">Workout Complete!</h1>
+                        <p class="text-muted mb-0" id="summary-date"></p>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="value" id="sum-duration">–</div>
+                                <div class="label">Minutes</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="value" id="sum-sets">–</div>
+                                <div class="label">Total Sets</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="value" id="sum-volume">–</div>
+                                <div class="label">kg Lifted</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="value" id="sum-intensity">–</div>
+                                <div class="label">Intensity</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <p class="fw-semibold mb-2">Muscle groups trained</p>
+                        <div id="sum-muscles" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="fw-semibold mb-2">Exercise breakdown</p>
+                        <div id="sum-exercises"></div>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ url_for('workouts') }}" class="btn btn-success flex-grow-1">
+                            View My Workouts
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success">
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let selectedGroups   = new Set({{ recommended_groups | tojson }});
+let recommendedExerciseNames = new Set({{ recommended_exercise_names | default([], true) | tojson }});
+let activeTab        = null;
+let exerciseCache    = {};
+let addedExercises   = {};
+let workoutSets      = {};
+
+let timerInterval    = null;
+let startedAt        = null;
+let durationMode     = 'stopwatch';
+const selectedPlan   = "{{ selected_plan }}";
+
+const startButtonText = {
+    strength: "Start Strength Workout →",
+    cardio: "Start Cardio Workout →",
+    flexibility: "Start Recovery Workout →",
+};
+
+const startButton = document.getElementById('start-workout-button');
+
+if (startButton) {
+    startButton.textContent = startButtonText[selectedPlan] || "Choose Exercises →";
+}
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function toast(msg) {
+    const el = document.createElement('div');
+    el.className = 'toast-msg';
+    el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+    }, 2500);
+}
+
+function totalSetCount() {
+    return Object.values(workoutSets).reduce((acc, sets) => acc + sets.length, 0);
+}
+
+function setDurationMode(mode) {
+    durationMode = mode;
+    document.getElementById('duration-mode').value = mode;
+
+    const stopwatchTab = document.getElementById('duration-tab-stopwatch');
+    const manualTab = document.getElementById('duration-tab-manual');
+    const stopwatchPanel = document.getElementById('duration-stopwatch-panel');
+    const manualPanel = document.getElementById('duration-manual-panel');
+
+    if (mode === 'stopwatch') {
+        stopwatchTab.classList.add('btn-success');
+        stopwatchTab.classList.remove('btn-outline-success');
+
+        manualTab.classList.add('btn-outline-success');
+        manualTab.classList.remove('btn-success');
+
+        stopwatchPanel.classList.remove('d-none');
+        manualPanel.classList.add('d-none');
+    } else {
+        manualTab.classList.add('btn-success');
+        manualTab.classList.remove('btn-outline-success');
+
+        stopwatchTab.classList.add('btn-outline-success');
+        stopwatchTab.classList.remove('btn-success');
+
+        manualPanel.classList.remove('d-none');
+        stopwatchPanel.classList.add('d-none');
+    }
+}
+
+function setWorkoutIntensity(level) {
+    document.getElementById('workout-intensity').value = level;
+
+    const low = document.getElementById('intensity-low');
+    const medium = document.getElementById('intensity-medium');
+    const high = document.getElementById('intensity-high');
+
+    low.className = 'btn btn-outline-success';
+    medium.className = 'btn btn-outline-warning';
+    high.className = 'btn btn-outline-danger';
+
+    if (level === 'Low') {
+        low.className = 'btn btn-success';
+    } else if (level === 'Medium') {
+        medium.className = 'btn btn-warning';
+    } else {
+        high.className = 'btn btn-danger';
+    }
+}
+
+function toggleMuscle(btn) {
+    const group = btn.dataset.group;
+    if (selectedGroups.has(group)) {
+        selectedGroups.delete(group);
+        btn.classList.remove('selected');
+    } else {
+        selectedGroups.add(group);
+        btn.classList.add('selected');
+    }
+}
+
+function goToExercises() {
+    if (selectedGroups.size === 0) {
+        toast('Pick at least one muscle group first');
+        return;
+    }
+
+    const tabsEl = document.getElementById('group-tabs');
+    tabsEl.innerHTML = '';
+    selectedGroups.forEach(group => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm btn-outline-success';
+        btn.textContent = group;
+        btn.dataset.group = group;
+        btn.onclick = () => switchTab(group);
+        tabsEl.appendChild(btn);
+    });
+
+    startedAt = new Date();
+    const pill = document.getElementById('timer-pill');
+    pill.classList.add('visible');
+
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    switchTab([...selectedGroups][0]);
+    showScreen('screen-workout');
+}
+
+async function switchTab(group) {
+    activeTab = group;
+
+    document.querySelectorAll('#group-tabs button').forEach(b => {
+        b.classList.toggle('btn-success', b.dataset.group === group);
+        b.classList.toggle('btn-outline-success', b.dataset.group !== group);
+    });
+
+    document.getElementById('custom-group').value = group;
+
+    if (!exerciseCache[group]) {
+        document.getElementById('exercise-list').innerHTML =
+            '<div class="empty-state"><div class="icon">🔄</div><p>Loading…</p></div>';
+        try {
+            const res = await fetch(`/api/exercises?muscle_group=${encodeURIComponent(group)}`);
+            exerciseCache[group] = await res.json();
+        } catch (e) {
+            document.getElementById('exercise-list').innerHTML =
+                '<div class="empty-state text-danger">Failed to load exercises. Please refresh.</div>';
+            return;
+        }
+    }
+    renderExerciseList(group);
+}
+
+function renderExerciseList(group) {
+    const list = document.getElementById('exercise-list');
+    const exercises = [...(exerciseCache[group] || [])].sort((a, b) => {
+        const aRecommended = !a.is_custom && recommendedExerciseNames.has(a.name);
+        const bRecommended = !b.is_custom && recommendedExerciseNames.has(b.name);
+
+        if (aRecommended !== bRecommended) {
+            return aRecommended ? -1 : 1;
+        }
+
+        return a.name.localeCompare(b.name);
+    });
+
+    if (exercises.length === 0) {
+        list.innerHTML = '<div class="empty-state"><p>No exercises found for this group.</p></div>';
+        return;
+    }
+
+    list.innerHTML = exercises.map(ex => {
+        const isAdded = !!addedExercises[ex.id];
+        const isRecommended = !ex.is_custom && recommendedExerciseNames.has(ex.name);
+
+        return `
+        <div class="exercise-item ${isAdded ? 'added' : ''} ${isRecommended ? 'exercise-item-recommended' : ''}"
+             id="ex-item-${ex.id}"
+             onclick="toggleExercise(${ex.id}, '${escapeAttr(ex.name)}', '${escapeAttr(ex.muscle_group)}', '${escapeAttr(ex.tracking_type || "strength")}', ${ex.is_custom})">
+            <span>
+                ${escapeHtml(ex.name)}
+                ${ex.is_custom ? '<span class="badge-custom">custom</span>' : ''}
+                ${isRecommended ? '<span class="badge text-bg-success ms-2">Recommended</span>' : ''}
+            </span>
+
+            <span class="d-flex align-items-center gap-2">
+                ${ex.is_custom ? `
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="deleteCustomExercise(event, ${ex.id}, '${escapeAttr(ex.name)}', '${escapeAttr(ex.muscle_group)}')"
+                    >
+                        Delete
+                    </button>
+                ` : ''}
+                <span style="font-size:1.2rem;">${isAdded ? '✅' : '➕'}</span>
+            </span>
+        </div>`;
+    }).join('');
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escapeAttr(str) {
+    return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function toggleExercise(id, name, muscleGroup, trackingType, isCustom) {
+    if (addedExercises[id]) {
+        const block = document.getElementById(`block-${id}`);
+        if (block) block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        toast(`${name} is already in your workout`);
+        return;
+    }
+
+    addedExercises[id] = {
+        id,
+        name,
+        muscle_group: muscleGroup,
+        tracking_type: trackingType || 'strength',
+        is_custom: isCustom
+    };
+
+    workoutSets[id] = [];
+
+    const item = document.getElementById(`ex-item-${id}`);
+    if (item) {
+        item.classList.add('added');
+        item.querySelector('span:last-child').textContent = '✅';
+    }
+
+    document.getElementById('no-sets-msg')?.remove();
+
+    renderExerciseBlock(id);
+    addSet(id);
+    updateSetCountLabel();
+
+    toast(`${name} added`);
+}
+
+function renderExerciseBlock(exerciseId) {
+    const ex = addedExercises[exerciseId];
+    const container = document.getElementById('exercise-blocks');
+
+    let headers = '';
+    let addButtonText = '+ Add Entry';
+
+    if (ex.tracking_type === 'strength') {
+        headers = `
+            <tr>
+                <th>Set</th>
+                <th>Reps</th>
+                <th>Weight (kg)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Set';
+    } else if (ex.tracking_type === 'bodyweight_reps') {
+        headers = `
+            <tr>
+                <th>Set</th>
+                <th>Reps</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Set';
+    } else if (ex.tracking_type === 'cardio_distance') {
+        headers = `
+            <tr>
+                <th>Entry</th>
+                <th>Distance (km)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Distance';
+    } else if (ex.tracking_type === 'stair_climber') {
+        headers = `
+            <tr>
+                <th>Entry</th>
+                <th>Distance (km)</th>
+                <th>Incline Angle (°)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Stair Entry';
+    } else if (ex.tracking_type === 'timed_hold') {
+        headers = `
+            <tr>
+                <th>Set</th>
+                <th>Time (sec)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Hold';
+    } else {
+        headers = `
+            <tr>
+                <th>Entry</th>
+                <th>Duration (min)</th>
+                <th></th>
+            </tr>
+        `;
+        addButtonText = '+ Add Duration';
+    }
+
+    const block = document.createElement('div');
+    block.className = 'exercise-block';
+    block.id = `block-${exerciseId}`;
+    block.innerHTML = `
+        <div class="exercise-block-header">
+            <span>
+                ${escapeHtml(ex.name)}
+                <span class="muscle-tag">${escapeHtml(ex.muscle_group)}</span>
+            </span>
+            <button class="btn-remove-exercise" onclick="removeExercise(${exerciseId})" title="Remove exercise">✕</button>
+        </div>
+        <table class="sets-table">
+            <thead>${headers}</thead>
+            <tbody id="sets-body-${exerciseId}"></tbody>
+        </table>
+        <button class="btn-add-set" onclick="addSet(${exerciseId})">${addButtonText}</button>
+    `;
+    container.appendChild(block);
+}
+
+function addSet(exerciseId) {
+    const ex = addedExercises[exerciseId];
+    const sets = workoutSets[exerciseId];
+    const setNum = sets.length + 1;
+    const prev = sets[sets.length - 1] || {};
+
+    let newSet = { set_number: setNum };
+    let rowHtml = '';
+
+    if (ex.tracking_type === 'strength') {
+        newSet.reps = prev.reps || '';
+        newSet.weight_kg = prev.weight_kg || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="1" placeholder="10"
+                    value="${newSet.reps}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'reps', this.value)">
+            </td>
+            <td>
+                <input class="set-input" type="number" min="0" step="0.5" placeholder="0"
+                    value="${newSet.weight_kg}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'weight_kg', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    } else if (ex.tracking_type === 'bodyweight_reps') {
+        newSet.reps = prev.reps || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="1" placeholder="8"
+                    value="${newSet.reps}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'reps', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    } else if (ex.tracking_type === 'cardio_distance') {
+        newSet.distance_km = prev.distance_km || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="0.1" step="0.1" placeholder="5.0"
+                    value="${newSet.distance_km}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'distance_km', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    } else if (ex.tracking_type === 'timed_hold') {
+        newSet.duration_sec = prev.duration_sec || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="1" placeholder="60"
+                    value="${newSet.duration_sec}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'duration_sec', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    } else {
+        newSet.duration_min = prev.duration_min || '';
+
+        rowHtml = `
+            <td class="mono" style="font-size:0.85rem; color:var(--muted);">${setNum}</td>
+            <td>
+                <input class="set-input" type="number" min="1" placeholder="10"
+                    value="${newSet.duration_min}"
+                    oninput="updateSet(${exerciseId}, ${setNum}, 'duration_min', this.value)">
+            </td>
+            <td>
+                <button class="btn-remove-set" onclick="removeSet(${exerciseId}, ${setNum})">✕</button>
+            </td>
+        `;
+    }
+
+    sets.push(newSet);
+
+    const tbody = document.getElementById(`sets-body-${exerciseId}`);
+    const row = document.createElement('tr');
+    row.id = `set-row-${exerciseId}-${setNum}`;
+    row.innerHTML = rowHtml;
+    tbody.appendChild(row);
+
+    updateSetCountLabel();
+}
+
+function updateSet(exerciseId, setNum, field, value) {
+    const sets = workoutSets[exerciseId];
+    const set = sets.find(s => s.set_number === setNum);
+    if (!set) return;
+
+    if (value === '') {
+        set[field] = '';
+        return;
+    }
+
+    if (field === 'weight_kg' || field === 'distance_km') {
+        set[field] = parseFloat(value);
+    } else {
+        set[field] = parseInt(value, 10);
+    }
+}
+
+function clampIncline(input) {
+    if (input.value === '') return;
+
+    let value = parseFloat(input.value);
+
+    if (value < 0) value = 0;
+    if (value > 90) value = 90;
+
+    input.value = value;
+}
+
+
+function updateSet(exerciseId, setNum, field, value) {
+    const sets = workoutSets[exerciseId];
+    const set = sets.find(s => s.set_number === setNum);
+    if (!set) return;
+
+    if (value === '') {
+        set[field] = '';
+        return;
+    }
+
+    if (field === 'weight_kg' || field === 'distance_km' || field === 'incline_deg') {
+        set[field] = parseFloat(value);
+    } else {
+        set[field] = parseInt(value, 10);
+    }
+}
+
+function removeSet(exerciseId, setNum) {
+    workoutSets[exerciseId] = workoutSets[exerciseId].filter(s => s.set_number !== setNum);
+    document.getElementById(`set-row-${exerciseId}-${setNum}`)?.remove();
+
+    renumberSets(exerciseId);
+    updateSetCountLabel();
+}
+
+function renumberSets(exerciseId) {
+    const tbody = document.getElementById(`sets-body-${exerciseId}`);
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, i) => {
+        row.querySelector('td:first-child').textContent = i + 1;
+        workoutSets[exerciseId][i].set_number = i + 1;
+    });
+}
+
+function removeExercise(exerciseId) {
+    delete addedExercises[exerciseId];
+    delete workoutSets[exerciseId];
+    document.getElementById(`block-${exerciseId}`)?.remove();
+
+    const item = document.getElementById(`ex-item-${exerciseId}`);
+    if (item) {
+        item.classList.remove('added');
+        item.querySelector('span:last-child').textContent = '➕';
+    }
+
+    if (Object.keys(addedExercises).length === 0) {
+        const container = document.getElementById('exercise-blocks');
+        const msg = document.createElement('div');
+        msg.className = 'empty-state';
+        msg.id = 'no-sets-msg';
+        msg.innerHTML = '<div class="icon">➕</div><p class="mb-0 text-muted">Add an exercise above to start logging sets</p>';
+        container.appendChild(msg);
+    }
+    updateSetCountLabel();
+}
+
+function updateSetCountLabel() {
+    const count = totalSetCount();
+    document.getElementById('set-count-label').textContent =
+        count === 1 ? '1 set logged' : `${count} sets logged`;
+}
+
+async function addCustomExercise() {
+    const name = document.getElementById('custom-name').value.trim();
+    const group = document.getElementById('custom-group').value;
+
+    if (!name) { toast('Enter an exercise name'); return; }
+
+    try {
+        const res = await fetch('/api/exercises', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, muscle_group: group }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            toast(data.error || 'Could not add exercise');
+            return;
+        }
+
+        if (!exerciseCache[group]) exerciseCache[group] = [];
+        exerciseCache[group].push(data);
+        exerciseCache[group].sort((a,b) => a.name.localeCompare(b.name));
+
+        if (activeTab === group) renderExerciseList(group);
+
+        document.getElementById('custom-name').value = '';
+        toast(`"${name}" added to ${group}`);
+    } catch (e) {
+        toast('Network error — please try again');
+    }
+}
+async function deleteCustomExercise(event, exerciseId, name, group) {
+    event.stopPropagation();
+
+
+    if (addedExercises[exerciseId]) {
+        removeExercise(exerciseId);
+    }
+
+    try {
+        const res = await fetch(`/api/exercises/${exerciseId}`, {
+            method: 'DELETE',
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            toast(data.error || 'Could not delete exercise');
+            return;
+        }
+
+        if (exerciseCache[group]) {
+            exerciseCache[group] = exerciseCache[group].filter(ex => ex.id !== exerciseId);
+        }
+
+        if (activeTab === group) {
+            renderExerciseList(group);
+        }
+
+        toast(`"${name}" deleted`);
+    } catch (e) {
+        toast('Network error — please try again');
+    }
+}
+function updateTimer() {
+    if (!startedAt) return;
+    const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
+    const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+    const seconds = String(elapsed % 60).padStart(2, '0');
+    const formatted = `${hours}:${minutes}:${seconds}`;
+
+    document.getElementById('timer-display').textContent = formatted;
+    const largeDisplay = document.getElementById('timer-display-large');
+    if (largeDisplay) largeDisplay.textContent = formatted;
+}
+
+async function finishWorkout() {
+    const allSets = [];
+
+    for (const [exerciseId, sets] of Object.entries(workoutSets)) {
+        const ex = addedExercises[exerciseId];
+
+        for (const s of sets) {
+            allSets.push({
+                exercise_id: parseInt(exerciseId, 10),
+                set_number: s.set_number,
+                tracking_type: ex.tracking_type,
+                reps: s.reps || 0,
+                weight_kg: s.weight_kg || 0,
+                distance_km: s.distance_km || 0,
+                duration_sec: s.duration_sec || 0,
+                duration_min: s.duration_min || 0,
+                incline_deg: s.incline_deg || 0,
+            });
+        }
+    }
+
+    if (allSets.length === 0) {
+        toast('Log at least one entry before finishing');
+        return;
+    }
+
+    const invalid = allSets.find(entry => {
+        if (entry.tracking_type === 'strength') {
+            return !entry.reps || entry.reps <= 0 || entry.weight_kg < 0;
+        }
+
+        if (entry.tracking_type === 'bodyweight_reps') {
+            return !entry.reps || entry.reps <= 0;
+        }
+
+        if (entry.tracking_type === 'cardio_distance') {
+            return !entry.distance_km || entry.distance_km <= 0;
+        }
+
+        if (entry.tracking_type === 'stair_climber') {
+            return (
+                !entry.distance_km ||
+                entry.distance_km <= 0 ||
+                entry.incline_deg < 0 ||
+                entry.incline_deg > 90
+            );
+        }
+
+        if (entry.tracking_type === 'timed_hold') {
+            return !entry.duration_sec || entry.duration_sec <= 0;
+        }
+
+        if (entry.tracking_type === 'duration_only') {
+            return !entry.duration_min || entry.duration_min <= 0;
+        }
+
+        return false;
+    });
+
+    if (invalid) {
+        toast('Please complete all required exercise fields before finishing');
+        return;
+    }
+
+    clearInterval(timerInterval);
+    const finishedAt = new Date();
+
+    const payload = {
+        started_at: startedAt.toISOString().slice(0, 19),
+        finished_at: finishedAt.toISOString().slice(0, 19),
+        notes: document.getElementById('workout-notes').value.trim(),
+        plan_type: document.getElementById('plan-type')?.value || "",
+        duration_mode: document.getElementById('duration-mode')?.value || 'stopwatch',
+        manual_duration_hours: document.getElementById('manual-duration-hours')?.value || "",
+        manual_duration_minutes: document.getElementById('manual-duration-minutes')?.value || "",
+        manual_duration_seconds: document.getElementById('manual-duration-seconds')?.value || "",
+        sets: allSets,
+        intensity: document.getElementById('workout-intensity')?.value || 'Medium',
+    };
+
+        if (payload.duration_mode === 'manual') {
+            const h = parseInt(payload.manual_duration_hours || 0, 10);
+            const m = parseInt(payload.manual_duration_minutes || 0, 10);
+            const s = parseInt(payload.manual_duration_seconds || 0, 10);
+
+            if (
+                isNaN(h) || isNaN(m) || isNaN(s) ||
+                h < 0 || m < 0 || s < 0 ||
+                m > 59 || s > 59 ||
+                (h === 0 && m === 0 && s === 0)
+            ) {
+                toast('Enter a valid manual duration. Minutes and seconds must be between 0 and 59.');
+                return;
+            }
+        }
+
+    const btn = document.getElementById('finish-workout-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+        const res = await fetch('/workouts/finish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            toast(data.error || 'Something went wrong');
+            btn.disabled = false;
+            btn.textContent = '🏁 Finish Workout';
+            return;
+        }
+
+        document.getElementById('timer-pill').classList.remove('visible');
+
+        populateSummary(data, finishedAt);
+        showScreen('screen-summary');
+
+    } catch (e) {
+        toast('Network error — please try again');
+        btn.disabled = false;
+        btn.textContent = '🏁 Finish Workout';
+    }
+}
+
+function populateSummary(data, finishedAt) {
+    const dateStr = finishedAt.toLocaleDateString('en-AU', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    document.getElementById('summary-date').textContent = dateStr;
+    document.getElementById('sum-duration').textContent = data.duration_minutes;
+    document.getElementById('sum-sets').textContent = data.total_sets;
+    document.getElementById('sum-volume').textContent = data.total_volume_kg.toLocaleString();
+    document.getElementById('sum-intensity').textContent = data.intensity;
+
+    const musclesEl = document.getElementById('sum-muscles');
+    musclesEl.innerHTML = data.muscle_groups.map(g =>
+        `<span class="badge text-bg-success px-3 py-2">${escapeHtml(g)}</span>`
+    ).join('');
+
+    const exEl = document.getElementById('sum-exercises');
+    exEl.innerHTML = Object.entries(data.exercises).map(([name, sets]) => `
+        <div class="exercise-summary-row">
+            <span>${escapeHtml(name)}</span>
+            <span class="badge text-bg-light text-dark border">${sets} set${sets !== 1 ? 's' : ''}</span>
+        </div>
+    `).join('');
+}
+</script>
+</body>
+</html>

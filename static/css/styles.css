@@ -3127,3 +3127,12 @@ body.premium-app-page::after {
     color: #111827 !important;
     background-color: #ffffff !important;
 }
+/* Add workout notes placeholder contrast */
+#workout-notes::placeholder {
+    color: #ffffff !important;
+    opacity: 0.75;
+}
+
+#workout-notes {
+    color: #ffffff !important;
+}

@@ -40,23 +40,18 @@ git clone https://github.com/kiegiam/CITS3403-Test-Repo.git
 cd CITS3403-Test-Repo
 ```
 
-### 2. Create and activate a virtual environment
+
+### 2. Install the required dependencies
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+py -3 -m pip install -r requirements.txt
 ```
 
-### 3. Install the required dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Initialise the database
+### 3. Initialise the database (if not using a virtual environment, skip this step)
 ```bash
 python init_db.py
 ```
 
-### 5. Run the application
+### 4. Run the application
 ```bash
 python app.py
 ```

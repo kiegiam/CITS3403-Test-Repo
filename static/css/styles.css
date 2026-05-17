@@ -41,6 +41,8 @@ body {
 /* ---------- Navbar ---------- */
 
 .navbar {
+    position: relative;
+    z-index: 3000;
     background:
         linear-gradient(90deg, rgba(10, 37, 64, 0.96), rgba(45, 55, 144, 0.94)) !important;
     box-shadow: 0 10px 30px rgba(10, 37, 64, 0.18);
@@ -491,6 +493,7 @@ h6 {
 }
 
 .profile-dropdown-menu {
+    z-index: 3200;
     border-radius: 18px;
     padding: 0.45rem;
     box-shadow: var(--ft-shadow-md);
@@ -2074,6 +2077,42 @@ body.premium-app-page::after {
     color: var(--ft-ink);
 }
 
+.premium-app-page .stat-box h2,
+.premium-app-page .stat-box .h1,
+.premium-app-page .recommendation-day strong,
+.premium-app-page .weekly-schedule-day strong,
+.premium-app-page .weekly-plan-day strong,
+.premium-app-page .top-rank-stats strong,
+.premium-app-page .ranking-minutes-text,
+.premium-app-page .ranking-insight-grid .h3,
+.premium-app-page .ranking-insight-grid p:not(.text-muted) {
+    color: var(--ft-ink) !important;
+}
+
+.premium-app-page .recommendation-day p,
+.premium-app-page .weekly-schedule-day .small,
+.premium-app-page .weekly-plan-day .small,
+.premium-app-page .top-rank-stats .small,
+.premium-app-page .ranking-insight-grid .small,
+.premium-app-page .ranking-insight-grid .text-muted {
+    color: var(--ft-ink-muted) !important;
+}
+
+.premium-app-page .recommended-exercise-chip {
+    color: #10243a !important;
+    border-color: rgba(134, 220, 255, 0.28) !important;
+    background: rgba(236, 244, 250, 0.92) !important;
+}
+
+.premium-app-page .recommended-exercise-chip strong {
+    color: #10243a !important;
+}
+
+.premium-app-page .recommended-exercise-meta small {
+    color: #29445f !important;
+    background: rgba(99, 91, 255, 0.10);
+}
+
 .premium-app-page .intensity-badge {
     color: #06101d;
     background: linear-gradient(135deg, var(--ft-aqua), var(--ft-lime));
@@ -2228,8 +2267,15 @@ body.premium-app-page::after {
 }
 
 .premium-app-page .dropdown-menu {
+    z-index: 3200;
     background: rgba(7, 11, 22, 0.94);
     border: 1px solid rgba(57, 228, 255, 0.16);
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.44), var(--ft-glow-aqua);
+}
+
+.premium-app-page .profile-dropdown-menu {
+    min-width: 12rem;
+    overflow: visible;
 }
 
 .premium-app-page .dropdown-item {
@@ -2376,6 +2422,108 @@ body.premium-app-page::after {
     background: rgba(255, 107, 122, 0.12);
 }
 
+.plans-page .hero-card,
+.plans-page .stat-box,
+.plans-page .plan-goals-card,
+.plans-page .personal-plan-card,
+.plans-page .weekly-plan-card,
+.plans-page .feature-card,
+.plans-page .planning-tips-card {
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+    animation: planFloatIn 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.plans-page .hero-card {
+    animation-delay: 0.02s;
+}
+
+.plans-page .stat-box:nth-child(1),
+.plans-page .row > .col-md-6:nth-child(1) .stat-box {
+    animation-delay: 0.10s;
+}
+
+.plans-page .row > .col-md-6:nth-child(2) .stat-box {
+    animation-delay: 0.18s;
+}
+
+.plans-page .plan-goals-card {
+    animation-delay: 0.24s;
+}
+
+.plans-page .personal-plan-card {
+    animation-delay: 0.32s;
+}
+
+.plans-page .weekly-plan-card {
+    animation-delay: 0.40s;
+}
+
+.plans-page .feature-card {
+    animation-delay: 0.48s;
+}
+
+.plans-page .planning-tips-card {
+    animation-delay: 0.56s;
+}
+
+.plans-page .recommendation-day,
+.plans-page .weekly-schedule-day,
+.plans-page .weekly-plan-day,
+.plans-page .planning-tip {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: planFloatIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.plans-page .recommendation-day:nth-child(1),
+.plans-page .weekly-schedule-day:nth-child(1),
+.plans-page .weekly-plan-day:nth-child(1),
+.plans-page .planning-tip:nth-child(1) {
+    animation-delay: 0.50s;
+}
+
+.plans-page .recommendation-day:nth-child(2),
+.plans-page .weekly-schedule-day:nth-child(2),
+.plans-page .weekly-plan-day:nth-child(2),
+.plans-page .planning-tip:nth-child(2) {
+    animation-delay: 0.58s;
+}
+
+.plans-page .recommendation-day:nth-child(3),
+.plans-page .weekly-schedule-day:nth-child(3),
+.plans-page .weekly-plan-day:nth-child(3),
+.plans-page .planning-tip:nth-child(3) {
+    animation-delay: 0.66s;
+}
+
+.plans-page .recommendation-day:nth-child(4),
+.plans-page .weekly-schedule-day:nth-child(4) {
+    animation-delay: 0.74s;
+}
+
+.plans-page .recommendation-day:nth-child(5),
+.plans-page .weekly-schedule-day:nth-child(5) {
+    animation-delay: 0.82s;
+}
+
+.plans-page .recommendation-day:nth-child(6),
+.plans-page .weekly-schedule-day:nth-child(6) {
+    animation-delay: 0.90s;
+}
+
+.plans-page .recommendation-day:nth-child(7),
+.plans-page .weekly-schedule-day:nth-child(7) {
+    animation-delay: 0.98s;
+}
+
+@keyframes planFloatIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .premium-app-page .profile-page .hero-card .bg-success,
 .profile-page .hero-card .bg-success {
     color: var(--ft-ink) !important;
@@ -2500,10 +2648,29 @@ body.premium-app-page::after {
     min-height: calc(100vh - 82px);
     display: flex;
     align-items: center;
+    width: 100%;
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+.auth-page main > section {
+    width: 100%;
 }
 
 .auth-page .login-card {
+    width: 100%;
+    min-width: 0;
     transform-style: preserve-3d;
+}
+
+.auth-page .row.justify-content-center {
+    width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.auth-page .col-12 {
+    min-width: min(100%, 360px);
 }
 
 .auth-page .login-card::before {
@@ -2523,12 +2690,32 @@ body.premium-app-page::after {
 
 .premium-landing-page {
     background:
-        linear-gradient(rgba(5, 8, 18, 0.22), rgba(5, 8, 18, 0.62)),
-        url("../background image/sports-sprinter-runner-man.jpg") center center / cover no-repeat fixed !important;
+        linear-gradient(135deg, #050711 0%, #0a1020 52%, #101827 100%) !important;
+    background-attachment: scroll;
 }
 
 .premium-landing-page .hero-section {
+    position: relative;
     min-height: 680px;
+    overflow: hidden;
+    background:
+        linear-gradient(90deg, rgba(5, 8, 18, 0.96) 0%, rgba(5, 8, 18, 0.76) 47%, rgba(5, 8, 18, 0.30) 100%),
+        url("../background image/sports-sprinter-runner-man.jpg") right -40px top -54px / auto 760px no-repeat,
+        #050711 !important;
+}
+
+.premium-landing-page .hero-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+.premium-landing-page .hero-section::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 44%;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent, rgba(5, 8, 18, 0.94));
 }
 
 .premium-landing-page .hero-section h1,
@@ -2546,6 +2733,68 @@ body.premium-app-page::after {
 
 .premium-landing-page .bg-white {
     background: rgba(5, 8, 18, 0.90) !important;
+}
+
+.premium-landing-page main > section {
+    position: relative;
+}
+
+.premium-landing-page main > section:not(.hero-section) {
+    background: rgba(5, 8, 18, 0.92);
+}
+
+.premium-landing-page main > section:nth-of-type(3),
+.premium-landing-page main > section:nth-of-type(4) {
+    background:
+        linear-gradient(180deg, rgba(5, 8, 18, 0.94), rgba(8, 14, 28, 0.90)),
+        radial-gradient(circle at 78% 20%, rgba(57, 228, 255, 0.11), transparent 36%);
+}
+
+.premium-landing-page .feature-card,
+.premium-landing-page .dashboard-info-card,
+.premium-landing-page .hero-card,
+.premium-landing-page .stat-box {
+    color: var(--ft-ink);
+    border-color: rgba(134, 220, 255, 0.22) !important;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.045)),
+        rgba(8, 14, 28, 0.82) !important;
+    box-shadow: 0 24px 68px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+}
+
+.premium-landing-page .feature-card h3,
+.premium-landing-page .dashboard-info-card h2,
+.premium-landing-page .dashboard-info-card h3,
+.premium-landing-page .hero-card h2,
+.premium-landing-page .stat-box h3 {
+    color: #ffffff;
+}
+
+.premium-landing-page .feature-card .card-text,
+.premium-landing-page .dashboard-info-card p,
+.premium-landing-page .stat-box p,
+.premium-landing-page .list-group-item,
+.premium-landing-page .hero-card .lead {
+    color: rgba(226, 241, 255, 0.74) !important;
+}
+
+.premium-landing-page .feature-card .badge,
+.premium-landing-page .dashboard-info-card .badge {
+    color: #06101d !important;
+}
+
+.premium-landing-page .stat-box {
+    min-height: 132px;
+}
+
+.premium-landing-page .stat-box::before {
+    width: 4px;
+    height: auto;
+    inset: 0 auto 0 0;
+}
+
+.premium-landing-page .list-group-item {
+    border-bottom-color: rgba(134, 220, 255, 0.14);
 }
 
 .landing-performance-panel {
@@ -2717,8 +2966,35 @@ body.premium-app-page::after {
 }
 
 @media (max-width: 991.98px) {
+    .premium-landing-page {
+        background: #050711 !important;
+    }
+
     .premium-landing-page .hero-section {
         min-height: auto;
+        background:
+            linear-gradient(rgba(5, 8, 18, 0.82), rgba(5, 8, 18, 0.92)),
+            url("../background image/sports-sprinter-runner-man.jpg") center top / cover no-repeat,
+            #050711 !important;
+    }
+
+    .landing-performance-panel {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .premium-landing-page .hero-section {
+        padding-top: 3rem !important;
+    }
+
+    .landing-metric-strip {
+        flex-direction: column;
+    }
+
+    .landing-gauge {
+        width: min(220px, 72vw);
     }
 }
 .duration-card-display {

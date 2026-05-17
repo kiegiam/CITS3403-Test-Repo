@@ -17,10 +17,12 @@ app = Flask(__name__)
 
 # ---------------------------------------------------------------------------
 # Security: secret key loaded from environment variable.
-# Set SECRET_KEY in your .env or shell before running.
-# Falls back to a dev default so the app still starts locally without config.
+# Set SECRET_KEY in your shell before running the app or database scripts.
 # ---------------------------------------------------------------------------
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me-in-production")
+secret_key = os.environ.get("SECRET_KEY")
+if not secret_key:
+    raise RuntimeError("SECRET_KEY environment variable must be set before starting FitTrack.")
+app.secret_key = secret_key
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///fittrack.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

@@ -105,6 +105,20 @@ python -m pip install -r requirements.txt
 
 ### 4. Initialise the database
 
+Set a local secret key before running the app or database setup scripts:
+
+#### Windows PowerShell
+
+```powershell
+$env:SECRET_KEY = "replace-this-with-a-local-development-secret"
+```
+
+#### macOS / Linux
+
+```bash
+export SECRET_KEY="replace-this-with-a-local-development-secret"
+```
+
 ```bash
 python init_db.py
 ```

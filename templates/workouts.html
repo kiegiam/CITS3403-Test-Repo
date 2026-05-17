@@ -219,6 +219,13 @@
             height: 390px;
         }
 
+        .intensity-chart-box {
+            width: 100%;
+            height: 320px;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+
         .line-chart-box {
             width: 100%;
             height: 320px;
@@ -558,7 +565,7 @@
                         </p>
                     </div>
 
-                    <div id="intensityChart" class="chart-box"></div>
+                    <div id="intensityChart" class="intensity-chart-box"></div>
                 </div>
             </div>
         </section>
@@ -1057,9 +1064,25 @@ function renderIntensityChart(data) {
             {
                 name: "Intensity",
                 type: "pie",
-                radius: ["50%", "74%"],
-                center: ["50%", "44%"],
+                radius: ["42%", "62%"],
+                center: ["50%", "46%"],
                 avoidLabelOverlap: true,
+                label: {
+                    color: "rgba(247, 251, 255, 0.82)",
+                    fontWeight: 700,
+                    formatter: function (params) {
+                        if (params.name === "Medium") {
+                            return "Med";
+                        }
+                        return params.name;
+                    },
+                    overflow: "none",
+                    width: 80,
+                },
+                labelLine: {
+                    length: 12,
+                    length2: 14,
+                },
                 data: [
                     {
                         value: counts.Low,
@@ -1070,6 +1093,9 @@ function renderIntensityChart(data) {
                         value: counts.Medium,
                         name: "Medium",
                         itemStyle: { color: "#39e4ff" },
+                        label: {
+                            formatter: "Med",
+                        },
                     },
                     {
                         value: counts.High,

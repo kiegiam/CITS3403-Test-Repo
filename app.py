@@ -1716,8 +1716,8 @@ def edit_profile():
                     os.remove(old_avatar_path)
 
                 user.avatar_filename = None
-                db.session.commit()
 
+            db.session.commit()
             flash("Profile picture removed. Default initials will now be used.", "success")
             return redirect(url_for("edit_profile"))
 
@@ -1737,9 +1737,13 @@ def edit_profile():
         user.goal = goal or "Stay consistent"
         user.location = location or "Not set"
 
+        # Important checkbox logic
+        user.show_public_profile = "show_public_profile" in request.form
+        user.show_public_fitness = "show_public_fitness" in request.form
+
         if avatar_file and avatar_file.filename:
             if not allowed_avatar_file(avatar_file.filename):
-                flash("Please upload a valid image file: PNG, JPG, JPEG, or GIF.", "danger")
+                flash("Please upload a valid image file: PNG, JPG, JPEG, GIF, or WEBP.", "danger")
                 return render_template(
                     "edit_profile.html",
                     profile=user_to_profile_dict(user)
@@ -1766,7 +1770,10 @@ def edit_profile():
         flash("Profile updated successfully.", "success")
         return redirect(url_for("profile"))
 
-    return render_template("edit_profile.html", profile=user_to_profile_dict(user))
+    return render_template(
+        "edit_profile.html",
+        profile=user_to_profile_dict(user)
+    )
 
 
 @app.route("/workouts")
